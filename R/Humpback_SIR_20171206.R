@@ -2,7 +2,6 @@
 # Code cleaned up and sent to Andre Punt, John Best and Grant Adams on 7 Dec 2017
 
 #Example call
-test <- HUMPBACK.SIR(file.name="test.N2005", n.samples=NULL, n.resamples=1000, prior.K=c(NA, NA, NA), prior.r_max=c("uniform", 0, 0.106), r_max.bound=c(0, 0.106), prior.N.obs=c("uniform", 500, 20000), prior.add.CV=c("uniform", 0, 1, FALSE), prior.z=c(NA, 2.39, NA), q.prior.IA=c("uniform", 0, 1, FALSE), q.prior.Count=c("uniform", 0, 1, FALSE), Klim=c(1, 500000), target.Yr=2005, num.haplotypes=0, tolerance.for.bisection=0.0001, output.Yrs=c(2005, 2006), abs.abundance=Abs.Abundance.2005, rel.abundance=Rel.Abundance, rel.abundance.key=TRUE, count.data=Count.Data, count.data.key=FALSE, growth.rate.obs=c(0.074, 0.033, TRUE), growth.rate.Yrs=c(1995, 1996, 1997, 1998), catch.data=Catch.data, Threshold=1e-17, Print=0)
 
 
 ####################### FUNCTIONS ######################################################
@@ -11,40 +10,73 @@ test <- HUMPBACK.SIR(file.name="test.N2005", n.samples=NULL, n.resamples=1000, p
 ############ HOUSEKEEPING FUNCTION #############
 # HUMPBACK SIR controls the sampling from the priors, the bisection and likelihoods and the output functions
 ################################################
+#' HUMPBACK SIR controls the sampling from the priors, the bisection and likelihoods and the output functions
+#'
+#' @param file.name name of a file to identified the files exported by the function
+#' @param n.samples number of samples for the Rubin SIR: NOT USED
+#' @param n.resamples number of resamples to compute the marginal posterior distributions
+#' @param prior.K prior for K for future use with the forward method: NOT USED
+#' @param prior.r_max prior for r_max. The first element identifies the sampling distribution, the send identifies the lower bound (for uniform distribution) or the mean (for a normal distribution), and the third element corresponds to the upper bound (uniform distribution) or the standard error (normal distribution). The default is Uniform with bounds c(0, 0.12)
+#' @param r_max.bound bounds for the r_max prior. Default is c(0, 0.12)
+#' @param prior.N.obs prior distribution for a recent abudnance estimate. Elements are equivalent to the prior on r_max
+#' @param prior.add.CV prior for additional CV if applicable. It is defined by four elements: (1) the sampling distribution, (2) lower bound or mean, (3) upper bound or SE, (4) boolean variable to specify whether CV add is used or not in the likelihood. Default is a uniform distribution bounded by (0,1) and FALSE (=CV.add not used)
+#' @param prior.z prior on the shape parameter. NOT USED, assumed z=2.39 (max productivity at K=0.6)
+#' @param q.prior.IA prior on q for indices of abundance. Definition of elements is similar to the prior on CV.add. If the fourth element = FALSE, an analytical solution for q is used (as in Zerbini et al. 2011)
+#' @param q.prior.Count similar to q.prior.IA, but for count data. NOT CURRENTLY USED
+#' @param Klim bounds for K when preforming the bisection method of Punt and Butterworth (1995). Defined by two elements, the lower and upper bounds. Default is (1, 500000)
+#' @param target.Yr year of the target population estimate for the bisection method. Default is 2008
+#' @param num.haplotypes number of haplotypes to compute minimum viable population (from Jackson et al., 2006 and IWC, 2007)
+#' @param tolerance.for.bisection tolerance value for performing the bisection method
+#' @param output.Yrs year for outputing the predicted abundance estimates. Default is 2008, but multiple years can be specified. For example, if outputs for 2005 and 2008 are needed, output.Yrs = c(2005, 2008)
+#' @param abs.abundance R object containing year, estimate of absolute abundance, and CV (see example)
+#' @param rel.abundance R object containing years, estimates of relative abudnance and CVs (see example)
+#' @param rel.abundance.key key to speficy if relative abundance data are used in the likelihood. Default is TRUE
+#' @param count.data R object containing years, estimates of counts and effort. NOT USED
+#' @param count.data.key key to speficy in count data are used. Default is FALSE. NOT USED
+#' @param growth.rate.obs observed growth rate (1st element) and standard error (2nd element) as in Zerbni et al. (2011). If third element is FALSE, the growth rate is not included in the likelihood
+#' @param growth.rate.Yrs Years for which the growth.rate.obs were computed (as in Zerbini et al., 2011)
+#' @param catch.data R object containing the years and catches (see example)
+#' @param Threshold threshold for the McCallister et al. (1994) SIR. This is data-specific. Default is 1e-100.
+#' @param Print key to print various pieces of information as the code runs. Default is 0 (nothing is printed)
+#'
+#' @return A \code{list} containing posterior samples and metadata
+#'
+#' TO DO:
+#' 1. add the negative binomial likelihood for the count data, which is not currently used even though it is defined in the main function call.
+#'
+#' @export
+#'
+#' @examples
+#'
+#' \dontrun{
+#' HUMPBACK.SIR(file.name = "test.N2005",
+#'              n.samples = NULL,
+#'              n.resamples = 1000,
+#'              prior.K = c(NA, NA, NA),
+#'              prior.r_max = c("uniform", 0, 0.106),
+#'              r_max.bound = c(0, 0.106),
+#'              prior.N.obs = c("uniform", 500, 20000),
+#'              prior.add.CV = c("uniform", 0, 1, FALSE),
+#'              prior.z = c(NA, 2.39, NA),
+#'              q.prior.IA = c("uniform", 0, 1, FALSE),
+#'              q.prior.Count = c("uniform", 0, 1, FALSE),
+#'              Klim = c(1, 500000),
+#'              target.Yr = 2005,
+#'              num.haplotypes = 0,
+#'              tolerance.for.bisection = 0.0001,
+#'              output.Yrs = c(2005, 2006),
+#'              abs.abundance = Abs.Abundance.2005,
+#'              rel.abundance = Rel.Abundance,
+#'              rel.abundance.key = TRUE,
+#'              count.data = Count.Data,
+#'              count.data.key = FALSE,
+#'              growth.rate.obs = c(0.074, 0.033, TRUE),
+#'              growth.rate.Yrs = c(1995, 1996, 1997, 1998),
+#'              catch.data = Catch.data,
+#'              Threshold = 1e-17,
+#'              Print = 0)
+#' }
 HUMPBACK.SIR=function(file.name="NULL", n.samples=1000, n.resamples=1000, prior.K=c(NA, NA, NA), prior.r_max=c("uniform", 0, 0.12), r_max.bound=c(0, 0.12), prior.N.obs=c("uniform", 0, 50000), prior.add.CV=c("uniform", 0, 1, TRUE), prior.z=c(NA, 2.39, NA), q.prior.IA=c("uniform", 0, 1, FALSE), q.prior.Count=c("uniform", 0, 1, FALSE), Klim=c(1, 500000), target.Yr=2008, num.haplotypes=66, tolerance.for.bisection=0.001, output.Yrs=c(2008), abs.abundance=Abs.Abundance, rel.abundance=Rel.Abundance, rel.abundance.key=TRUE, count.data=NULL, count.data.key=FALSE, growth.rate.obs=c(0.074, 0.033, TRUE), growth.rate.Yrs=c(1995, 1996, 1997, 1998), catch.data=Catch.data, Threshold=1e100, Print=0)
-
-# CALL ELEMENTS
-# file name = name of a file to identified the files exported by the function
-# n.samples = number of samples for the Rubin SIR: NOT USED
-# n.resamples = number of resamples to compute the marginal posterior distributions
-# prior.K = prior for K for future use with the forward method: NOT USED
-# prior.r_max = prior for r_max. The first element identifies the sampling distribution, the send identifies the lower bound (for uniform distribution) or the mean (for a normal distribution), and the third element corresponds to the upper bound (uniform distribution) or the standard error (normal distribution). The default is Uniform with bounds c(0, 0.12)
-# r_max.bound = bounds for the r_max prior. Default is c(0, 0.12)
-# prior.N.obs = prior distribution for a recent abudnance estimate. Elements are equivalent to the prior on r_max
-# prior.CV.add = prior for additional CV if applicable. It is defined by four elements: (1) the sampling distribution, (2) lower bound or mean, (3) upper bound or SE, (4) boolean variable to specify whether CV add is used or not in the likelihood. Default is a uniform distribution bounded by (0,1) and FALSE (=CV.add not used)
-# prior.z = prior on the shape parameter. NOT USED, assumed z=2.39 (max productivity at K=0.6)
-# q.prior.IA = prior on q for indices of abundance. Definition of elements is similar to the prior on CV.add. If the fourth element = FALSE, an analytical solution for q is used (as in Zerbini et al. 2011)
-# q.prior.Count = similar to q.prior.IA, but for count data. NOT CURRENTLY USED
-# K.lim = bounds for K when preforming the bisection method of Punt and Butterworth (1995). Defined by two elements, the lower and upper bounds. Default is (1, 500000)
-# target.Yr = year of the target population estimate for the bisection method. Default is 2008
-# num.haplotypes = number of haplotypes to compute minimum viable population (from Jackson et al., 2006 and IWC, 2007)
-# tolerance.for.bisection = tolerance value for performing the bisection method
-# output.Yrs = year for outputing the predicted abundance estimates. Default is 2008, but multiple years can be specified. For example, if outputs for 2005 and 2008 are needed, output.Yrs = c(2005, 2008)
-# abs.abundance = R object containing year, estimate of absolute abundance, and CV (see example)
-# rel.abundance = R object containing years, estimates of relative abudnance and CVs (see example)
-# rel.abundance.key = key to speficy if relative abundance data are used in the likelihood. Default is TRUE
-# count.data= R object containing years, estimates of counts and effort. NOT USED
-# count.data.key = key to speficy in count data are used. Default is FALSE. NOT USED
-# growth.rate.obs = observed growth rate (1st element) and standard error (2nd element) as in Zerbni et al. (2011). If third element is FALSE, the growth rate is not included in the likelihood
-# growth.rate.Yrs = Years for which the growth.rate.obs were computed (as in Zerbini et al., 2011)
-# catch.data = R object containing the years and catches (see example)
-# Threshold = threshold for the McCallister et al. (1994) SIR. This is data-specific. Default is 1e-100.
-# Print = key to print various pieces of information as the code runs. Default is 0 (nothing is printed)
-
-
-  #TO DO:
-  #(1) add the negative binomial likelihood for the count data, which is not currently used even though it is defined in the main function call.
-
 {
   require(utils)
   begin.time=Sys.time()
