@@ -4,7 +4,7 @@ Title: Use Sample-Importance-Resampling to Estimate Southern Humpback Abundance
 Version: 0.0.0.9000
 Authors@R: c(
     person("John", "Best", email = "jkbest@gmail.com", role = c("cre", "aut")),
-    person("Grant", "Adams", role = "aut"),
+    person("Grant", "Adams", email = "adamsgd@uw.edu", role = "aut"),
     person("Alexandre", "Zerbini", role = "aut"))
 Description: Combine multiple sources of data to estimate the abundance
     of Humpback whales (Megaptera novaeangliae) in the Southern Ocean.
