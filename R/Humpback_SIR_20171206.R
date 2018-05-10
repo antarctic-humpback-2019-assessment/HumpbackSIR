@@ -1,15 +1,6 @@
 # R Script for Bayesian Assessment Model of Humpback Whales - uses the equations in Zerbini et al. (2011)
 # Code cleaned up and sent to Andre Punt, John Best and Grant Adams on 7 Dec 2017
 
-#Example call
-
-
-####################### FUNCTIONS ######################################################
-########################################################################################
-
-############ HOUSEKEEPING FUNCTION #############
-# HUMPBACK SIR controls the sampling from the priors, the bisection and likelihoods and the output functions
-################################################
 #' HUMPBACK SIR controls the sampling from the priors, the bisection and likelihoods and the output functions
 #'
 #' @param file.name name of a file to identified the files exported by the function
@@ -82,7 +73,7 @@ HUMPBACK.SIR=function(file.name="NULL", n.samples=1000, n.resamples=1000, prior.
   begin.time=Sys.time()
 
   ################################
-  #Assingning variables
+  # Assigning variables
   ################################
   n.samples=n.samples #not used as I am not doing the Rubin (1988) SIR anymore.
   target.Yr=target.Yr
@@ -342,15 +333,21 @@ HUMPBACK.SIR=function(file.name="NULL", n.samples=1000, n.resamples=1000, prior.
   return(list(call=call, file.name=file.name, Date.Time=Sys.time(), Time.to.compute.in.minutes=paste((end.time-begin.time)/60), Threshold=Threshold, Ratio.Resamples.per.Sample=paste("1 resample",":", resamples.per.samples, "samples"),  resamples.output=resamples.output, resamples.output.summary=resamples.output.summary$output.table, samples.output.summary=samples.output.summary$output.table, final.trajectory=final.trajectory, inputs=list(draws=draw, n.resamples=n.resamples, prior.r_max=prior.r_max, prior.N.obs=prior.N.obs, target.Yr=target.Yr, MVP=paste("num.haplotypes=", num.haplotypes, "MVP=", 4*num.haplotypes), tolerance=tolerance.for.bisection, output.Years=output.Yrs)))
 
 }
-#### END OF FUNCTION ###################################
 
-
-#################################################
-# FUNCTION TO SAMPLE FROM PRIORS
-# This function samples from 4 distributions given two input values (Val.1 and Val.2). If the distribution
-# is uniform or log-uniform, then Val.1 and Val.2 correspond to the lower and upper bounds. If normal
-# or log-normal, Val.1 corresponds to the mean and Val.2 to the SD.
-# -----------------------------------------------
+#' Function to sample from priors
+#'
+#' @param name Name of a distribution, as a string
+#' @param Val.1 Lower bound of "(log-)uniform", mean of "(log-)normal"
+#' @param Val.2 Upper bound of "(log-)uniform", SD of "(log-)normal"
+#'
+#' @return Single random sample from the specified prior distribution.
+#' @export
+#'
+#' @examples
+#' SAMPLE.PRIOR("uniform", 0, 1)
+#' SAMPLE.PRIOR("log-uniform", 1e-5, 10)
+#' SAMPLE.PRIOR("normal", 0, 1)
+#' SAMPLE.PRIOR("log-normal", 0, 1)
 SAMPLE.PRIOR=function(name=NA, Val.1=NA, Val.2=NA)
 {
   #uniform prior
@@ -362,10 +359,6 @@ SAMPLE.PRIOR=function(name=NA, Val.1=NA, Val.2=NA)
   #log-normal prior
   else if(name=="log-normal"){return(rlnorm(1, as.numeric(Val.1), as.numeric(Val.2)))}
 }
-
-# END OF FUNCTION
-# -------------------------
-
 
 ###################################################
 # GENERALISED LOGISTIC MODEL
