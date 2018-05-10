@@ -1,0 +1,19 @@
+Package: HumpbackSIR
+Type: Package
+Title: Use Sample-Importance-Resampling to Estimate Southern Humpback Abundance
+Version: 0.0.0.9000
+Authors@R: c(
+    person("John", "Best", email = "jkbest@gmail.com", role = c("cre", "aut")),
+    person("Grant", "Adams", role = "aut"),
+    person("Alexandre", "Zerbini", role = "aut"))
+Description: Combine multiple sources of data to estimate the abundance
+    of Humpback whales (Megaptera novaeangliae) in the Southern Ocean.
+    Uses Sample-Importance-Resampling to draw samples from the
+    posterior distribution.
+License: What license is it under?
+URL: https://github.com/jkbest2/HumpbackSIR
+BugReports: https://github.com/jkbest2/HumpbackSIR/issues
+Encoding: UTF-8
+LazyData: true
+Imports: Rcpp (>= 0.12.16)
+LinkingTo: Rcpp
