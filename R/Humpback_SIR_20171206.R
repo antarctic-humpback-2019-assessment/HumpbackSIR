@@ -483,9 +483,20 @@ LOGISTIC.BISECTION.K=function(K.low, K.high, r_max, z, num.Yrs, start.Yr, target
 #END OF FUNCTION
 #------------------------
 
-######################################################
-# THIS FUNCTION COMPUTES THE ANALYTICAL ESTIMATES OF Q
-######################################################
+#' Compute analytic estimates of q, the scaling parameter between
+#' indices and absolute population size
+#'
+#'
+#' @param rel.Abundance Relative abundance index
+#' @param Pred.N Predicted population
+#' @param start.Yr Initial year
+#' @param add.CV Coefficient of variation
+#' @param num.IA Index of abundance
+#'
+#' @return A numeric estimator for $q$.
+#' @export
+#'
+#' @examples
 CALC.ANALYTIC.Q=function(rel.Abundance, Pred.N, start.Yr, add.CV=0, num.IA)
 {
   analytic.Q=rep(NA, num.IA) #vector to store the q values
