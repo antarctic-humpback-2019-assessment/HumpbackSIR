@@ -412,6 +412,23 @@ GENERALIZED.LOGISTIC=function(r_max, K, N1, z, start.Yr, num.Yrs, catches, MVP=0
 #FROM A INDEPENDENT ESTIMATE (EQUATION 2 in Zerbini et al., 2011) AND WILL NOT BE
 #COMPUTED FROM INPUT DATA IN THIS MODEL
 #######################################################
+#' PREDICTED GROWTH RATE
+#'
+#' \code{PRED.GROWTH.RATE} computes the predicted growth rate if such information is available from an independent estimate rather than being estimated from data. Growth rate is calculated as:
+#' $$r_{t_0 - t_{fin}}^{pred} = \frac{ \sum_{t = t_0} ^{t_{fin - 1}} ln \left( \frac{N_{t+1}^{pred}} { N_t^{pred}} \right) } { t_{fin} - t_0 } = \frac{ ln \left( N_{fin}^{pred} \right) - ln \left( N_{0}^{pred} \right)} { t_{fin} - t_0 }$$
+#' where $N^{pred}$ is the model predicted population size, in numbers, at time $t$ or $t+1$ in years, $t_0$ is the start year of the equation (1995 in Zerbini et al. 2011), and $t_{fin}$ is the last year of the equation (1998 in Zerbini et al. 2011).
+#'
+#' @param growth.rate.Yrs The years to be used for growth rate computation. 1995 - 1998 are used in Zerbini et al. 2011.
+#' @param Pred.N Time series of predicted abundance, in numbers, from \code{\link{GENERALIZED.LOGISTIC}}.
+#' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
+#'
+#' @return A numeric scalar representing predicted growth rate.
+#'
+#' @examples
+#' growth.rate.Yrs = c(1995:1998)
+#' Pred.N <- c(1000, 1500, 1500, 2000)
+#' start.Yr = 1995
+#' PRED.GROWTH.RATE(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
 PRED.GROWTH.RATE=function(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
 {
   GR.Yrs=growth.rate.Yrs-start.Yr+1 #computing the growth rate years
