@@ -402,11 +402,18 @@ PRED.GROWTH.RATE=function(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
 # END OF FUNCTION
 #----------------------------------------
 
-########################################
-#THIS FUNCTION COMPUTES THE PREDICTED RATE OF INCREASE FOR A SET OF SPECIFIED
-#YEARS FOR COMPARISON WITH TRENDS ESTIMATED SEPARATELY WITH ANY OF THE INDICES OF
-#ABUNDANCE OR COUNT DATA
-########################################
+#' Computes the predicted rate of increase for a  set of specified years
+#' for comparison with trends estimated separately with any of the
+#' indices of abundance or count data
+#'
+#' @param data Count data or relative abundance index to use
+#' @param Pred.N Number of individuals predicted
+#' @param start.Yr Initial year
+#'
+#' @return Vector of rates of increase, one per index
+#' @export
+#'
+#' @examples
 COMPUTING.ROI=function(data=data, Pred.N=Pred.N, start.Yr=NULL)
 {
   num.indices=max(data$Index)
