@@ -515,9 +515,21 @@ CALC.ANALYTIC.Q=function(rel.Abundance, Pred.N, start.Yr, add.CV=0, num.IA)
 # END OF FUNCTION
 #-------------------------------------------------------
 
-################################################################################
-# THIS FUNCTION COMPUTES THE LN LIKELIHOOD OF THE INDICES OF ABUNDANCE
-################################################################################
+#' Compute the log-likelihood of indices of abundance
+#'
+#' @param Rel.Abundance Relative abundance
+#' @param Pred.N Predicted population size
+#' @param start.Yr Initial year
+#' @param q.values Scaling parameter
+#' @param add.CV Coefficient of variation
+#' @param num.IA Number of indices of abundance
+#' @param log Boolean, return log likelihood (default TRUE) or
+#'   likelihood.
+#'
+#' @return List of likelihood based on Zerbini et al. (2011) eq. 5 or using `dnorm`
+#' @export
+#'
+#' @examples
 LNLIKE.IAs=function(Rel.Abundance, Pred.N, start.Yr, q.values, add.CV, num.IA, log=TRUE)
 {
   loglike.IA1=0
