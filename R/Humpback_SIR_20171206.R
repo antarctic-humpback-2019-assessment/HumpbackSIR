@@ -371,7 +371,7 @@ SAMPLE.PRIOR=function(name=NA, Val.1=NA, Val.2=NA)
 #' @param N1 The population size in numbers or biomass at year 1 (generally assumed to be K).
 #' @param z The parameter that determines the population size where productivity is maximum (assumed to be 2.39 by the IWC SC).
 #' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
-#' @param num.Yrs The number of projection years. Set as the last year in the catch or abundance series, whichever is most recent minus the start-year.
+#' @param num.Yrs The number of projection years. Set as the last year in the catch or abundance series, whichever is most recent, minus the \code{start.Yr}.
 #' @param catches The time series of catch in numbers or biomass. Currently does not handle NAs and zeros will have to input a priori for years in which there were no catches.
 #' @param MVP The minimum viable population size in numbers or biomass. Computed as 4 * \code{\link{num.haplotypes}} to compute minimum viable population (from Jackson et al., 2006 and IWC, 2007).
 #'
@@ -488,7 +488,25 @@ TARGET.K = function(r_max, K, N1, z, num.Yrs, start.Yr, target.Pop, catches=catc
 #####################################################################
 # THIS FUNCTION DOES THE LOGISTIC BISECTION
 #####################################################################
-#ex call: LOGISTIC.BISECTION.K(K.low=1, K.high=100000, r_max=r_max, z=z, num.Yrs=bisection.Yrs, start.Yr=start.Yr, target.Pop=target.Pop, catches=catches, MVP=MVP, tol=0.001)
+#' LOGISTIC BISECTION
+#'
+#' Method of Butterworth and Punt (1995) where the prior distribution of the current absolute abundance $N_{2005}$ and maximum net recruitment rate \code{r_max} are sampled and then used to determine the unique value of the population abundance $N$ in \code{start.Yr} (assumed to correspond to carrying capacity $K$). Requires \code{\link{TARGET.K}} and subsequent dependencies.
+#'
+#' @param K.low Lower bound for $K$ when preforming the bisection method of Punt and Butterworth (1995). Default is 1.
+#' @param K.high Upper bound for $K$ when preforming the bisection method of Punt and Butterworth (1995). Default is 500,000.
+#' @param r_max The maximum net recruitment rate ($r_{max}$).
+#' @param z The parameter that determines the population size where productivity is maximum (assumed to be 2.39 by the IWC SC).
+#' @param num.Yrs The number of projection years. Set as the last year in the catch or abundance series, whichever is most recent, minus the \code{start.Yr}.
+#' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
+#' @param target.Pop A sample of the prior on population abundance $N$, in numbers, set as \code{sample.N.obs} sampled using \code{\link{SAMPLE.PRIOR}} and \code{prior.N.obs}
+#' @param catches The time series of catch in numbers or biomass. Currently does not handle NAs and zeros will have to input a priori for years in which there were no catches.
+#' @param MVP The minimum viable population size in numbers or biomass. Computed as 4 * \code{\link{num.haplotypes}} to compute minimum viable population (from Jackson et al., 2006 and IWC, 2007).
+#' @param tol The desired accuracy (convergence tolerance) of \code{\link{stats::uniroot}}.
+#'
+#' @return A numeric scalar of an estimate of  carrying capacity $K$.
+#'
+#' @examples
+#' LOGISTIC.BISECTION.K(K.low=1, K.high=100000, r_max=r_max, z=z, num.Yrs=bisection.Yrs, start.Yr=start.Yr, target.Pop=target.Pop, catches=catches, MVP=MVP, tol=0.001)
 LOGISTIC.BISECTION.K=function(K.low, K.high, r_max, z, num.Yrs, start.Yr, target.Pop, catches, MVP, tol=0.001)
 {
   Kmin=uniroot(TARGET.K, tol=tol, c(K.low, K.high), r_max=r_max, z=z, num.Yrs=num.Yrs, start.Yr=start.Yr, target.Pop=target.Pop, catches=catches, MVP=MVP)
