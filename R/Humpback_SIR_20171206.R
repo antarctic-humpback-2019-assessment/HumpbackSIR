@@ -587,9 +587,17 @@ LNLIKE.GR=function(Obs.GR, Pred.GR, GR.SD.Obs)
 # END OF FUNCTION
 ################################################################################
 
-################################################################################
-# THIS FUNCTION COMPUTES THE LOG LIKELIHOOD
-################################################################################
+#' Compute the log-likelihood
+#'
+#' @param Obs.N Observed population time series
+#' @param Pred.N Predicted population time series
+#' @param CV Coefficient of variation
+#' @param log Boolean; return log-liklihood or just likelihood
+#'
+#' @return (log) Likelihood of predicted population sizes
+#' @export
+#'
+#' @examples
 CALC.LNLIKE=function(Obs.N, Pred.N, CV, log=F)
 {
   return(sum(dnorm(x=log(Obs.N), mean=log(Pred.N), sd=CV, log=F)))
