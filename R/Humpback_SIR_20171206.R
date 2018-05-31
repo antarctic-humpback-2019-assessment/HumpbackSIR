@@ -433,14 +433,32 @@ COMPUTING.ROI=function(data=data, Pred.N=Pred.N, start.Yr=NULL)
 #END OF FUNCTION
 #--------------------------
 
-
-####################################################################
-# FUNCTION TO CALCULATE A TARGET K FOR THE BISECTION METHOD
-###################################################################
-
-#example call: TARGET.K(r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs, target.Pop=target.Pop, catches=catches, MVP=MVP)
-#  TARGET.K(r_max=sample.r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs, target.Pop=sample.N.obs, catches=catches, MVP=MVP)
-
+#' Calculate a target K for the bisection method
+#'
+#' @param r_max The maximum net recruitment rate ($r_{max}$).
+#' @param K Pre-expoitation population size in numbers or biomass
+#'   (depending on input).
+#' @param N1 Population size in numbers or biomass at year 1 (generally
+#'   assumed to be K).
+#' @param z Generalized logistic shape parameter, determines population
+#'   size where productivity is masimum (assumed to be 2.39 by the ISC
+#'   SC).
+#' @param num.Yrs The number of projection years. Set as the last year
+#'   in the catchor abundance series whichever is most recent, minus the
+#'   start year.
+#' @param start.Yr First year of the projection (assumed to be the first
+#'   year in the catch series).
+#' @param target.Pop Target population size.
+#' @param catches Catch time series. Cannot include NAs,
+#' @param MVP Minimum Viable Population Size; `4 * num.haplotypes`
+#'
+#' @return Vector of differences between predicted population and target
+#'   population.
+#' @export
+#'
+#' @examples
+#' TARGET.K(r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs,
+#'          target.Pop=target.Pop, catches=catches, MVP=MVP)
 TARGET.K = function(r_max, K, N1, z, num.Yrs, start.Yr, target.Pop, catches=catches, MVP=0)
 {
   Pred.N=GENERALIZED.LOGISTIC(r_max=r_max, K=K, N1=K, z=z, start.Yr=start.Yr, num.Yrs=num.Yrs, catches=catches, MVP=MVP)
