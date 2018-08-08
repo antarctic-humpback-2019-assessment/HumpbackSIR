@@ -402,11 +402,18 @@ PRED.GROWTH.RATE=function(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
 # END OF FUNCTION
 #----------------------------------------
 
-########################################
-#THIS FUNCTION COMPUTES THE PREDICTED RATE OF INCREASE FOR A SET OF SPECIFIED
-#YEARS FOR COMPARISON WITH TRENDS ESTIMATED SEPARATELY WITH ANY OF THE INDICES OF
-#ABUNDANCE OR COUNT DATA
-########################################
+#' Computes the predicted rate of increase for a  set of specified years
+#' for comparison with trends estimated separately with any of the
+#' indices of abundance or count data
+#'
+#' @param data Count data or relative abundance index to use
+#' @param Pred.N Number of individuals predicted
+#' @param start.Yr Initial year
+#'
+#' @return Vector of rates of increase, one per index
+#' @export
+#'
+#' @examples
 COMPUTING.ROI=function(data=data, Pred.N=Pred.N, start.Yr=NULL)
 {
   num.indices=max(data$Index)
@@ -426,14 +433,32 @@ COMPUTING.ROI=function(data=data, Pred.N=Pred.N, start.Yr=NULL)
 #END OF FUNCTION
 #--------------------------
 
-
-####################################################################
-# FUNCTION TO CALCULATE A TARGET K FOR THE BISECTION METHOD
-###################################################################
-
-#example call: TARGET.K(r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs, target.Pop=target.Pop, catches=catches, MVP=MVP)
-#  TARGET.K(r_max=sample.r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs, target.Pop=sample.N.obs, catches=catches, MVP=MVP)
-
+#' Calculate a target K for the bisection method
+#'
+#' @param r_max The maximum net recruitment rate ($r_{max}$).
+#' @param K Pre-expoitation population size in numbers or biomass
+#'   (depending on input).
+#' @param N1 Population size in numbers or biomass at year 1 (generally
+#'   assumed to be K).
+#' @param z Generalized logistic shape parameter, determines population
+#'   size where productivity is masimum (assumed to be 2.39 by the ISC
+#'   SC).
+#' @param num.Yrs The number of projection years. Set as the last year
+#'   in the catchor abundance series whichever is most recent, minus the
+#'   start year.
+#' @param start.Yr First year of the projection (assumed to be the first
+#'   year in the catch series).
+#' @param target.Pop Target population size.
+#' @param catches Catch time series. Cannot include NAs,
+#' @param MVP Minimum Viable Population Size; `4 * num.haplotypes`
+#'
+#' @return Vector of differences between predicted population and target
+#'   population.
+#' @export
+#'
+#' @examples
+#' TARGET.K(r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs,
+#'          target.Pop=target.Pop, catches=catches, MVP=MVP)
 TARGET.K = function(r_max, K, N1, z, num.Yrs, start.Yr, target.Pop, catches=catches, MVP=0)
 {
   Pred.N=GENERALIZED.LOGISTIC(r_max=r_max, K=K, N1=K, z=z, start.Yr=start.Yr, num.Yrs=num.Yrs, catches=catches, MVP=MVP)
@@ -458,9 +483,20 @@ LOGISTIC.BISECTION.K=function(K.low, K.high, r_max, z, num.Yrs, start.Yr, target
 #END OF FUNCTION
 #------------------------
 
-######################################################
-# THIS FUNCTION COMPUTES THE ANALYTICAL ESTIMATES OF Q
-######################################################
+#' Compute analytic estimates of q, the scaling parameter between
+#' indices and absolute population size
+#'
+#'
+#' @param rel.Abundance Relative abundance index
+#' @param Pred.N Predicted population
+#' @param start.Yr Initial year
+#' @param add.CV Coefficient of variation
+#' @param num.IA Index of abundance
+#'
+#' @return A numeric estimator for $q$.
+#' @export
+#'
+#' @examples
 CALC.ANALYTIC.Q=function(rel.Abundance, Pred.N, start.Yr, add.CV=0, num.IA)
 {
   analytic.Q=rep(NA, num.IA) #vector to store the q values
@@ -479,9 +515,21 @@ CALC.ANALYTIC.Q=function(rel.Abundance, Pred.N, start.Yr, add.CV=0, num.IA)
 # END OF FUNCTION
 #-------------------------------------------------------
 
-################################################################################
-# THIS FUNCTION COMPUTES THE LN LIKELIHOOD OF THE INDICES OF ABUNDANCE
-################################################################################
+#' Compute the log-likelihood of indices of abundance
+#'
+#' @param Rel.Abundance Relative abundance
+#' @param Pred.N Predicted population size
+#' @param start.Yr Initial year
+#' @param q.values Scaling parameter
+#' @param add.CV Coefficient of variation
+#' @param num.IA Number of indices of abundance
+#' @param log Boolean, return log likelihood (default TRUE) or
+#'   likelihood.
+#'
+#' @return List of likelihood based on Zerbini et al. (2011) eq. 5 or using `dnorm`
+#' @export
+#'
+#' @examples
 LNLIKE.IAs=function(Rel.Abundance, Pred.N, start.Yr, q.values, add.CV, num.IA, log=TRUE)
 {
   loglike.IA1=0
@@ -539,9 +587,17 @@ LNLIKE.GR=function(Obs.GR, Pred.GR, GR.SD.Obs)
 # END OF FUNCTION
 ################################################################################
 
-################################################################################
-# THIS FUNCTION COMPUTES THE LOG LIKELIHOOD
-################################################################################
+#' Compute the log-likelihood
+#'
+#' @param Obs.N Observed population time series
+#' @param Pred.N Predicted population time series
+#' @param CV Coefficient of variation
+#' @param log Boolean; return log-liklihood or just likelihood
+#'
+#' @return (log) Likelihood of predicted population sizes
+#' @export
+#'
+#' @examples
 CALC.LNLIKE=function(Obs.N, Pred.N, CV, log=F)
 {
   return(sum(dnorm(x=log(Obs.N), mean=log(Pred.N), sd=CV, log=F)))
