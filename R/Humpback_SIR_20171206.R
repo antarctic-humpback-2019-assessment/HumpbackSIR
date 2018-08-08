@@ -618,6 +618,20 @@ LNLIKE.GR=function(Obs.GR, Pred.GR, GR.SD.Obs)
 ################################################################################
 # THIS FUNCTION COMPUTES THE LOG LIKELIHOOD
 ################################################################################
+#' Function to calculate the log-likelihood using a lognormal distribution
+#'
+#' @param Obs.N Time series of observed abundance
+#' @param Pred.N Time series of estimated abundance
+#' @param CV coefficient of variation
+#' @param log wether to export as log-likelihood
+#'
+#' @return returns a scalar of the likelihood
+#'
+#' @examples
+#' Obs.N = 2000
+#' Pred.N = 2340
+#' CV = 4
+#' CALC.LNLIKE(Obs.N, Pred.N, CV)
 CALC.LNLIKE=function(Obs.N, Pred.N, CV, log=F)
 {
   return(sum(dnorm(x=log(Obs.N), mean=log(Pred.N), sd=CV, log=F)))
