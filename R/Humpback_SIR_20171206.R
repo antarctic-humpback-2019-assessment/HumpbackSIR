@@ -587,9 +587,23 @@ LNLIKE.IAs=function(Rel.Abundance, Pred.N, start.Yr, q.values, add.CV, num.IA, l
 
 }
 
-################################################################################
-# THIS FUNCTION COMPUTES THE LN LIKELIHOOD OF THE ABSOLUTE ABUNDANCE
-################################################################################
+#' LOG LIKELIHOOD OF ABSOLUTE ABUNDANCE
+#'
+#' This function computes two estimates of the log-likelihood of the estimated absolute abundance using the equation from Zerbini et al. 2011 (eq. 4) and a lognormal distribution from \code{\link{CALC.LNLIKE}}.
+#'
+#' @param Obs.N Observed absoluted abundance in numbers as a data.frame containing year, estimate of absolute abundance, and CV.
+#' @param Pred.N Predicted absolute abundance in numbers from \code{\link{GENERALIZED.LOGISTIC}}.
+#' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
+#' @param add.CV Additional CV to add to variance of lognormal distribution sampled from \code{\link{SAMPLE.PRIOR}}
+#' @param log Return the log of the likelihood (TRUE/FALSE)
+#'
+#' @return A list of two numeric scalars of estimates of log-likelihood.
+#'
+#' @examples
+#' Obs.N = data.frame(Year = 2005, Sigma = 5, Obs.N = 1000)
+#' Pred.N = 1234
+#' start.Yr = 2005
+#' LNLIKE.Ns(Obs.N, Pred.N, start.Yr, add.CV = 0, log=TRUE)
 LNLIKE.Ns=function(Obs.N, Pred.N, start.Yr, add.CV, log=TRUE)
 {
   loglike.Ns1=0
@@ -603,9 +617,18 @@ LNLIKE.Ns=function(Obs.N, Pred.N, start.Yr, add.CV, log=TRUE)
 
 }
 
-################################################################################
-# THIS FUNCTION COMPUTES THE LN LIKELIHOOD OF THE GROWTH RATE
-################################################################################
+#' Calculate the log-likelihood of the growth rate
+#'
+#' Calculates the log-likelihood of the estimated growth rate given the observed growth rate and the standard deviation of the observed growth rate.
+#'
+#' @param Obs.GR Observed growth rate
+#' @param Pred.GR Predicted growth rate
+#' @param GR.SD.Obs Standard error of the observed growth rate
+#'
+#' @return A \code{list} containing \code{loglike.GR1} and \code{loglike.GR2}
+#'
+#' @examples
+#' LNLIKE.GR(0.1, 0.1, 0.1)
 LNLIKE.GR=function(Obs.GR, Pred.GR, GR.SD.Obs)
 {
   loglike.GR1=0
@@ -619,28 +642,25 @@ LNLIKE.GR=function(Obs.GR, Pred.GR, GR.SD.Obs)
 
 }
 
-#' Compute the log-likelihood
+#' Function to calculate the log-likelihood using a lognormal distribution
 #'
-#' @param Obs.N Observed population time series
-#' @param Pred.N Predicted population time series
-#' @param CV Coefficient of variation
-#' @param log Boolean; return log-liklihood or just likelihood
+#' @param Obs.N Time series of observed abundance
+#' @param Pred.N Time series of estimated abundance
+#' @param CV coefficient of variation
+#' @param log wether to export as log-likelihood
 #'
-#' @return (log) Likelihood of predicted population sizes
-#' @export
+#' @return returns a scalar of the likelihood
 #'
 #' @examples
+#' Obs.N = 2000
+#' Pred.N = 2340
+#' CV = 4
+#' CALC.LNLIKE(Obs.N, Pred.N, CV)
 CALC.LNLIKE=function(Obs.N, Pred.N, CV, log=F)
 {
   return(sum(dnorm(x=log(Obs.N), mean=log(Pred.N), sd=CV, log=F)))
 }
-# END OF FUNCTION
-################################################################################
 
-################################################################################
-# OUTPUT FUNCTION
-# FUNCTION TO PROVIDE AN SUMMARY OF THE SIR.HUMPBACK OUTPUT
-################################################################################
 #' OUTPUT FUNCTION
 #'
 #' Function that provides a summary of SIR outputs including: mean, median, 95% credible interval, 90% predicitive interval, max, and sample size.
@@ -681,9 +701,4 @@ SUMMARY.SIR=function(x, scenario="USERDEFINED")
   return(list(scenario=scenario, date=Sys.time(), output.table=output.table))
 
 }
-#################################
-# END OF FUNCTION
-#################################
-
-
 
