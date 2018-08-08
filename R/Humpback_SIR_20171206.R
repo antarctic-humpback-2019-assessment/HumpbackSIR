@@ -127,7 +127,7 @@ HUMPBACK.SIR=function(file.name="NULL", n.samples=1000, n.resamples=1000, prior.
 
     if(prior.add.CV[4]==TRUE) #prior on additional CV
     {
-      sample.add.CV=SAMPLE.PRIOR(name=prior.add.CV[1], Val.1=prior.add.CV[2], Val.2=prior.add.CV[3])
+      sample.add.CV=SAMPLE.PRIOR(name=x[1], Val.1=prior.add.CV[2], Val.2=prior.add.CV[3])
     }
     else
     {
@@ -360,10 +360,33 @@ SAMPLE.PRIOR=function(name=NA, Val.1=NA, Val.2=NA)
   else if(name=="log-normal"){return(rlnorm(1, as.numeric(Val.1), as.numeric(Val.2)))}
 }
 
-###################################################
-# GENERALISED LOGISTIC MODEL
-# This function does the population projection using a Pella-Tomlison population dynamics model
-###################################################
+#' GENERALISED LOGISTIC MODEL
+#'
+#' \code{GENERALIZED.LOGISTIC} returns the population projection using a Pella-Tomlison population dynamics model:
+#' $$N_{t+1} = N_{t}+N_{t}*r_{max}*\left[ 1 - \left( \frac{N_{t}}{K} \right) ^z \right] - C_{t}$$
+#' where $N$ is the population size at year $t$ or $t+1$, $r_{max}$ is the maximum net recruitment rate, $K$ is the pre-exploitation population size, $z$ is the parameter that determines the population size where productivity is maximum. For example, a value of 2.39 corresponds to maximum sustainable yield of $0.6K$ and is assumed by the IWC SC, and $C_t$ is the harvest in numbers in year $t$. Population size can be in either numbers or biomass, however, units will have to be the same as the units used for catch, relative abundance, and absolute abundance.
+#'
+#'
+#' @param r_max The maximum net recruitment rate ($r_{max}$).
+#' @param K Pre-exploitation population size in numbers or biomass (depending on input).
+#' @param N1 The population size in numbers or biomass at year 1 (generally assumed to be K).
+#' @param z The parameter that determines the population size where productivity is maximum (assumed to be 2.39 by the IWC SC).
+#' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
+#' @param num.Yrs The number of projection years. Set as the last year in the catch or abundance series, whichever is most recent, minus the \code{start.Yr}.
+#' @param catches The time series of catch in numbers or biomass. Currently does not handle NAs and zeros will have to input a priori for years in which there were no catches.
+#' @param MVP The minimum viable population size in numbers or biomass. Computed as 4 * \code{\link{num.haplotypes}} to compute minimum viable population (from Jackson et al., 2006 and IWC, 2007).
+#'
+#' @return A list of the minimum population size \code{\link{Min.Pop}}, year of the minimum population size \code{\link{Min.Yr}}, a indicator of wether the minimum population size is below the \code{\link{MVP}}, and the predicted population size \code{Pred.N}.
+#'
+#' @examples
+#' num.Yrs = 10
+#' start.Yr = 1
+#' r_max = 0.2
+#' K = 1000
+#' N1 = K
+#' catches = round(runif(10, min = 0, max = 150 ), 0 )
+#' MVP = 0
+#' GENERALIZED.LOGISTIC(r_max, K, N1, z, start.Yr, num.Yrs, catches)
 GENERALIZED.LOGISTIC=function(r_max, K, N1, z, start.Yr, num.Yrs, catches, MVP=0)
 {
   Violate.Min.Viable.Pop=FALSE #variable to indicate whether min population is reached
@@ -382,14 +405,24 @@ GENERALIZED.LOGISTIC=function(r_max, K, N1, z, start.Yr, num.Yrs, catches, MVP=0
 
   return(list(Min.Pop=Min.Pop, Min.Yr=Min.Yr, Violate.MVP=Violate.Min.Viable.Pop, Pred.N=Pred.N))
 }
-#END FUNCTION
-#---------------------------------
 
-#######################################################
-#THiS FUNCTION COMPUTES THE PREDICTED GROWTH RATE IF SUCH INFORMATION IS AVAILABLE
-#FROM A INDEPENDENT ESTIMATE (EQUATION 2 in Zerbini et al., 2011) AND WILL NOT BE
-#COMPUTED FROM INPUT DATA IN THIS MODEL
-#######################################################
+#' PREDICTED GROWTH RATE
+#'
+#' \code{PRED.GROWTH.RATE} computes the predicted growth rate if such information is available from an independent estimate rather than being estimated from data. Growth rate is calculated as:
+#' $$r_{t_0 - t_{fin}}^{pred} = \frac{ \sum_{t = t_0} ^{t_{fin - 1}} ln \left( \frac{N_{t+1}^{pred}} { N_t^{pred}} \right) } { t_{fin} - t_0 } = \frac{ ln \left( N_{fin}^{pred} \right) - ln \left( N_{0}^{pred} \right)} { t_{fin} - t_0 }$$
+#' where $N^{pred}$ is the model predicted population size, in numbers, at time $t$ or $t+1$ in years, $t_0$ is the start year of the equation (1995 in Zerbini et al. 2011), and $t_{fin}$ is the last year of the equation (1998 in Zerbini et al. 2011).
+#'
+#' @param growth.rate.Yrs The years to be used for growth rate computation. 1995 - 1998 are used in Zerbini et al. 2011.
+#' @param Pred.N Time series of predicted abundance, in numbers, from \code{\link{GENERALIZED.LOGISTIC}}.
+#' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
+#'
+#' @return A numeric scalar representing predicted growth rate.
+#'
+#' @examples
+#' growth.rate.Yrs = c(1995:1998)
+#' Pred.N <- c(1000, 1500, 1500, 2000)
+#' start.Yr = 1995
+#' PRED.GROWTH.RATE(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
 PRED.GROWTH.RATE=function(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
 {
   GR.Yrs=growth.rate.Yrs-start.Yr+1 #computing the growth rate years
@@ -399,14 +432,21 @@ PRED.GROWTH.RATE=function(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
 
   return(Pred.GR)
 }
-# END OF FUNCTION
-#----------------------------------------
 
-########################################
-#THIS FUNCTION COMPUTES THE PREDICTED RATE OF INCREASE FOR A SET OF SPECIFIED
-#YEARS FOR COMPARISON WITH TRENDS ESTIMATED SEPARATELY WITH ANY OF THE INDICES OF
-#ABUNDANCE OR COUNT DATA
-########################################
+#' COMPUTING.ROI
+#' 
+#' Computes the predicted rate of increase for a  set of specified years
+#' for comparison with trends estimated separately with any of the
+#' indices of abundance or count data
+#'
+#' @param data Count data or relative abundance index to use
+#' @param Pred.N Number of individuals predicted
+#' @param start.Yr Initial year
+#'
+#' @return Vector of rates of increase, one per index
+#' @export
+#'
+#' @examples
 COMPUTING.ROI=function(data=data, Pred.N=Pred.N, start.Yr=NULL)
 {
   num.indices=max(data$Index)
@@ -423,17 +463,33 @@ COMPUTING.ROI=function(data=data, Pred.N=Pred.N, start.Yr=NULL)
   }
   return(Pred.ROI=Pred.ROI)
 }
-#END OF FUNCTION
-#--------------------------
 
-
-####################################################################
-# FUNCTION TO CALCULATE A TARGET K FOR THE BISECTION METHOD
-###################################################################
-
-#example call: TARGET.K(r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs, target.Pop=target.Pop, catches=catches, MVP=MVP)
-#  TARGET.K(r_max=sample.r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs, target.Pop=sample.N.obs, catches=catches, MVP=MVP)
-
+#' Calculate a target K for the bisection method
+#'
+#' @param r_max The maximum net recruitment rate ($r_{max}$).
+#' @param K Pre-expoitation population size in numbers or biomass
+#'   (depending on input).
+#' @param N1 Population size in numbers or biomass at year 1 (generally
+#'   assumed to be K).
+#' @param z Generalized logistic shape parameter, determines population
+#'   size where productivity is masimum (assumed to be 2.39 by the ISC
+#'   SC).
+#' @param num.Yrs The number of projection years. Set as the last year
+#'   in the catchor abundance series whichever is most recent, minus the
+#'   start year.
+#' @param start.Yr First year of the projection (assumed to be the first
+#'   year in the catch series).
+#' @param target.Pop Target population size.
+#' @param catches Catch time series. Cannot include NAs,
+#' @param MVP Minimum Viable Population Size; `4 * num.haplotypes`
+#'
+#' @return Vector of differences between predicted population and target
+#'   population.
+#' @export
+#'
+#' @examples
+#' TARGET.K(r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs,
+#'          target.Pop=target.Pop, catches=catches, MVP=MVP)
 TARGET.K = function(r_max, K, N1, z, num.Yrs, start.Yr, target.Pop, catches=catches, MVP=0)
 {
   Pred.N=GENERALIZED.LOGISTIC(r_max=r_max, K=K, N1=K, z=z, start.Yr=start.Yr, num.Yrs=num.Yrs, catches=catches, MVP=MVP)
@@ -442,25 +498,46 @@ TARGET.K = function(r_max, K, N1, z, num.Yrs, start.Yr, target.Pop, catches=catc
   #print(paste("N-Target=", Pred.N$Pred.N[num.Yrs], "Target.Pop=", target.Pop, "K=", K))
   return(diff=diff)
 }
-#END FUNCTION
-#---------------------------------
 
-
-#####################################################################
-# THIS FUNCTION DOES THE LOGISTIC BISECTION
-#####################################################################
-#ex call: LOGISTIC.BISECTION.K(K.low=1, K.high=100000, r_max=r_max, z=z, num.Yrs=bisection.Yrs, start.Yr=start.Yr, target.Pop=target.Pop, catches=catches, MVP=MVP, tol=0.001)
+#' LOGISTIC BISECTION
+#'
+#' Method of Butterworth and Punt (1995) where the prior distribution of the current absolute abundance $N_{2005}$ and maximum net recruitment rate \code{r_max} are sampled and then used to determine the unique value of the population abundance $N$ in \code{start.Yr} (assumed to correspond to carrying capacity $K$). Requires \code{\link{TARGET.K}} and subsequent dependencies.
+#'
+#' @param K.low Lower bound for $K$ when preforming the bisection method of Punt and Butterworth (1995). Default is 1.
+#' @param K.high Upper bound for $K$ when preforming the bisection method of Punt and Butterworth (1995). Default is 500,000.
+#' @param r_max The maximum net recruitment rate ($r_{max}$).
+#' @param z The parameter that determines the population size where productivity is maximum (assumed to be 2.39 by the IWC SC).
+#' @param num.Yrs The number of projection years. Set as the last year in the catch or abundance series, whichever is most recent, minus the \code{start.Yr}.
+#' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
+#' @param target.Pop A sample of the prior on population abundance $N$, in numbers, set as \code{sample.N.obs} sampled using \code{\link{SAMPLE.PRIOR}} and \code{prior.N.obs}
+#' @param catches The time series of catch in numbers or biomass. Currently does not handle NAs and zeros will have to input a priori for years in which there were no catches.
+#' @param MVP The minimum viable population size in numbers or biomass. Computed as 4 * \code{\link{num.haplotypes}} to compute minimum viable population (from Jackson et al., 2006 and IWC, 2007).
+#' @param tol The desired accuracy (convergence tolerance) of \code{\link{stats::uniroot}}.
+#'
+#' @return A numeric scalar of an estimate of  carrying capacity $K$.
+#'
+#' @examples
+#' LOGISTIC.BISECTION.K(K.low=1, K.high=100000, r_max=r_max, z=z, num.Yrs=bisection.Yrs, start.Yr=start.Yr, target.Pop=target.Pop, catches=catches, MVP=MVP, tol=0.001)
 LOGISTIC.BISECTION.K=function(K.low, K.high, r_max, z, num.Yrs, start.Yr, target.Pop, catches, MVP, tol=0.001)
 {
   Kmin=uniroot(TARGET.K, tol=tol, c(K.low, K.high), r_max=r_max, z=z, num.Yrs=num.Yrs, start.Yr=start.Yr, target.Pop=target.Pop, catches=catches, MVP=MVP)
   return(Kmin$root)
 }
-#END OF FUNCTION
-#------------------------
 
-######################################################
-# THIS FUNCTION COMPUTES THE ANALYTICAL ESTIMATES OF Q
-######################################################
+#' Compute analytic estimates of q, the scaling parameter between
+#' indices and absolute population size
+#'
+#'
+#' @param rel.Abundance Relative abundance index
+#' @param Pred.N Predicted population
+#' @param start.Yr Initial year
+#' @param add.CV Coefficient of variation
+#' @param num.IA Index of abundance
+#'
+#' @return A numeric estimator for $q$.
+#' @export
+#'
+#' @examples
 CALC.ANALYTIC.Q=function(rel.Abundance, Pred.N, start.Yr, add.CV=0, num.IA)
 {
   analytic.Q=rep(NA, num.IA) #vector to store the q values
@@ -476,12 +553,22 @@ CALC.ANALYTIC.Q=function(rel.Abundance, Pred.N, start.Yr, add.CV=0, num.IA)
   }
   return(analytic.Q=analytic.Q)
 }
-# END OF FUNCTION
-#-------------------------------------------------------
 
-################################################################################
-# THIS FUNCTION COMPUTES THE LN LIKELIHOOD OF THE INDICES OF ABUNDANCE
-################################################################################
+#' Compute the log-likelihood of indices of abundance
+#'
+#' @param Rel.Abundance Relative abundance
+#' @param Pred.N Predicted population size
+#' @param start.Yr Initial year
+#' @param q.values Scaling parameter
+#' @param add.CV Coefficient of variation
+#' @param num.IA Number of indices of abundance
+#' @param log Boolean, return log likelihood (default TRUE) or
+#'   likelihood.
+#'
+#' @return List of likelihood based on Zerbini et al. (2011) eq. 5 or using `dnorm`
+#' @export
+#'
+#' @examples
 LNLIKE.IAs=function(Rel.Abundance, Pred.N, start.Yr, q.values, add.CV, num.IA, log=TRUE)
 {
   loglike.IA1=0
@@ -499,8 +586,6 @@ LNLIKE.IAs=function(Rel.Abundance, Pred.N, start.Yr, q.values, add.CV, num.IA, l
   return(list(loglike.IA1=loglike.IA1, loglike.IA2=loglike.IA2))
 
 }
-# END OF FUNCTION
-################################################################################
 
 ################################################################################
 # THIS FUNCTION COMPUTES THE LN LIKELIHOOD OF THE ABSOLUTE ABUNDANCE
@@ -518,9 +603,6 @@ LNLIKE.Ns=function(Obs.N, Pred.N, start.Yr, add.CV, log=TRUE)
 
 }
 
-# END OF FUNCTION
-################################################################################
-
 ################################################################################
 # THIS FUNCTION COMPUTES THE LN LIKELIHOOD OF THE GROWTH RATE
 ################################################################################
@@ -536,12 +618,18 @@ LNLIKE.GR=function(Obs.GR, Pred.GR, GR.SD.Obs)
   return(list(loglike.GR1=loglike.GR1, loglike.GR2=loglike.GR2))
 
 }
-# END OF FUNCTION
-################################################################################
 
-################################################################################
-# THIS FUNCTION COMPUTES THE LOG LIKELIHOOD
-################################################################################
+#' Compute the log-likelihood
+#'
+#' @param Obs.N Observed population time series
+#' @param Pred.N Predicted population time series
+#' @param CV Coefficient of variation
+#' @param log Boolean; return log-liklihood or just likelihood
+#'
+#' @return (log) Likelihood of predicted population sizes
+#' @export
+#'
+#' @examples
 CALC.LNLIKE=function(Obs.N, Pred.N, CV, log=F)
 {
   return(sum(dnorm(x=log(Obs.N), mean=log(Pred.N), sd=CV, log=F)))
@@ -553,6 +641,20 @@ CALC.LNLIKE=function(Obs.N, Pred.N, CV, log=F)
 # OUTPUT FUNCTION
 # FUNCTION TO PROVIDE AN SUMMARY OF THE SIR.HUMPBACK OUTPUT
 ################################################################################
+#' OUTPUT FUNCTION
+#'
+#' Function that provides a summary of SIR outputs including: mean, median, 95% credible interval, 90% predicitive interval, max, and sample size.
+#'
+#' @param x A data.frame of model outputs including: sample.r_max, sample.K, sample.N.obs, sample.add.CV, Pred.N$Min.Pop, Pred.N$Min.Yr, Pred.N$Violate.MVP, c(Pred.N$Pred.N[output.Yrs-start.Yr+1]), Pred.ROI.IA, q.sample.IA, Pred.ROI.Count, q.sample.Count, lnlike.IAs[[1]], lnlike.Count[[1]], lnlike.Ns[[1]], lnlike.GR[[1]], LL, Likelihood, Pred.N$Min.Pop/sample.K, c(Pred.N$Pred.N[output.Yrs-start.Yr+1]/sample.K), draw, save)
+#' @param scenario Name of the model run and object as specified by the user.
+#'
+#' @return Returns a data.frame with summary of SIR outputs
+#'
+#' @examples
+#' x = rnorm(1000, 5, 7)
+#' y = rnorm(1000, 6, 9)
+#' df <- data.frame(x = x, y = y)
+#' SUMMARY.SIR( df , scenario = "example_summary" )
 SUMMARY.SIR=function(x, scenario="USERDEFINED")
   # x corresponds to the output resample table from the HUMPBACK.SIR function
 {
