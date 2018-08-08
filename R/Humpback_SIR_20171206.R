@@ -629,6 +629,20 @@ CALC.LNLIKE=function(Obs.N, Pred.N, CV, log=F)
 # OUTPUT FUNCTION
 # FUNCTION TO PROVIDE AN SUMMARY OF THE SIR.HUMPBACK OUTPUT
 ################################################################################
+#' OUTPUT FUNCTION
+#'
+#' Function that provides a summary of SIR outputs including: mean, median, 95% credible interval, 90% predicitive interval, max, and sample size.
+#'
+#' @param x A data.frame of model outputs including: sample.r_max, sample.K, sample.N.obs, sample.add.CV, Pred.N$Min.Pop, Pred.N$Min.Yr, Pred.N$Violate.MVP, c(Pred.N$Pred.N[output.Yrs-start.Yr+1]), Pred.ROI.IA, q.sample.IA, Pred.ROI.Count, q.sample.Count, lnlike.IAs[[1]], lnlike.Count[[1]], lnlike.Ns[[1]], lnlike.GR[[1]], LL, Likelihood, Pred.N$Min.Pop/sample.K, c(Pred.N$Pred.N[output.Yrs-start.Yr+1]/sample.K), draw, save)
+#' @param scenario Name of the model run and object as specified by the user.
+#'
+#' @return Returns a data.frame with summary of SIR outputs
+#'
+#' @examples
+#' x = rnorm(1000, 5, 7)
+#' y = rnorm(1000, 6, 9)
+#' df <- data.frame(x = x, y = y)
+#' SUMMARY.SIR( df , scenario = "example_summary" )
 SUMMARY.SIR=function(x, scenario="USERDEFINED")
   # x corresponds to the output resample table from the HUMPBACK.SIR function
 {
