@@ -124,7 +124,7 @@ HUMPBACK.SIR=function(file.name="NULL", n.samples=1000, n.resamples=1000, prior.
 
     if(prior.add.CV[4]==TRUE) #prior on additional CV
     {
-      sample.add.CV=SAMPLE.PRIOR(name=prior.add.CV[1], Val.1=prior.add.CV[2], Val.2=prior.add.CV[3])
+      sample.add.CV=SAMPLE.PRIOR(name=x[1], Val.1=prior.add.CV[2], Val.2=prior.add.CV[3])
     }
     else
     {
@@ -562,13 +562,32 @@ LNLIKE.IAs=function(Rel.Abundance, Pred.N, start.Yr, q.values, add.CV, num.IA, l
 ################################################################################
 # THIS FUNCTION COMPUTES THE LN LIKELIHOOD OF THE ABSOLUTE ABUNDANCE
 ################################################################################
+#' LOG LIKELIHOOD OF ABSOLUTE ABUNDANCE
+#'
+#' This function computes two estimates of the log-likelihood of the estimated absolute abundance using the equation from Zerbini et al. 2011 (eq. 4) and a lognormal distribution from \code{\link{CALC.LNLIKE}}.
+#'
+#' @param Obs.N Observed absoluted abundance in numbers as a data.frame containing year, estimate of absolute abundance, and CV.
+#' @param Pred.N Predicted absolute abundance in numbers from \code{\link{GENERALIZED.LOGISTIC}}.
+#' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
+#' @param add.CV Additional CV to add to variance of lognormal distribution sampled from \code{\link{SAMPLE.PRIOR}}
+#' @param log Return the log of the likelihood (TRUE/FALSE)
+#'
+#' @return A list of two numeric scalars of estimates of log-likelihood.
+#'
+#' @examples
+#' Obs.N = data.frame(Year = 2005, Sigma = 5, Obs.N = 1000)
+#' Pred.N = 1234
+#' start.Yr = 2005
+#' LNLIKE.Ns(Obs.N, Pred.N, start.Yr, add.CV = 0, log=TRUE)
 LNLIKE.Ns=function(Obs.N, Pred.N, start.Yr, add.CV, log=TRUE)
 {
   loglike.Ns1=0
   loglike.Ns2=0
 
   N.yrs=Obs.N$Year-start.Yr+1 #years for which Ns are available
+
   loglike.Ns1=loglike.Ns1+((sum(log(Obs.N$Sigma)+log(Obs.N$N.obs)+0.5*((((log(Pred.N[N.yrs])-log(Obs.N$N.obs))^2)/(Obs.N$Sigma*Obs.N$Sigma+add.CV*add.CV)))))) #this is the likelihood from Zerbini et al. 2011 (eq. 4)
+
   loglike.Ns2=loglike.Ns2 + CALC.LNLIKE(Obs.N=Obs.N$N.obs, Pred.N=(Pred.N[N.yrs]), CV= sqrt(Obs.N$Sigma*Obs.N$Sigma + add.CV*add.CV), log=log) #this is the log-normal distribution from R (using function dnorm)
 
   return(list(loglike.Ns1=loglike.Ns1, loglike.Ns2=loglike.Ns2))
