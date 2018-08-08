@@ -433,8 +433,6 @@ PRED.GROWTH.RATE=function(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
   return(Pred.GR)
 }
 
-#' COMPUTING.ROI
-#' 
 #' Computes the predicted rate of increase for a  set of specified years
 #' for comparison with trends estimated separately with any of the
 #' indices of abundance or count data
