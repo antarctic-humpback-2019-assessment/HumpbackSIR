@@ -215,7 +215,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                  Val.2 = prior.N.obs[3])
 
     ## Prior on additional CV 
-    if (prior.add.CV[4]) {
+    if (as.logical(prior.add.CV[4])) {
       sample.add.CV <- SAMPLE.PRIOR(name = x[1],
                                     Val.1 = prior.add.CV[2],
                                     Val.2 = prior.add.CV[3])
@@ -225,7 +225,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     ## Sampling from q priors if q.prior is TRUE; priors on q for indices of
     ## abundance
-    if (q.prior.IA[4]) {
+    if (as.logical(q.prior.IA[4])) {
       q.sample.IA <- rep(NA, num.IA)
 
       for (i in 1:num.IA) {
@@ -239,7 +239,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     }
 
     ##priors on q for count data
-    if (q.prior.Count[4]) {
+    if (as.logical(q.prior.Count[4])) {
       q.sample.Count <- rep(NA, 1:num.Count)
       for (i in num.Count) {
         q.sample.Count[i] <- SAMPLE.PRIOR(name = q.prior.Count[1],
@@ -302,8 +302,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     #Calculate Analytical Qs if rel.abundance.key is TRUE
     #---------------------------------------------------------
-    if(rel.abundance.key) {
-      if(!q.prior.IA[4]) {
+    if (rel.abundance.key) {
+      if (!as.logical(q.prior.IA[4])) {
         q.sample.IA <- CALC.ANALYTIC.Q(rel.abundance,
                                        Pred.N$Pred.N,
                                        start.Yr,
@@ -319,7 +319,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     ## Calculate Analytical Qs if count.data.key is TRUE
     ## (NOT USED YET - AZerbini, Feb 2013)
     if (rel.abundance.key) {
-      if (!q.prior.Count[4]) {
+      if (!as.logical(q.prior.Count[4])) {
         q.sample.Count <- CALC.ANALYTIC.Q(count.data,
                                           Pred.N$Pred.N,
                                           start.Yr,
