@@ -59,3 +59,20 @@ test_that("Log-uniform prior constructed correctly", {
   expect_true(prior$use)
   expect_equal(prior$label, "Log-uniform(0.01, 0.2)")
 })
+
+test_that("Specify constant \"prior\" constructed correctly", {
+  n <- 100
+  z <- 2.39
+  prior <- make_prior(z)
+  prior_samples <- replicate(n, prior$rfn())
+  expect_equal(prior_samples, rep(z, n))
+  expect_equal(prior$pars, z)
+  expect_true(prior$use)
+  expect_equal(prior$label, "Constant(2.39)")
+})
+
+test_that("Unused priors constructed correctly", {
+  prior <- make_prior(use = FALSE)
+  expect_true(is.na(prior$rfn()))
+  expect_false(prior$use)
+})
