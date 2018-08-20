@@ -4,7 +4,8 @@
 ##' the SIR.
 ##'
 ##' @param rfn Function to be used to generate samples from the prior
-##'   distribution, such as \code{rnorm} or \code{runif}
+##'   distribution, such as \code{rnorm} or \code{runif}. Can also be set to a
+##'   single number in order to hold that parameter constant.
 ##' @param par1 First parameter of the prior distribution. For \code{rnorm} this
 ##'   is the mean, for \code{runif} this is the lower bound.
 ##' @param par2 Second parameter of the prior distribution. For \code{rnorm}
@@ -25,19 +26,28 @@
 ##' make_prior(rnorm, 0, 1, TRUE)
 ##' make_prior(runif, 0, 1, TRUE)
 ##' make_prior(rlunif, 0.01, 0.2, "Log-uniform(0.01, 0.2)")
-make_prior <- function(rfn, par1, par2, use = TRUE, label = NULL) {
-  fn <- function() rfn(1, par1, par2)
-  if (is.null(label)) {
-    ## FIXME It would be nice to separate this out to a separate function, but
-    ## `substitute` doesn't seem to work right if I'm passing through multiple
-    ## functions, even if I specify `env = .GlobalEnv`.
-    dist_lab <- switch(deparse(substitute(rfn)),
-                       "rnorm"  = "Normal",
-                       "rlnorm" = "Log-normal",
-                       "runif"  = "Uniform",
-                       "rlunif" = "Log-uniform",
-                       "User defined")
-    label <- paste0(dist_lab, "(", par1, ", ", par2, ")")
+make_prior <- function(rfn = NA, par1 = NULL, par2 = NULL, use = TRUE, label = NULL) {
+  if (is.function(rfn)) {
+    fn <- function() rfn(1, par1, par2)
+    if (is.null(label)) {
+      ## FIXME It would be nice to separate this out to a separate function, but
+      ## `substitute` doesn't seem to work right if I'm passing through multiple
+      ## functions, even if I specify `env = .GlobalEnv`.
+      dist_lab <- switch(deparse(substitute(rfn)),
+                        "rnorm"  = "Normal",
+                        "rlnorm" = "Log-normal",
+                        "runif"  = "Uniform",
+                        "rlunif" = "Log-uniform",
+                        "User defined")
+      label <- paste0(dist_lab, "(", par1, ", ", par2, ")")
+    }
+  } else if (is.numeric(rfn)) {
+    fn <- function() rfn
+    par1 <- rfn
+    label <- paste0("Constant(", rfn, ")")
+  } else {
+    fn <- function() NA
+    label <- "Not used"
   }
   list(rfn = fn, pars = c(par1, par2), use = use, label = label)
 }
