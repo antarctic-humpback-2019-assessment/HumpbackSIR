@@ -7,7 +7,6 @@
 #'
 #' @param file.name name of a file to identified the files exported by the
 #'   function
-#' @param n.samples number of samples for the Rubin SIR: NOT USED
 #' @param n.resamples number of resamples to compute the marginal posterior
 #'   distributions
 #' @param prior.K prior for K for future use with the forward method: NOT USED
@@ -76,7 +75,6 @@
 #'
 #' \dontrun{
 #' HUMPBACK.SIR(file.name = "test.N2005",
-#'              n.samples = NULL,
 #'              n.resamples = 1000,
 #'              prior.K = c(NA, NA, NA),
 #'              prior.r_max = c("uniform", 0, 0.106),
@@ -103,7 +101,6 @@
 #'              Print = 0)
 #' }
 HUMPBACK.SIR <- function(file.name = "NULL",
-                         n.samples = 1000,
                          n.resamples = 1000,
                          prior.K = c(NA, NA, NA),
                          prior.r_max = c("uniform", 0, 0.12),
@@ -134,8 +131,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
   ################################
   # Assigning variables
   ################################
-  ## Not used as I am not doing the Rubin (1988) SIR anymore.
-  n.samples <- n.samples
   target.Yr <- target.Yr
   ## Use the first year of the projection is set as the first year in the
   ## catch series

@@ -3,7 +3,6 @@ context("SIR")
 test_that("Example runs", {
   set.seed(48448)
   sir <- HUMPBACK.SIR(file.name = "test.N2005",
-                      n.samples = NULL,
                       n.resamples = 100,
                       prior.K = c(NA, NA, NA),
                       prior.r_max = c("uniform", 0, 0.106),
