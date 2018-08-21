@@ -45,41 +45,42 @@ using namespace Rcpp;
 //' MVP  <-  0
 //' GENERALIZED_LOGISTIC(r_max, K, N1, z, start_Yr, num_Yrs, catches)
 // [[Rcpp::export]]
-List GENERALIZED_LOGISTIC(double r_max, double K, double N1, double z, double start_Yr, double num_Yrs, NumericVector catches, double MVP ) {
+List GENERALIZED_LOGISTIC(
+        double r_max,
+        double K,
+        double N1,
+        double z,
+        double start_Yr,
+        double num_Yrs,
+        NumericVector catches,
+        double MVP ) {
 
+    // 1. Setup
+    LogicalVector VMVP = false;         // Variable to indicate whether min population is reached
+    NumericVector n_hat(num_Yrs);       // Create a vector to hold the model predicted population size
+    n_hat[0] = N1;                      // The first year in the vector above is N1
 
-    LogicalVector VMVP = false;     // Variable to indicate whether min population is reached
-    NumericVector n_hat(num_Yrs);      // Create a vector to hold the model predicted population size
-    n_hat[0] = N1;                     // The first year in the vector above is N1
-
+    // 2. Run through population dynamics
     for (int t = 1; t < num_Yrs; t++){
         n_hat[t] = n_hat[t - 1] + r_max * n_hat[t - 1] * (1 - pow(n_hat[t - 1] / K, z) ) - catches[t - 1] ;
         if(n_hat[t] < 1){
-            n_hat[t] = 1; // Make sure the population is positive
+            n_hat[t] = 1;               // Make sure the population is positive
         }
     }
 
-    double n_min = min( n_hat ); // Compute Nmin
-
-    IntegerVector y_min ; //  Compute the year at which Nmin occurred
+    // 3. Summary
+    double n_min = min( n_hat );        // Compute Nmin
+    IntegerVector y_min ;               //  Compute the year at which Nmin occurred
     for(int t = 0; t < num_Yrs; t++) {
         if (n_hat[t] == n_min) y_min.push_back(t);
     }
-    y_min = y_min + start_Yr; 
-
-
-    if (n_min < MVP) {
-        VMVP = true; // Determine whether Nmin is below Min Viable Population
-    }
+    y_min = y_min + start_Yr;
+    if (n_min < MVP) { VMVP = true; }   // Determine whether Nmin is below Min Viable Population
 
     // Compile results
-    return List::create( Named("Min_Pop") =  n_min , _["Min_Yr"] = y_min , _["Violate_Min_Viable_Pop"] = VMVP, _["Pred_N"] = n_hat);
-
+    return List::create(
+        Named("Min_Pop") =  n_min ,
+        _["Min_Yr"] = y_min ,
+        _["Violate_Min_Viable_Pop"] = VMVP,
+        _["Pred_N"] = n_hat);
 }
-
-
-// You can include R code blocks in C++ files processed with sourceCpp
-// (useful for testing and dev elopment). The R code will be automatically
-// run after the compilation.
-//
-
