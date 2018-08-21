@@ -7,7 +7,6 @@
 #'
 #' @param file.name name of a file to identified the files exported by the
 #'   function
-#' @param n.samples number of samples for the Rubin SIR: NOT USED
 #' @param n.resamples number of resamples to compute the marginal posterior
 #'   distributions
 #' @param prior.K prior for K for future use with the forward method: NOT USED
@@ -76,16 +75,14 @@
 #'
 #' \dontrun{
 #' HUMPBACK.SIR(file.name = "test.N2005",
-#'              n.samples = NULL,
-#'              n.resamples = 1000,
+#'              n.resamples = 100,
 #'              prior.K = c(NA, NA, NA),
-#'              prior.r_max = c("uniform", 0, 0.106),
-#'              r_max.bound = c(0, 0.106),
-#'              prior.N.obs = c("uniform", 500, 20000),
-#'              prior.add.CV = c("uniform", 0, 1, FALSE),
-#'              prior.z = c(NA, 2.39, NA),
-#'              q.prior.IA = c("uniform", 0, 1, FALSE),
-#'              q.prior.Count = c("uniform", 0, 1, FALSE),
+#'              prior.r_max = make_prior(runif, 0, 0.106),
+#'              prior.N.obs = make_prior(runif, 500, 20000),
+#'              prior.add.CV = make_prior(use = FALSE),
+#'              prior.z = make_prior(2.39),
+#'              q.prior.IA = make_prior(use = FALSE),
+#'              q.prior.Count = make_prior(use = FALSE),
 #'              Klim = c(1, 500000),
 #'              target.Yr = 2005,
 #'              num.haplotypes = 0,
@@ -101,18 +98,15 @@
 #'              catch.data = Catch.data,
 #'              Threshold = 1e-17,
 #'              Print = 0)
-#' }
 HUMPBACK.SIR <- function(file.name = "NULL",
-                         n.samples = 1000,
                          n.resamples = 1000,
                          prior.K = c(NA, NA, NA),
-                         prior.r_max = c("uniform", 0, 0.12),
-                         r_max.bound = c(0, 0.12),
-                         prior.N.obs = c("uniform", 0, 50000),
-                         prior.add.CV = c("uniform", 0, 1, TRUE),
-                         prior.z = c(NA, 2.39, NA),
-                         q.prior.IA = c("uniform", 0, 1, FALSE),
-                         q.prior.Count = c("uniform", 0, 1, FALSE),
+                         prior.r_max = make_prior(runif, 0, 0.106),
+                         prior.N.obs = make_prior(runif, 500, 20000),
+                         prior.add.CV = make_prior(use = FALSE),
+                         prior.z = make_prior(2.39),
+                         q.prior.IA = make_prior(use = FALSE),
+                         q.prior.Count = make_prior(use = FALSE),
                          Klim = c(1, 500000),
                          target.Yr = 2008,
                          num.haplotypes = 66,
@@ -128,14 +122,11 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                          catch.data = Catch.data,
                          Threshold = 1e100,
                          Print = 0) {
-  library(utils)
   begin.time <- Sys.time()
 
   ################################
   # Assigning variables
   ################################
-  ## Not used as I am not doing the Rubin (1988) SIR anymore.
-  n.samples <- n.samples
   target.Yr <- target.Yr
   ## Use the first year of the projection is set as the first year in the
   ## catch series
@@ -150,7 +141,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
   ## Setting the years to project
   projection.Yrs <- end.Yr-start.Yr + 1
 
-  z <- prior.z[2]
+  ## z <- prior.z[2]
   ## Assigning the catch data
   catches <- catch.data$Catch
   ## Determining the number of Indices of Abundance available
@@ -202,50 +193,37 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     #Sampling for r_max
     sample.r_max <- 0.2 #setting sample.r_max outside of the bound
-    while (sample.r_max < r_max.bound[1] | sample.r_max > r_max.bound[2]) {
+    ## FIXME Why is this check necessary; just set the bounds using the prior?
+    while (sample.r_max < prior.r_max$pars[1] | sample.r_max > prior.r_max$pars[2]) {
       ## Prior on r_max, keep if within boundaries
-      sample.r_max <- SAMPLE.PRIOR(name = prior.r_max[1],
-                                   Val.1 = prior.r_max[2],
-                                   Val.2 = prior.r_max[3])
+      sample.r_max <- prior.r_max$rfn()
     }
 
     ## Sampling from the N.obs prior
-    sample.N.obs <- SAMPLE.PRIOR(name = prior.N.obs[1],
-                                 Val.1 = prior.N.obs[2],
-                                 Val.2 = prior.N.obs[3])
+    sample.N.obs <- prior.N.obs$rfn()
 
     ## Prior on additional CV 
-    if (prior.add.CV[4]) {
-      sample.add.CV <- SAMPLE.PRIOR(name = x[1],
-                                    Val.1 = prior.add.CV[2],
-                                    Val.2 = prior.add.CV[3])
+    if (prior.add.CV$use) {
+      sample.add.CV <- prior.add.CV$rfn()
     } else {
       sample.add.CV <- 0
     }
 
+    ## Sample from prior for `z` (usually constant)
+    sample.z <- prior.z$rfn()
+
     ## Sampling from q priors if q.prior is TRUE; priors on q for indices of
     ## abundance
-    if (q.prior.IA[4]) {
-      q.sample.IA <- rep(NA, num.IA)
-
-      for (i in 1:num.IA) {
-        q.sample.IA[i] <- SAMPLE.PRIOR(name = q.prior.IA[1],
-                                       Val.1 = q.prior.IA[2],
-                                       Val.2 = q.prior.IA[3])
-      }
+    if (q.prior.IA$use) {
+      q.sample.IA <- replicate(num.IA, q.prior.IA$rfn())
     } else {
       ## FIXME: -9999 is probably not a good sentinel value here; NA?
       q.sample.IA <- rep(-9999, length(unique(rel.abundance$Index)))
     }
 
     ##priors on q for count data
-    if (q.prior.Count[4]) {
-      q.sample.Count <- rep(NA, 1:num.Count)
-      for (i in num.Count) {
-        q.sample.Count[i] <- SAMPLE.PRIOR(name = q.prior.Count[1],
-                                          Val.1 = q.prior.Count[2],
-                                          Val.2 = q.prior.Count[3])
-      }
+    if (q.prior.Count$use) {
+      q.sample.Count <- replicate(num.Count, q.prior.Count$rfn())
     } else {
       ## FIXME: Sentinel -9999 again
       q.sample.Count <- rep(-9999, length(unique(count.data$Index)))
@@ -254,7 +232,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     sample.K <- LOGISTIC.BISECTION.K(K.low = Klim[1],
                                      K.high = Klim[2],
                                      r_max = sample.r_max,
-                                     z = z,
+                                     z = sample.z,
                                      num.Yrs = bisection.Yrs,
                                      start.Yr = start.Yr,
                                      target.Pop = sample.N.obs,
@@ -264,14 +242,14 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     #Computing the predicted abundances with the samples from the priors
     #----------------------------------------
-    Pred.N <- GENERALIZED.LOGISTIC(r_max=sample.r_max,
-                                   K=sample.K,
-                                   N1=sample.K,
-                                   z=z,
-                                   start.Yr=start.Yr,
-                                   num.Yrs=projection.Yrs,
-                                   catches=catches,
-                                   MVP=MVP)
+    Pred.N <- GENERALIZED.LOGISTIC(r_max = sample.r_max,
+                                   K = sample.K,
+                                   N1 = sample.K,
+                                   z = sample.z,
+                                   start.Yr = start.Yr,
+                                   num.Yrs = projection.Yrs,
+                                   catches = catches,
+                                   MVP = MVP)
     #Print results if required
     ## FIXME: Print as boolean? Maybe rename `verbose`
     if (Print==1) {
@@ -302,8 +280,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     #Calculate Analytical Qs if rel.abundance.key is TRUE
     #---------------------------------------------------------
-    if(rel.abundance.key) {
-      if(!q.prior.IA[4]) {
+    if (rel.abundance.key) {
+      if (!q.prior.IA$use) {
         q.sample.IA <- CALC.ANALYTIC.Q(rel.abundance,
                                        Pred.N$Pred.N,
                                        start.Yr,
@@ -319,7 +297,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     ## Calculate Analytical Qs if count.data.key is TRUE
     ## (NOT USED YET - AZerbini, Feb 2013)
     if (rel.abundance.key) {
-      if (!q.prior.Count[4]) {
+      if (!q.prior.Count$use) {
         q.sample.Count <- CALC.ANALYTIC.Q(count.data,
                                           Pred.N$Pred.N,
                                           start.Yr,
