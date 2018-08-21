@@ -9,28 +9,7 @@
 #'   function
 #' @param n.resamples number of resamples to compute the marginal posterior
 #'   distributions
-#' @param prior.K prior for K for future use with the forward method: NOT USED
-#' @param prior.r_max prior for r_max. The first element identifies the sampling
-#'   distribution, the send identifies the lower bound (for uniform
-#'   distribution) or the mean (for a normal distribution), and the third
-#'   element corresponds to the upper bound (uniform distribution) or the
-#'   standard error (normal distribution). The default is Uniform with bounds
-#'   c(0, 0.12)
-#' @param r_max.bound bounds for the r_max prior. Default is c(0, 0.12)
-#' @param prior.N.obs prior distribution for a recent abudnance estimate.
-#'   Elements are equivalent to the prior on r_max
-#' @param prior.add.CV prior for additional CV if applicable. It is defined by
-#'   four elements: (1) the sampling distribution, (2) lower bound or mean, (3)
-#'   upper bound or SE, (4) boolean variable to specify whether CV add is used
-#'   or not in the likelihood. Default is a un-iform distribution bounded by
-#'   (0,1) and FALSE (=CV.add not used)
-#' @param prior.z prior on the shape parameter. NOT USED, assumed z=2.39 (max
-#'   productivity at K=0.6)
-#' @param q.prior.IA prior on q for indices of abundance. Definition of elements
-#'   is similar to the prior on CV.add. If the fourth element = FALSE, an
-#'   analytical solution for q is used (as in Zerbini et al. 2011)
-#' @param q.prior.Count similar to q.prior.IA, but for count data. NOT CURRENTLY
-#'   USED
+#' @param priors List of priors, usually generated using \link{make_prior_list}.
 #' @param Klim bounds for K when preforming the bisection method of Punt and
 #'   Butterworth (1995). Defined by two elements, the lower and upper bounds.
 #'   Default is (1, 500000)
@@ -76,13 +55,7 @@
 #' \dontrun{
 #' HUMPBACK.SIR(file.name = "test.N2005",
 #'              n.resamples = 100,
-#'              prior.K = c(NA, NA, NA),
-#'              prior.r_max = make_prior(runif, 0, 0.106),
-#'              prior.N.obs = make_prior(runif, 500, 20000),
-#'              prior.add.CV = make_prior(use = FALSE),
-#'              prior.z = make_prior(2.39),
-#'              q.prior.IA = make_prior(use = FALSE),
-#'              q.prior.Count = make_prior(use = FALSE),
+#'              priors = make_prior_list(),
 #'              Klim = c(1, 500000),
 #'              target.Yr = 2005,
 #'              num.haplotypes = 0,
@@ -100,13 +73,7 @@
 #'              Print = 0)
 HUMPBACK.SIR <- function(file.name = "NULL",
                          n.resamples = 1000,
-                         prior.K = c(NA, NA, NA),
-                         prior.r_max = make_prior(runif, 0, 0.106),
-                         prior.N.obs = make_prior(runif, 500, 20000),
-                         prior.add.CV = make_prior(use = FALSE),
-                         prior.z = make_prior(2.39),
-                         q.prior.IA = make_prior(use = FALSE),
-                         q.prior.Count = make_prior(use = FALSE),
+                         priors = make_prior_list(),
                          Klim = c(1, 500000),
                          target.Yr = 2008,
                          num.haplotypes = 66,
@@ -141,7 +108,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
   ## Setting the years to project
   projection.Yrs <- end.Yr-start.Yr + 1
 
-  ## z <- prior.z[2]
   ## Assigning the catch data
   catches <- catch.data$Catch
   ## Determining the number of Indices of Abundance available
@@ -168,7 +134,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
   #Creating output vectors
   #-------------------------------------
-  names <- c("r_max", "K", "sample.N.obs", "add.CV", "Nmin", "YearMin",
+  names <- c("r_max", "K", "sample.N.obs", "add_CV", "Nmin", "YearMin",
              "violate_MVP", paste("N", output.Yrs, sep = ""),
              paste("ROI_IA", unique(rel.abundance$Index), sep = ""),
              paste("q_IA", unique(rel.abundance$Index), sep = ""),
@@ -194,36 +160,36 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     #Sampling for r_max
     sample.r_max <- 0.2 #setting sample.r_max outside of the bound
     ## FIXME Why is this check necessary; just set the bounds using the prior?
-    while (sample.r_max < prior.r_max$pars[1] | sample.r_max > prior.r_max$pars[2]) {
+    while (sample.r_max < priors$r_max$pars[1] | sample.r_max > priors$r_max$pars[2]) {
       ## Prior on r_max, keep if within boundaries
-      sample.r_max <- prior.r_max$rfn()
+      sample.r_max <- priors$r_max$rfn()
     }
 
     ## Sampling from the N.obs prior
-    sample.N.obs <- prior.N.obs$rfn()
+    sample.N.obs <- priors$N_obs$rfn()
 
-    ## Prior on additional CV 
-    if (prior.add.CV$use) {
-      sample.add.CV <- prior.add.CV$rfn()
+    ## Prior on additional CV
+    if (priors$add_CV$use) {
+      sample.add_CV <- priors$add_CV$rfn()
     } else {
-      sample.add.CV <- 0
+      sample.add_CV <- 0
     }
 
     ## Sample from prior for `z` (usually constant)
-    sample.z <- prior.z$rfn()
+    sample.z <- priors$z$rfn()
 
     ## Sampling from q priors if q.prior is TRUE; priors on q for indices of
     ## abundance
-    if (q.prior.IA$use) {
-      q.sample.IA <- replicate(num.IA, q.prior.IA$rfn())
+    if (priors$q_IA$use) {
+      q.sample.IA <- replicate(num.IA, priors$q_IA$rfn())
     } else {
       ## FIXME: -9999 is probably not a good sentinel value here; NA?
       q.sample.IA <- rep(-9999, length(unique(rel.abundance$Index)))
     }
 
     ##priors on q for count data
-    if (q.prior.Count$use) {
-      q.sample.Count <- replicate(num.Count, q.prior.Count$rfn())
+    if (priors$q_count$use) {
+      q.sample.Count <- replicate(num.Count, priors$q_count$rfn())
     } else {
       ## FIXME: Sentinel -9999 again
       q.sample.Count <- rep(-9999, length(unique(count.data$Index)))
@@ -281,11 +247,11 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     #Calculate Analytical Qs if rel.abundance.key is TRUE
     #---------------------------------------------------------
     if (rel.abundance.key) {
-      if (!q.prior.IA$use) {
+      if (!priors$q_IA$use) {
         q.sample.IA <- CALC.ANALYTIC.Q(rel.abundance,
                                        Pred.N$Pred.N,
                                        start.Yr,
-                                       sample.add.CV,
+                                       sample.add_CV,
                                        num.IA)
       } else {
       q.sample.IA <- q.sample.IA
@@ -297,11 +263,11 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     ## Calculate Analytical Qs if count.data.key is TRUE
     ## (NOT USED YET - AZerbini, Feb 2013)
     if (rel.abundance.key) {
-      if (!q.prior.Count$use) {
+      if (!priors$q_count$use) {
         q.sample.Count <- CALC.ANALYTIC.Q(count.data,
                                           Pred.N$Pred.N,
                                           start.Yr,
-                                          sample.add.CV,
+                                          sample.add_CV,
                                           num.Count)
       } else {
       q.sample.Count <- q.sample.Count
@@ -322,7 +288,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                Pred.N$Pred.N,
                                start.Yr,
                                q.sample.IA,
-                               sample.add.CV,
+                               sample.add_CV,
                                num.IA,
                                log=TRUE)
     } else {
@@ -339,7 +305,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                  Pred.N$Pred.N,
                                  start.Yr,
                                  q.sample.Count,
-                                 sample.add.CV,
+                                 sample.add_CV,
                                  num.Count,
                                  log=TRUE)
     } else {
@@ -354,7 +320,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     lnlike.Ns <- LNLIKE.Ns(abs.abundance,
                            Pred.N$Pred.N,
                            start.Yr,
-                           sample.add.CV,
+                           sample.add_CV,
                            log=TRUE)
     ## FIXME: Print -> message
     if (Print==1) {
@@ -408,7 +374,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                   c(sample.r_max,
                                     sample.K,
                                     sample.N.obs,
-                                    sample.add.CV,
+                                    sample.add_CV,
                                     Pred.N$Min.Pop,
                                     Pred.N$Min.Yr,
                                     Pred.N$Violate.MVP,
@@ -436,7 +402,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                             c(sample.r_max,
                               sample.K,
                               sample.N.obs,
-                              sample.add.CV,
+                              sample.add_CV,
                               Pred.N$Min.Pop,
                               Pred.N$Min.Yr,
                               Pred.N$Violate.MVP,
@@ -520,8 +486,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
        final.trajectory = final.trajectory,
        inputs = list(draws = draw,
                      n.resamples = n.resamples,
-                     prior.r_max = prior.r_max,
-                     prior.N.obs = prior.N.obs,
+                     prior_r_max = priors$r_max,
+                     priors_N.obs = priors$N.obs,
                      target.Yr = target.Yr,
                      MVP = paste("num.haplotypes = ",
                                  num.haplotypes,
@@ -751,7 +717,7 @@ TARGET.K <- function(r_max,
 #' @param start.Yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param target.Pop A sample of the prior on population abundance $N$, in
-#'   numbers, set as \code{sample.N.obs} sampled from \code{prior.N.obs}
+#'   numbers, set as \code{sample.N.obs} sampled from \code{priors$N.obs}
 #' @param catches The time series of catch in numbers or biomass. Currently does
 #'   not handle NAs and zeros will have to input a priori for years in which
 #'   there were no catches.
@@ -798,7 +764,7 @@ LOGISTIC.BISECTION.K <- function(K.low,
 #' @param rel.Abundance Relative abundance index
 #' @param Pred.N Predicted population
 #' @param start.Yr Initial year
-#' @param add.CV Coefficient of variation
+#' @param add_CV Coefficient of variation
 #' @param num.IA Index of abundance
 #'
 #' @return A numeric estimator for $q$.
@@ -806,7 +772,7 @@ LOGISTIC.BISECTION.K <- function(K.low,
 #'
 #' @examples
 CALC.ANALYTIC.Q <- function(rel.Abundance, Pred.N, start.Yr,
-                            add.CV = 0, num.IA) {
+                            add_CV = 0, num.IA) {
   ## Vector to store the q values
   analytic.Q <- rep(NA, num.IA)
 
@@ -819,7 +785,7 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred.N, start.Yr,
     IA$Sigma <- sqrt(log(1 + IA$CV.IA.obs^2))
     ## Numerator of the analytic q estimator (Zerbini et al., 2011 - eq. (3))
     qNumerator <- sum((log(IA$IA.obs / Pred.N[IA.yrs])) /
-                      (IA$Sigma * IA$Sigma + add.CV * add.CV))
+                      (IA$Sigma * IA$Sigma + add_CV * add_CV))
     ## Denominator of the analytic q estimator (Zerbini et al., 2011 - eq. (3))
     qDenominator <- sum(1 / (IA$Sigma * IA$Sigma))
     ## Estimate of q
@@ -834,7 +800,7 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred.N, start.Yr,
 #' @param Pred.N Predicted population size
 #' @param start.Yr Initial year
 #' @param q.values Scaling parameter
-#' @param add.CV Coefficient of variation
+#' @param add_CV Coefficient of variation
 #' @param num.IA Number of indices of abundance
 #' @param log Boolean, return log likelihood (default TRUE) or
 #'   likelihood.
@@ -844,7 +810,7 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred.N, start.Yr,
 #'
 #' @examples
 LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
-                       q.values, add.CV, num.IA, log = TRUE) {
+                       q.values, add_CV, num.IA, log = TRUE) {
   loglike.IA1 <- 0
   loglike.IA2 <- 0
 
@@ -864,7 +830,7 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
     loglike.IA2 <- loglike.IA2 +
       CALC.LNLIKE(Obs.N = IA$IA.obs,
                   Pred.N = (q.values[i] * Pred.N[IA.yrs]),
-                  CV =  sqrt(IA$Sigma * IA$Sigma + add.CV * add.CV),
+                  CV =  sqrt(IA$Sigma * IA$Sigma + add_CV * add_CV),
                   log = log)
   }
   list(loglike.IA1 = loglike.IA1, loglike.IA2 = loglike.IA2)
@@ -882,8 +848,8 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
 #'   \code{\link{GENERALIZED.LOGISTIC}}.
 #' @param start.Yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
-#' @param add.CV Additional CV to add to variance of lognormal distribution
-#'   sampled from \code{prior.add.CV}.
+#' @param add_CV Additional CV to add to variance of lognormal distribution
+#'   sampled from \code{priors$add_CV}.
 #' @param log Return the log of the likelihood (TRUE/FALSE)
 #'
 #' @return A list of two numeric scalars of estimates of log-likelihood.
@@ -892,8 +858,8 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
 #' Obs.N  <-  data.frame(Year = 2005, Sigma = 5, Obs.N = 1000)
 #' Pred.N  <-  1234
 #' start.Yr  <-  2005
-#' LNLIKE.Ns(Obs.N, Pred.N, start.Yr, add.CV = 0, log=TRUE)
-LNLIKE.Ns <- function(Obs.N, Pred.N, start.Yr, add.CV, log = TRUE) {
+#' LNLIKE.Ns(Obs.N, Pred.N, start.Yr, add_CV = 0, log=TRUE)
+LNLIKE.Ns <- function(Obs.N, Pred.N, start.Yr, add_CV, log = TRUE) {
   loglike.Ns1 <- 0
   loglike.Ns2 <- 0
 
@@ -903,13 +869,13 @@ LNLIKE.Ns <- function(Obs.N, Pred.N, start.Yr, add.CV, log = TRUE) {
   loglike.Ns1 <- loglike.Ns1 +
     ((sum(log(Obs.N$Sigma) + log(Obs.N$N.obs) + 0.5 *
           ((((log(Pred.N[N.yrs]) - log(Obs.N$N.obs))^2) /
-            (Obs.N$Sigma * Obs.N$Sigma + add.CV * add.CV))))))
+            (Obs.N$Sigma * Obs.N$Sigma + add_CV * add_CV))))))
   ## This is the log-normal distribution from R (using function dnorm)
   ## FIXME See comments above re: `dlnorm`
   loglike.Ns2 <- loglike.Ns2 + CALC.LNLIKE(Obs.N = Obs.N$N.obs,
                                            Pred.N = (Pred.N[N.yrs]),
                                            CV = sqrt(Obs.N$Sigma * Obs.N$Sigma +
-                                                     add.CV * add.CV),
+                                                     add_CV * add_CV),
                                            log = log)
 
   list(loglike.Ns1 = loglike.Ns1, loglike.Ns2 = loglike.Ns2)
@@ -968,7 +934,7 @@ CALC.LNLIKE <- function(Obs.N, Pred.N, CV, log = FALSE) {
 #' credible interval, 90% predicitive interval, max, and sample size.
 #'
 #' @param x A data.frame of model outputs including: sample.r_max, sample.K,
-#'   sample.N.obs, sample.add.CV, Pred.N$Min.Pop, Pred.N$Min.Yr,
+#'   sample.N.obs, sample.add_CV, Pred.N$Min.Pop, Pred.N$Min.Yr,
 #'   Pred.N$Violate.MVP, c(Pred.N$Pred.N[output.Yrs-start.Yr+1]), Pred.ROI.IA,
 #'   q.sample.IA, Pred.ROI.Count, q.sample.Count, lnlike.IAs[[1]],
 #'   lnlike.Count[[1]], lnlike.Ns[[1]], lnlike.GR[[1]], LL, Likelihood,
