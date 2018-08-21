@@ -252,6 +252,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                    num_Yrs = projection.Yrs,
                                    catches = catches,
                                    MVP = MVP)
+
     #Print results if required
     ## FIXME: Print as boolean? Maybe rename `verbose`
     if (Print==1) {
