@@ -49,7 +49,3 @@ GENERALIZED_LOGISTIC <- function(r_max, K, N1, z, start_Yr, num_Yrs, catches, MV
     .Call(`_HumpbackSIR_GENERALIZED_LOGISTIC`, r_max, K, N1, z, start_Yr, num_Yrs, catches, MVP)
 }
 
-rcpp_sum <- function(v) {
-    .Call(`_HumpbackSIR_rcpp_sum`, v)
-}
-

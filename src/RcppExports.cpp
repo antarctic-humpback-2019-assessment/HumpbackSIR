@@ -23,21 +23,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_sum
-double rcpp_sum(NumericVector v);
-RcppExport SEXP _HumpbackSIR_rcpp_sum(SEXP vSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type v(vSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_sum(v));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_HumpbackSIR_GENERALIZED_LOGISTIC", (DL_FUNC) &_HumpbackSIR_GENERALIZED_LOGISTIC, 8},
-    {"_HumpbackSIR_rcpp_sum", (DL_FUNC) &_HumpbackSIR_rcpp_sum, 1},
     {NULL, NULL, 0}
 };
 

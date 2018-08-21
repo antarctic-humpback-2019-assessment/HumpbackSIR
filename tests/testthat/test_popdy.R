@@ -14,11 +14,11 @@ test_that("K steady state", {
                                     start_yr, num_yrs,
                                     catches = catch0,
                                     MVP = 0)
-  expect_equal(length(P_Ksteady$Min.Yr), num_yrs)
-  expect_equal(length(P_Ksteady$Pred.N), num_yrs)
-  expect_equal(P_Ksteady$Min.Pop, K)
-  expect_equal(P_Ksteady$Pred.N[10], K)
-  expect_false(P_Ksteady$Violate.MVP)
+  expect_equal(length(P_Ksteady$Min_Yr), num_yrs)
+  expect_equal(length(P_Ksteady$Pred_N), num_yrs)
+  expect_equal(P_Ksteady$Min_Pop, K)
+  expect_equal(P_Ksteady$Pred_N[10], K)
+  expect_false(P_Ksteady$Violate_Min_Viable_Pop)
 })
 
 test_that("Zero steady state", {
@@ -27,11 +27,11 @@ test_that("Zero steady state", {
                                     start_yr, num_yrs,
                                     catches = catch0,
                                     MVP = 0)
-  expect_equal(length(P_Ksteady$Min.Yr), num_yrs)
-  expect_equal(length(P_Ksteady$Pred.N), num_yrs)
-  expect_equal(P_Ksteady$Min.Pop, 0)
-  expect_equal(P_Ksteady$Pred.N[10], 0)
-  expect_false(P_Ksteady$Violate.MVP)
+  expect_equal(length(P_Ksteady$Min_Yr), num_yrs)
+  expect_equal(length(P_Ksteady$Pred_N), num_yrs)
+  expect_equal(P_Ksteady$Min_Pop, 0)
+  expect_equal(P_Ksteady$Pred_N[10], 0)
+  expect_false(P_Ksteady$Violate_Min_Viable_Pop)
 })
 
 test_that("Gen. logistic with MYS catch", {
@@ -41,12 +41,12 @@ test_that("Gen. logistic with MYS catch", {
                                  start_yr, num_yrs_sust,
                                  catches = rep(84.6033, num_yrs_sust),
                                  MVP = 600)
-  expect_equal(length(P_sust$Pred.N), num_yrs_sust)
+  expect_equal(length(P_sust$Pred_N), num_yrs_sust)
   ## Increased tolerance; approaches steady state slowly
-  expect_equal(P_sust$Pred.N[num_yrs_sust], 600, tol = 5)
-  ## expect_equal(P_sust$Min.Yr, num_yrs_sust)
-  ## expect_equal(P_sust$Min.Pop, P_sust$Pred.N[num_yrs_sust])
-  expect_false(P_sust$Violate.MVP)
+  expect_equal(P_sust$Pred_N[num_yrs_sust], 600, tol = 5)
+  ## expect_equal(P_sust$Min_Yr, num_yrs_sust)
+  ## expect_equal(P_sust$Min_Pop, P_sust$Pred_N[num_yrs_sust])
+  expect_false(P_sust$Violate_Min_Viable_Pop)
 })
 
 test_that("Gen. logistic with catches", {
@@ -61,9 +61,9 @@ test_that("Gen. logistic with catches", {
   pred <- c(1000, 990, 974.69935403084, 946.280493711608, 889.67821393339,
             773.049600240948, 524.089030824881, 566.52925365989,
             610.697507599572, 675.254944423984)
-  expect_equal(P_catches$Pred.N, pred)
-  expect_equal(P_catches$Min.Yr, 7)
-  expect_false(P_catches$Violate.MVP)
+  expect_equal(P_catches$Pred_N, pred)
+  expect_equal(P_catches$Min_Yr, 7)
+  expect_false(P_catches$Violate_Min_Viable_Pop)
 })
 
 
@@ -79,7 +79,7 @@ test_that("Gen. logistic with catches and violates MVP", {
   pred <- c(1000, 700, 480.308519406096, 359.721390994838, 225.417459001219,
             169.219630256064, 102.578850737432, 23.0057998076636,
             27.6064004514929, 33.126642886365)
-  expect_equal(P_catches_mvp$Pred.N, pred)
-  expect_equal(P_catches_mvp$Min.Yr, 8)
-  expect_true(P_catches_mvp$Violate.MVP)
+  expect_equal(P_catches_mvp$Pred_N, pred)
+  expect_equal(P_catches_mvp$Min_Yr, 8)
+  expect_true(P_catches_mvp$Violate_Min_Viable_Pop)
 })

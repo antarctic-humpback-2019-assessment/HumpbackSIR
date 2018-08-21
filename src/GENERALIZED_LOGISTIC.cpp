@@ -48,7 +48,7 @@ using namespace Rcpp;
 List GENERALIZED_LOGISTIC(double r_max, double K, double N1, double z, double start_Yr, double num_Yrs, NumericVector catches, double MVP ) {
 
 
-    int VMVP = 0;     // Variable to indicate whether min population is reached
+    LogicalVector VMVP = false;     // Variable to indicate whether min population is reached
     NumericVector n_hat(num_Yrs);      // Create a vector to hold the model predicted population size
     n_hat[0] = N1;                     // The first year in the vector above is N1
 
@@ -60,10 +60,16 @@ List GENERALIZED_LOGISTIC(double r_max, double K, double N1, double z, double st
     }
 
     double n_min = min( n_hat ); // Compute Nmin
-    int y_min = which_min( n_hat ) + start_Yr; //  Compute the year at which Nmin occurred
+
+    IntegerVector y_min ; //  Compute the year at which Nmin occurred
+    for(int t = 0; t < num_Yrs; t++) {
+        if (n_hat[t] == n_min) y_min.push_back(t);
+    }
+    y_min = y_min + start_Yr; 
+
 
     if (n_min < MVP) {
-        VMVP = 1; // Determine whether Nmin is below Min Viable Population
+        VMVP = true; // Determine whether Nmin is below Min Viable Population
     }
 
     // Compile results
