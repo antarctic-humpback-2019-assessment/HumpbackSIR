@@ -130,16 +130,16 @@ HUMPBACK.SIR <- function(file.name = "NULL",
   target.Yr <- target.Yr
   ## Use the first year of the projection is set as the first year in the
   ## catch series
-  start.Yr <- catch.data$Year[1]
+  start_Yr <- catch.data$Year[1]
   ## The last year of the projection is set as the last year in the catch or
   ## abundance series, whichever is most recent
   end.Yr <- max(tail(catch.data$Year, 1),
                 max(abs.abundance$Year),
                 max(rel.abundance$Year))
   ## Setting the target year for the bisection method
-  bisection.Yrs <- target.Yr-start.Yr + 1
+  bisection.Yrs <- target.Yr-start_Yr + 1
   ## Setting the years to project
-  projection.Yrs <- end.Yr-start.Yr + 1
+  projection.Yrs <- end.Yr-start_Yr + 1
 
   ## z <- prior.z[2]
   ## Assigning the catch data
@@ -182,7 +182,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
   resamples.output <- matrix(0, nrow = 1, ncol = length(names))
   resamples.trajectories <- matrix(NA, nrow = 1, ncol = projection.Yrs)
   final.trajectory <- matrix(NA, nrow = projection.Yrs, ncol = 6)
-  Year <- seq(start.Yr, end.Yr, by = 1)
+  Year <- seq(start_Yr, end.Yr, by = 1)
 
   #Initiating the SIR loop
 
@@ -202,9 +202,10 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     ## Sampling from the N.obs prior
     sample.N.obs <- prior.N.obs$rfn()
 
-    ## Prior on additional CV 
+    ## Prior on additional CV
     if (prior.add.CV$use) {
       sample.add.CV <- prior.add.CV$rfn()
+
     } else {
       sample.add.CV <- 0
     }
@@ -233,8 +234,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                      K.high = Klim[2],
                                      r_max = sample.r_max,
                                      z = sample.z,
-                                     num.Yrs = bisection.Yrs,
-                                     start.Yr = start.Yr,
+                                     num_Yrs = bisection.Yrs,
+                                     start_Yr = start_Yr,
                                      target.Pop = sample.N.obs,
                                      catches = catches,
                                      MVP = MVP,
@@ -242,29 +243,30 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     #Computing the predicted abundances with the samples from the priors
     #----------------------------------------
-    Pred.N <- GENERALIZED.LOGISTIC(r_max = sample.r_max,
+    Pred_N <- GENERALIZED_LOGISTIC(r_max = sample.r_max,
                                    K = sample.K,
                                    N1 = sample.K,
                                    z = sample.z,
-                                   start.Yr = start.Yr,
-                                   num.Yrs = projection.Yrs,
+                                   start_Yr = start_Yr,
+                                   num_Yrs = projection.Yrs,
                                    catches = catches,
                                    MVP = MVP)
+
     #Print results if required
     ## FIXME: Print as boolean? Maybe rename `verbose`
     if (Print==1) {
       print(paste("sample.r_max =", sample.r_max,
                   "sample.N.obs =", sample.N.obs,
                   "sample.K =", sample.K,
-                  "Pred.N.target =", Pred.N$Pred.N[bisection.Yrs]))}
+                  "Pred.N.target =", Pred_N$Pred_N[bisection.Yrs]))}
 
     #Computing the predicted ROI for the IAs and Count data, if applicable
     #----------------------------------------
     #For IAs
     if (rel.abundance.key) {
       Pred.ROI.IA <- COMPUTING.ROI(data = rel.abundance,
-                                   Pred.N = Pred.N$Pred.N,
-                                   start.Yr = start.Yr)
+                                   Pred_N = Pred_N$Pred_N,
+                                   start_Yr = start_Yr)
     } else {
       Pred.ROI.IA <- rep(0, num.IA)
     }
@@ -272,8 +274,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     #For Count Data
     if (count.data.key) {
       Pred.ROI.Count <- COMPUTING.ROI(data = count.data,
-                                      Pred.N = Pred.N$Pred.N,
-                                      start.Yr = start.Yr)
+                                      Pred_N = Pred_N$Pred_N,
+                                      start_Yr = start_Yr)
     } else {
       Pred.ROI.Count <- rep(0, num.Count)
     }
@@ -283,8 +285,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     if (rel.abundance.key) {
       if (!q.prior.IA$use) {
         q.sample.IA <- CALC.ANALYTIC.Q(rel.abundance,
-                                       Pred.N$Pred.N,
-                                       start.Yr,
+                                       Pred_N$Pred_N,
+                                       start_Yr,
                                        sample.add.CV,
                                        num.IA)
       } else {
@@ -299,8 +301,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     if (rel.abundance.key) {
       if (!q.prior.Count$use) {
         q.sample.Count <- CALC.ANALYTIC.Q(count.data,
-                                          Pred.N$Pred.N,
-                                          start.Yr,
+                                          Pred_N$Pred_N,
+                                          start_Yr,
                                           sample.add.CV,
                                           num.Count)
       } else {
@@ -319,8 +321,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     # (1) relative indices (if rel.abundance.key is TRUE)
     if (rel.abundance.key) {
       lnlike.IAs <- LNLIKE.IAs(rel.abundance,
-                               Pred.N$Pred.N,
-                               start.Yr,
+                               Pred_N$Pred_N,
+                               start_Yr,
                                q.sample.IA,
                                sample.add.CV,
                                num.IA,
@@ -336,8 +338,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     # (2) count data (if count.data.key is TRUE)
     if (count.data.key) {
       lnlike.Count <- LNLIKE.IAs(count.data,
-                                 Pred.N$Pred.N,
-                                 start.Yr,
+                                 Pred_N$Pred_N,
+                                 start_Yr,
                                  q.sample.Count,
                                  sample.add.CV,
                                  num.Count,
@@ -352,8 +354,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     # (3) absolute abundance
     lnlike.Ns <- LNLIKE.Ns(abs.abundance,
-                           Pred.N$Pred.N,
-                           start.Yr,
+                           Pred_N$Pred_N,
+                           start_Yr,
                            sample.add.CV,
                            log=TRUE)
     ## FIXME: Print -> message
@@ -364,8 +366,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     # (4) growth rate if applicable
     if (growth.rate.obs[3]) {
       Pred.GR <- PRED.GROWTH.RATE(growth.rate.Yrs=growth.rate.Yrs,
-                                  Pred.N=Pred.N$Pred.N,
-                                  start.Yr=start.Yr)
+                                  Pred_N=Pred_N$Pred_N,
+                                  start_Yr=start_Yr)
       lnlike.GR <- LNLIKE.GR(Obs.GR=growth.rate.obs[1],
                              Pred.GR=Pred.GR,
                              GR.SD.Obs=growth.rate.obs[2])
@@ -385,7 +387,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
       print(paste("NLL =", LL, "Likelihood =", Likelihood))
     }
 
-    if (Pred.N$Violate.MVP) {
+    if (Pred_N$Violate_Min_Viable_Pop) {
       Likelihood <- 0
       print(paste("MVP violated on draw", draw))
     }
@@ -393,7 +395,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     Cumulative.Likelihood <- Cumulative.Likelihood + Likelihood
     #print(paste("Sample=", i, "Likelihood=", Likelihood))
 
-    if (!Pred.N$Violate.MVP) {
+    if (!Pred_N$Violate_Min_Viable_Pop) {
       while (Cumulative.Likelihood > Threshold) {
         print(paste("sample =", i, " & draw =", draw))
         ## FIXME: Print -> message
@@ -403,16 +405,16 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                       "Cumulative =", Cumulative.Likelihood))}
         save <- TRUE
         Cumulative.Likelihood <- Cumulative.Likelihood-Threshold
-        resamples.trajectories <- rbind(resamples.trajectories, Pred.N$Pred.N)
+        resamples.trajectories <- rbind(resamples.trajectories, Pred_N$Pred_N)
         resamples.output <- rbind(resamples.output,
                                   c(sample.r_max,
                                     sample.K,
                                     sample.N.obs,
                                     sample.add.CV,
-                                    Pred.N$Min.Pop,
-                                    Pred.N$Min.Yr,
-                                    Pred.N$Violate.MVP,
-                                    c(Pred.N$Pred.N[output.Yrs - start.Yr + 1]),
+                                    Pred_N$Min_Pop,
+                                    Pred_N$Min_Yr,
+                                    Pred_N$Violate_Min_Viable_Pop,
+                                    c(Pred_N$Pred_N[output.Yrs - start_Yr + 1]),
                                     Pred.ROI.IA,
                                     q.sample.IA,
                                     Pred.ROI.Count,
@@ -423,8 +425,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                     lnlike.GR[[1]],
                                     LL,
                                     Likelihood,
-                                    Pred.N$Min.Pop / sample.K,
-                                    c(Pred.N$Pred.N[output.Yrs - start.Yr + 1] /
+                                    Pred_N$Min_Pop / sample.K,
+                                    c(Pred_N$Pred_N[output.Yrs - start_Yr + 1] /
                                       sample.K),
                                     draw,
                                     save))
@@ -437,10 +439,10 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                               sample.K,
                               sample.N.obs,
                               sample.add.CV,
-                              Pred.N$Min.Pop,
-                              Pred.N$Min.Yr,
-                              Pred.N$Violate.MVP,
-                              c(Pred.N$Pred.N[output.Yrs-start.Yr+1]),
+                              Pred_N$Min_Pop,
+                              Pred_N$Min_Yr,
+                              Pred_N$Violate_Min_Viable_Pop,
+                              c(Pred_N$Pred_N[output.Yrs-start_Yr+1]),
                               Pred.ROI.IA,
                               q.sample.IA,
                               Pred.ROI.Count,
@@ -451,8 +453,8 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                               lnlike.GR[[1]],
                               LL,
                               Likelihood,
-                              Pred.N$Min.Pop/sample.K,
-                              c(Pred.N$Pred.N[output.Yrs-start.Yr+1]/sample.K),
+                              Pred_N$Min_Pop/sample.K,
+                              c(Pred_N$Pred_N[output.Yrs-start_Yr+1]/sample.K),
                               draw,
                               save))
 
@@ -477,7 +479,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
             paste(file.name, "_", "resamples.output.csv", sep=""))
 
   resamples.trajectories <- data.frame(resamples.trajectories)
-  names(resamples.trajectories) <- seq(start.Yr, end.Yr,  1)
+  names(resamples.trajectories) <- seq(start_Yr, end.Yr,  1)
   resamples.trajectories <- resamples.trajectories[-1, ]
   ## FIXME Use `paste0` here
   write.csv(resamples.trajectories,
@@ -531,89 +533,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                      output.Years = output.Yrs))
 }
 
-#' GENERALISED LOGISTIC MODEL
-#'
-#' \code{GENERALIZED.LOGISTIC} returns the population projection using a
-#' Pella-Tomlison population dynamics model: $$N_{t+1} =
-#' N_{t}+N_{t}*r_{max}*\left[ 1 - \left( \frac{N_{t}}{K} \right) ^z \right] -
-#' C_{t}$$ where $N$ is the population size at year $t$ or $t+1$, $r_{max}$ is
-#' the maximum net recruitment rate, $K$ is the pre-exploitation population
-#' size, $z$ is the parameter that determines the population size where
-#' productivity is maximum. For example, a value of 2.39 corresponds to maximum
-#' sustainable yield of $0.6K$ and is assumed by the IWC SC, and $C_t$ is the
-#' harvest in numbers in year $t$. Population size can be in either numbers or
-#' biomass, however, units will have to be the same as the units used for catch,
-#' relative abundance, and absolute abundance.
-#'
-#' @param r_max The maximum net recruitment rate ($r_{max}$).
-#' @param K Pre-exploitation population size in numbers or biomass (depending on
-#'   input).
-#' @param N1 The population size in numbers or biomass at year 1 (generally
-#'   assumed to be K).
-#' @param z The parameter that determines the population size where productivity
-#'   is maximum (assumed to be 2.39 by the IWC SC).
-#' @param start.Yr The first year of the projection (assumed to be the first
-#'   year in the catch series).
-#' @param num.Yrs The number of projection years. Set as the last year in the
-#'   catch or abundance series, whichever is most recent, minus the
-#'   \code{start.Yr}.
-#' @param catches The time series of catch in numbers or biomass. Currently does
-#'   not handle NAs and zeros will have to input a priori for years in which
-#'   there were no catches.
-#' @param MVP The minimum viable population size in numbers or biomass. Computed
-#'   as 4 * \code{\link{num.haplotypes}} to compute minimum viable population
-#'   (from Jackson et al., 2006 and IWC, 2007).
-#'
-#' @return A list of the minimum population size \code{\link{Min.Pop}}, year of the minimum population size \code{\link{Min.Yr}}, a indicator of wether the minimum population size is below the \code{\link{MVP}}, and the predicted population size \code{Pred.N}.
-#'
-#' @examples
-#' num.Yrs  <-  10
-#' start.Yr  <-  1
-#' r_max  <-  0.2
-#' K  <-  1000
-#' N1  <-  K
-#' catches  <-  round(runif(10, min = 0, max = 150 ), 0 )
-#' MVP  <-  0
-#' GENERALIZED.LOGISTIC(r_max, K, N1, z, start.Yr, num.Yrs, catches)
-GENERALIZED.LOGISTIC <- function(r_max,
-                                 K,
-                                 N1,
-                                 z,
-                                 start.Yr,
-                                 num.Yrs,
-                                 catches,
-                                 MVP = 0) {
-  ## Variable to indicate whether min population is reached
-  Violate.Min.Viable.Pop <- FALSE
-  ## Create a vector to hold the model predicted population size
-  Pred.N <- rep(NA, num.Yrs)
-  ## The first year in the vector above is N1
-  Pred.N[1] <- N1
-
-  # Project the population
-  for (t in 1:(num.Yrs - 1)) {
-    ## FIXME Separate population dynamics function (Rcpp?)
-    Pred.N[t + 1] <- max(Pred.N[t] +
-                         r_max * Pred.N[t] *
-                         (1 - (Pred.N[t] / K)^z) -
-                         catches[t],
-                         1)
-  }
-
-  ## Compute the Nmin
-  Min.Pop <- min(Pred.N)
-  ## Compute the year at which Nmin occurred
-  Min.Yr <- which(Pred.N == Min.Pop) + start.Yr - 1
-  if (Min.Pop < MVP) {
-    ## Determine whether Nmin is below Min Viable Population
-    Violate.Min.Viable.Pop <- TRUE
-  }
-
-  list(Min.Pop = Min.Pop,
-       Min.Yr = Min.Yr,
-       Violate.MVP = Violate.Min.Viable.Pop,
-       Pred.N = Pred.N)
-}
 
 #' PREDICTED GROWTH RATE
 #'
@@ -629,20 +548,20 @@ GENERALIZED.LOGISTIC <- function(r_max,
 #' al. 2011).
 #'
 #' @param growth.rate.Yrs The years to be used for growth rate computation. 1995 - 1998 are used in Zerbini et al. 2011.
-#' @param Pred.N Time series of predicted abundance, in numbers, from \code{\link{GENERALIZED.LOGISTIC}}.
-#' @param start.Yr The first year of the projection (assumed to be the first year in the catch series).
+#' @param Pred_N Time series of predicted abundance, in numbers, from \code{\link{GENERALIZED_LOGISTIC}}.
+#' @param start_Yr The first year of the projection (assumed to be the first year in the catch series).
 #'
 #' @return A numeric scalar representing predicted growth rate.
 #'
 #' @examples
 #' growth.rate.Yrs  <-  c(1995:1998)
-#' Pred.N <- c(1000, 1500, 1500, 2000)
-#' start.Yr  <-  1995
-#' PRED.GROWTH.RATE(growth.rate.Yrs, Pred.N, start.Yr=start.Yr)
-PRED.GROWTH.RATE <- function(growth.rate.Yrs, Pred.N, start.Yr = start.Yr) {
+#' Pred_N <- c(1000, 1500, 1500, 2000)
+#' start_Yr  <-  1995
+#' PRED.GROWTH.RATE(growth.rate.Yrs, Pred_N, start_Yr=start_Yr)
+PRED.GROWTH.RATE <- function(growth.rate.Yrs, Pred_N, start_Yr = start_Yr) {
   ## Computing the growth rate years
-  GR.Yrs <- growth.rate.Yrs - start.Yr + 1
-  Pred.N.GR <- Pred.N[GR.Yrs]
+  GR.Yrs <- growth.rate.Yrs - start_Yr + 1
+  Pred.N.GR <- Pred_N[GR.Yrs]
 
   ## FIXME Just return this line?
   Pred.GR <- (log(Pred.N.GR[length(Pred.N.GR)]) -
@@ -656,24 +575,24 @@ PRED.GROWTH.RATE <- function(growth.rate.Yrs, Pred.N, start.Yr = start.Yr) {
 #' abundance or count data
 #'
 #' @param data Count data or relative abundance index to use
-#' @param Pred.N Number of individuals predicted
-#' @param start.Yr Initial year
+#' @param Pred_N Number of individuals predicted
+#' @param start_Yr Initial year
 #'
 #' @return Vector of rates of increase, one per index
 #' @export
 #'
 #' @examples
-COMPUTING.ROI <- function(data = data, Pred.N = Pred.N, start.Yr = NULL) {
+COMPUTING.ROI <- function(data = data, Pred_N = Pred_N, start_Yr = NULL) {
   num.indices <- max(data$Index)
   Pred.ROI <- rep(NA, num.indices)
 
   for (i in 1:num.indices) {
-    index.ini.year <- (head(subset(data, Index == i)$Year, 1) - start.Yr)
-    index.final.year <- (tail(subset(data, Index == i)$Year, 1) - start.Yr)
+    index.ini.year <- (head(subset(data, Index == i)$Year, 1) - start_Yr)
+    index.final.year <- (tail(subset(data, Index == i)$Year, 1) - start_Yr)
     elapsed.years <- index.final.year - index.ini.year
 
-    Pred.ROI[i] <- exp((log(Pred.N[index.final.year]) -
-                        log(Pred.N[index.ini.year])) /
+    Pred.ROI[i] <- exp((log(Pred_N[index.final.year]) -
+                        log(Pred_N[index.ini.year])) /
                        (elapsed.years)) - 1
   }
   Pred.ROI
@@ -689,10 +608,10 @@ COMPUTING.ROI <- function(data = data, Pred.N = Pred.N, start.Yr = NULL) {
 #' @param z Generalized logistic shape parameter, determines population
 #'   size where productivity is masimum (assumed to be 2.39 by the ISC
 #'   SC).
-#' @param num.Yrs The number of projection years. Set as the last year
+#' @param num_Yrs The number of projection years. Set as the last year
 #'   in the catchor abundance series whichever is most recent, minus the
 #'   start year.
-#' @param start.Yr First year of the projection (assumed to be the first
+#' @param start_Yr First year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param target.Pop Target population size.
 #' @param catches Catch time series. Cannot include NAs,
@@ -703,29 +622,29 @@ COMPUTING.ROI <- function(data = data, Pred.N = Pred.N, start.Yr = NULL) {
 #' @export
 #'
 #' @examples
-#' TARGET.K(r_max, K, N1, z, start.Yr=start.Yr, num.Yrs=bisection.Yrs,
+#' TARGET.K(r_max, K, N1, z, start_Yr=start_Yr, num_Yrs=bisection.Yrs,
 #'          target.Pop=target.Pop, catches=catches, MVP=MVP)
 TARGET.K <- function(r_max,
                      K,
                      N1,
                      z,
-                     num.Yrs,
-                     start.Yr,
+                     num_Yrs,
+                     start_Yr,
                      target.Pop,
                      catches=catches,
                      MVP = 0) {
-  Pred.N <- GENERALIZED.LOGISTIC(r_max = r_max,
+  Pred_N <- GENERALIZED_LOGISTIC(r_max = r_max,
                                  K = K,
                                  N1 = K,
                                  z = z,
-                                 start.Yr = start.Yr,
-                                 num.Yrs = num.Yrs,
+                                 start_Yr = start_Yr,
+                                 num_Yrs = num_Yrs,
                                  catches = catches,
                                  MVP = MVP)
   ## FIXME Return this line?
-  diff <- Pred.N$Pred.N[num.Yrs] - target.Pop
-  #plot(seq(1901, 1900+num.Yrs, 1), Pred.N$Pred.N, ylim=c(0,50000))
-  #print(paste("N-Target=", Pred.N$Pred.N[num.Yrs], "Target.Pop=", target.Pop, "K=", K))
+  diff <- Pred_N$Pred_N[num_Yrs] - target.Pop
+  #plot(seq(1901, 1900+num_Yrs, 1), Pred_N$Pred_N, ylim=c(0,50000))
+  #print(paste("N-Target=", Pred_N$Pred_N[num_Yrs], "Target.Pop=", target.Pop, "K=", K))
   diff
 }
 
@@ -734,7 +653,7 @@ TARGET.K <- function(r_max,
 #' Method of Butterworth and Punt (1995) where the prior distribution of the
 #' current absolute abundance $N_{2005}$ and maximum net recruitment rate
 #' \code{r_max} are sampled and then used to determine the unique value of the
-#' population abundance $N$ in \code{start.Yr} (assumed to correspond to
+#' population abundance $N$ in \code{start_Yr} (assumed to correspond to
 #' carrying capacity $K$). Requires \code{\link{TARGET.K}} and subsequent
 #' dependencies.
 #'
@@ -745,10 +664,10 @@ TARGET.K <- function(r_max,
 #' @param r_max The maximum net recruitment rate ($r_{max}$).
 #' @param z The parameter that determines the population size where productivity
 #'   is maximum (assumed to be 2.39 by the IWC SC).
-#' @param num.Yrs The number of projection years. Set as the last year in the
+#' @param num_Yrs The number of projection years. Set as the last year in the
 #'   catch or abundance series, whichever is most recent, minus the
-#'   \code{start.Yr}.
-#' @param start.Yr The first year of the projection (assumed to be the first
+#'   \code{start_Yr}.
+#' @param start_Yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param target.Pop A sample of the prior on population abundance $N$, in
 #'   numbers, set as \code{sample.N.obs} sampled from \code{prior.N.obs}
@@ -765,15 +684,15 @@ TARGET.K <- function(r_max,
 #'
 #' @examples
 #' LOGISTIC.BISECTION.K(K.low = 1, K.high = 100000, r_max = r_max, z = z,
-#'                      num.Yrs = bisection.Yrs, start.Yr = start.Yr,
+#'                      num_Yrs = bisection.Yrs, start_Yr = start_Yr,
 #'                      target.Pop = target.Pop, catches = catches, MVP = MVP,
 #'                      tol = 0.001)
 LOGISTIC.BISECTION.K <- function(K.low,
                                  K.high,
                                  r_max,
                                  z,
-                                 num.Yrs,
-                                 start.Yr,
+                                 num_Yrs,
+                                 start_Yr,
                                  target.Pop,
                                  catches,
                                  MVP,
@@ -784,8 +703,8 @@ LOGISTIC.BISECTION.K <- function(K.low,
                     K.high),
                   r_max = r_max,
                   z = z,
-                  num.Yrs = num.Yrs,
-                  start.Yr = start.Yr,
+                  num_Yrs = num_Yrs,
+                  start_Yr = start_Yr,
                   target.Pop = target.Pop,
                   catches = catches,
                   MVP = MVP)
@@ -796,8 +715,8 @@ LOGISTIC.BISECTION.K <- function(K.low,
 #' absolute population size
 #'
 #' @param rel.Abundance Relative abundance index
-#' @param Pred.N Predicted population
-#' @param start.Yr Initial year
+#' @param Pred_N Predicted population
+#' @param start_Yr Initial year
 #' @param add.CV Coefficient of variation
 #' @param num.IA Index of abundance
 #'
@@ -805,7 +724,7 @@ LOGISTIC.BISECTION.K <- function(K.low,
 #' @export
 #'
 #' @examples
-CALC.ANALYTIC.Q <- function(rel.Abundance, Pred.N, start.Yr,
+CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
                             add.CV = 0, num.IA) {
   ## Vector to store the q values
   analytic.Q <- rep(NA, num.IA)
@@ -814,11 +733,11 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred.N, start.Yr,
     ## Subseting across each index of abundance
     IA <- subset(rel.Abundance, Index == i)
     ## Years for which IAs are available
-    IA.yrs <- IA$Year-start.Yr + 1
+    IA.yrs <- IA$Year-start_Yr + 1
     ## Computing the value of sigma as in Zerbini et al. 2011
     IA$Sigma <- sqrt(log(1 + IA$CV.IA.obs^2))
     ## Numerator of the analytic q estimator (Zerbini et al., 2011 - eq. (3))
-    qNumerator <- sum((log(IA$IA.obs / Pred.N[IA.yrs])) /
+    qNumerator <- sum((log(IA$IA.obs / Pred_N[IA.yrs])) /
                       (IA$Sigma * IA$Sigma + add.CV * add.CV))
     ## Denominator of the analytic q estimator (Zerbini et al., 2011 - eq. (3))
     qDenominator <- sum(1 / (IA$Sigma * IA$Sigma))
@@ -831,8 +750,8 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred.N, start.Yr,
 #' Compute the log-likelihood of indices of abundance
 #'
 #' @param Rel.Abundance Relative abundance
-#' @param Pred.N Predicted population size
-#' @param start.Yr Initial year
+#' @param Pred_N Predicted population size
+#' @param start_Yr Initial year
 #' @param q.values Scaling parameter
 #' @param add.CV Coefficient of variation
 #' @param num.IA Number of indices of abundance
@@ -843,7 +762,7 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred.N, start.Yr,
 #' @export
 #'
 #' @examples
-LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
+LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_Yr,
                        q.values, add.CV, num.IA, log = TRUE) {
   loglike.IA1 <- 0
   loglike.IA2 <- 0
@@ -852,18 +771,18 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
     ## Subseting across each index of abundance
     IA <- subset(Rel.Abundance, Index == i)
     ## Years for which IAs are available
-    IA.yrs <- IA$Year-start.Yr + 1
+    IA.yrs <- IA$Year-start_Yr + 1
     ## This is the likelihood from Zerbini et al. 2011 (eq. 5)
     loglike.IA1 <- loglike.IA1 +
       ((sum(log(IA$Sigma) + log(IA$IA.obs) + 0.5 *
-            ((((log(q.values[i] * Pred.N[IA.yrs]) - log(IA$IA.obs))^2) /
+            ((((log(q.values[i] * Pred_N[IA.yrs]) - log(IA$IA.obs))^2) /
               (IA$Sigma*IA$Sigma))))))
 
     ## This is the log-normal distribution from R (using function dnorm)
     ## FIXME Why is this better than using builtin `dlnorm`?
     loglike.IA2 <- loglike.IA2 +
       CALC.LNLIKE(Obs.N = IA$IA.obs,
-                  Pred.N = (q.values[i] * Pred.N[IA.yrs]),
+                  Pred_N = (q.values[i] * Pred_N[IA.yrs]),
                   CV =  sqrt(IA$Sigma * IA$Sigma + add.CV * add.CV),
                   log = log)
   }
@@ -878,9 +797,9 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
 #'
 #' @param Obs.N Observed absoluted abundance in numbers as a data.frame
 #'   containing year, estimate of absolute abundance, and CV.
-#' @param Pred.N Predicted absolute abundance in numbers from
-#'   \code{\link{GENERALIZED.LOGISTIC}}.
-#' @param start.Yr The first year of the projection (assumed to be the first
+#' @param Pred_N Predicted absolute abundance in numbers from
+#'   \code{\link{GENERALIZED_LOGISTIC}}.
+#' @param start_Yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param add.CV Additional CV to add to variance of lognormal distribution
 #'   sampled from \code{prior.add.CV}.
@@ -890,24 +809,24 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
 #'
 #' @examples
 #' Obs.N  <-  data.frame(Year = 2005, Sigma = 5, Obs.N = 1000)
-#' Pred.N  <-  1234
-#' start.Yr  <-  2005
-#' LNLIKE.Ns(Obs.N, Pred.N, start.Yr, add.CV = 0, log=TRUE)
-LNLIKE.Ns <- function(Obs.N, Pred.N, start.Yr, add.CV, log = TRUE) {
+#' Pred_N  <-  1234
+#' start_Yr  <-  2005
+#' LNLIKE.Ns(Obs.N, Pred_N, start_Yr, add.CV = 0, log=TRUE)
+LNLIKE.Ns <- function(Obs.N, Pred_N, start_Yr, add.CV, log = TRUE) {
   loglike.Ns1 <- 0
   loglike.Ns2 <- 0
 
   ## Years for which Ns are available
-  N.yrs <- Obs.N$Year-start.Yr+1
+  N.yrs <- Obs.N$Year-start_Yr+1
   ## This is the likelihood from Zerbini et al. 2011 (eq. 4)
   loglike.Ns1 <- loglike.Ns1 +
     ((sum(log(Obs.N$Sigma) + log(Obs.N$N.obs) + 0.5 *
-          ((((log(Pred.N[N.yrs]) - log(Obs.N$N.obs))^2) /
+          ((((log(Pred_N[N.yrs]) - log(Obs.N$N.obs))^2) /
             (Obs.N$Sigma * Obs.N$Sigma + add.CV * add.CV))))))
   ## This is the log-normal distribution from R (using function dnorm)
   ## FIXME See comments above re: `dlnorm`
   loglike.Ns2 <- loglike.Ns2 + CALC.LNLIKE(Obs.N = Obs.N$N.obs,
-                                           Pred.N = (Pred.N[N.yrs]),
+                                           Pred_N = (Pred_N[N.yrs]),
                                            CV = sqrt(Obs.N$Sigma * Obs.N$Sigma +
                                                      add.CV * add.CV),
                                            log = log)
@@ -937,7 +856,7 @@ LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs) {
   loglike.GR1 <- loglike.GR1 + (((log(GR.SD.Obs) + 0.5 * (((Pred.GR-Obs.GR) / GR.SD.Obs)^2))))
 
   loglike.GR2 <- loglike.GR2 + CALC.LNLIKE(Obs.N = Obs.GR,
-                                           Pred.N = Pred.GR,
+                                           Pred_N = Pred.GR,
                                            CV = GR.SD.Obs,
                                            log = FALSE)
 
@@ -947,7 +866,7 @@ LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs) {
 #' Function to calculate the log-likelihood using a lognormal distribution
 #'
 #' @param Obs.N Time series of observed abundance
-#' @param Pred.N Time series of estimated abundance
+#' @param Pred_N Time series of estimated abundance
 #' @param CV coefficient of variation
 #' @param log whether to export as log-likelihood
 #'
@@ -955,11 +874,11 @@ LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs) {
 #'
 #' @examples
 #' Obs.N <- 2000
-#' Pred.N <- 2340
+#' Pred_N <- 2340
 #' CV <- 4
-#' CALC.LNLIKE(Obs.N, Pred.N, CV)
-CALC.LNLIKE <- function(Obs.N, Pred.N, CV, log = FALSE) {
-  sum(dnorm(x = log(Obs.N), mean = log(Pred.N), sd = CV, log = log))
+#' CALC.LNLIKE(Obs.N, Pred_N, CV)
+CALC.LNLIKE <- function(Obs.N, Pred_N, CV, log = FALSE) {
+  sum(dnorm(x = log(Obs.N), mean = log(Pred_N), sd = CV, log = log))
 }
 
 #' OUTPUT FUNCTION
@@ -968,11 +887,11 @@ CALC.LNLIKE <- function(Obs.N, Pred.N, CV, log = FALSE) {
 #' credible interval, 90% predicitive interval, max, and sample size.
 #'
 #' @param x A data.frame of model outputs including: sample.r_max, sample.K,
-#'   sample.N.obs, sample.add.CV, Pred.N$Min.Pop, Pred.N$Min.Yr,
-#'   Pred.N$Violate.MVP, c(Pred.N$Pred.N[output.Yrs-start.Yr+1]), Pred.ROI.IA,
+#'   sample.N.obs, sample.add.CV, Pred_N$Min_Pop, Pred_N$Min_Yr,
+#'   Pred_N$Violate_Min_Viable_Pop, c(Pred_N$Pred_N[output.Yrs-start_Yr+1]), Pred.ROI.IA,
 #'   q.sample.IA, Pred.ROI.Count, q.sample.Count, lnlike.IAs[[1]],
 #'   lnlike.Count[[1]], lnlike.Ns[[1]], lnlike.GR[[1]], LL, Likelihood,
-#'   Pred.N$Min.Pop/sample.K, c(Pred.N$Pred.N[output.Yrs-start.Yr+1]/sample.K),
+#'   Pred_N$Min_Pop/sample.K, c(Pred_N$Pred_N[output.Yrs-start_Yr+1]/sample.K),
 #'   draw, save)
 #' @param scenario Name of the model run and object as specified by the user.
 #'
