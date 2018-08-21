@@ -531,38 +531,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                      output.Years = output.Yrs))
 }
 
-#' Function to sample from priors
-#'
-#' @param name Name of a distribution, as a string
-#' @param Val.1 Lower bound of "(log-)uniform", mean of "(log-)normal"
-#' @param Val.2 Upper bound of "(log-)uniform", SD of "(log-)normal"
-#'
-#' @return Single random sample from the specified prior distribution.
-#' @export
-#'
-#' @examples
-#' SAMPLE.PRIOR("uniform", 0, 1)
-#' SAMPLE.PRIOR("log-uniform", 1e-5, 10)
-#' SAMPLE.PRIOR("normal", 0, 1)
-#' SAMPLE.PRIOR("log-normal", 0, 1)
-SAMPLE.PRIOR <- function(name, Val.1, Val.2) {
-  ## FIXME Change to switch statement, use temp variable to clean up multiple
-  ## returns?
-  if (name == "uniform") {
-    ## Uniform prior
-    return(runif(1, as.numeric(Val.1), as.numeric(Val.2)))
-  } else if (name == "log-uniform") {
-    ## Log-uniform prior
-    return(exp(runif(1, as.numeric(Val.1), as.numeric(Val.2))))
-  } else if (name == "normal") {
-    ## Normal prior
-    return(rnorm(1, as.numeric(Val.1), as.numeric(Val.2)))
-  } else if (name=="log-normal") {
-    ## Log-normal prior
-    return(rlnorm(1, as.numeric(Val.1), as.numeric(Val.2)))
-  }
-}
-
 #' GENERALISED LOGISTIC MODEL
 #'
 #' \code{GENERALIZED.LOGISTIC} returns the population projection using a
@@ -783,8 +751,7 @@ TARGET.K <- function(r_max,
 #' @param start.Yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param target.Pop A sample of the prior on population abundance $N$, in
-#'   numbers, set as \code{sample.N.obs} sampled using
-#'   \code{\link{SAMPLE.PRIOR}} and \code{prior.N.obs}
+#'   numbers, set as \code{sample.N.obs} sampled from \code{prior.N.obs}
 #' @param catches The time series of catch in numbers or biomass. Currently does
 #'   not handle NAs and zeros will have to input a priori for years in which
 #'   there were no catches.
@@ -916,7 +883,7 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred.N, start.Yr,
 #' @param start.Yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param add.CV Additional CV to add to variance of lognormal distribution
-#'   sampled from \code{\link{SAMPLE.PRIOR}}
+#'   sampled from \code{prior.add.CV}.
 #' @param log Return the log of the likelihood (TRUE/FALSE)
 #'
 #' @return A list of two numeric scalars of estimates of log-likelihood.
