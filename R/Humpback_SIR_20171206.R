@@ -243,7 +243,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     #Computing the predicted abundances with the samples from the priors
     #----------------------------------------
-    Pred.N <- GENERALIZED.LOGISTIC(r_max = sample.r_max,
+    Pred.N <- GENERALIZED_LOGISTIC(r_max = sample.r_max,
                                    K = sample.K,
                                    N1 = sample.K,
                                    z = sample.z,
