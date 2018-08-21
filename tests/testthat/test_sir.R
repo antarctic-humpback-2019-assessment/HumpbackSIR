@@ -5,17 +5,8 @@ test_that("Example runs", {
   sir <- HUMPBACK.SIR(file.name = "test.N2005",
                       n.resamples = 100,
                       priors = make_prior_list(),
-                      ## prior.K = c(NA, NA, NA),
-                      ## prior.r_max = make_prior(runif, 0, 0.106),
-                      ## prior.N.obs = make_prior(runif, 500, 20000),
-                      ## prior.add.CV = make_prior(use = FALSE),
-                      ## prior.z = make_prior(2.39),
-                      ## q.prior.IA = make_prior(use = FALSE),
-                      ## q.prior.Count = make_prior(use = FALSE),
-                      Klim = c(1, 500000),
                       target.Yr = 2005,
                       num.haplotypes = 0,
-                      tolerance.for.bisection = 0.0001,
                       output.Yrs = c(2005, 2006),
                       abs.abundance = Abs.Abundance.2005,
                       rel.abundance = Rel.Abundance,
@@ -25,8 +16,7 @@ test_that("Example runs", {
                       growth.rate.obs = c(0.074, 0.033, TRUE),
                       growth.rate.Yrs = c(1995, 1996, 1997, 1998),
                       catch.data = Catch.data,
-                      Threshold = 1e-17,
-                      Print = 0)
+                      control = sir_control())
   ## Results generated 2018-08-19
   ## Only using 100 samples so tests don't take forever
   ## Only checking a few of these; not clear which should be targeted for tests
