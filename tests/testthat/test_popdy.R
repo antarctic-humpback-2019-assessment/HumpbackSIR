@@ -10,7 +10,7 @@ catch0 <- rep(0, num_yrs)
 catch_sust <- rep(1 - 0.6 * K, num_yrs)
 
 test_that("K steady state", {
-  P_Ksteady <- GENERALIZED.LOGISTIC(r_max, K, N1, z,
+  P_Ksteady <- GENERALIZED_LOGISTIC(r_max, K, N1, z,
                                     start_yr, num_yrs,
                                     catches = catch0,
                                     MVP = 0)
@@ -23,7 +23,7 @@ test_that("K steady state", {
 
 test_that("Zero steady state", {
   skip("Minimum population currently set to 1")
-  P_0steady <- GENERALIZED.LOGISTIC(r_max, K, N1 = 0, z,
+  P_0steady <- GENERALIZED_LOGISTIC(r_max, K, N1 = 0, z,
                                     start_yr, num_yrs,
                                     catches = catch0,
                                     MVP = 0)
@@ -37,7 +37,7 @@ test_that("Zero steady state", {
 test_that("Gen. logistic with MYS catch", {
   ## Need to start near steady state; values found with `optimize`
   num_yrs_sust <- 20
-  P_sust <- GENERALIZED.LOGISTIC(r_max, K, N1 = 600.0109, z,
+  P_sust <- GENERALIZED_LOGISTIC(r_max, K, N1 = 600.0109, z,
                                  start_yr, num_yrs_sust,
                                  catches = rep(84.6033, num_yrs_sust),
                                  MVP = 600)
@@ -52,7 +52,7 @@ test_that("Gen. logistic with MYS catch", {
 test_that("Gen. logistic with catches", {
   catches <- c(10, 20, 40, 80, 160,
                320, 40, 40, 20, 10)
-  P_catches <- GENERALIZED.LOGISTIC(r_max, K, N1, z,
+  P_catches <- GENERALIZED_LOGISTIC(r_max, K, N1, z,
                                     start_yr, num_yrs,
                                     catches = catches,
                                     MVP = 100)
@@ -70,7 +70,7 @@ test_that("Gen. logistic with catches", {
 test_that("Gen. logistic with catches and violates MVP", {
   catches <- c(300, 300, 200, 200, 100,
                100, 100, 0, 0, 0)
-  P_catches_mvp <- GENERALIZED.LOGISTIC(r_max, K, N1, z,
+  P_catches_mvp <- GENERALIZED_LOGISTIC(r_max, K, N1, z,
                                         start_yr, num_yrs,
                                         catches = catches,
                                         MVP = 100)
