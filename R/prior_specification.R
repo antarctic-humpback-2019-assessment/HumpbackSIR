@@ -30,7 +30,7 @@ make_prior <- function(rfn = NA, par1 = NULL, par2 = NULL, use = TRUE, label = N
   if (is.function(rfn)) {
     fn <- function() rfn(1, par1, par2)
     if (is.null(label)) {
-      ## FIXME It would be nice to separate this out to a separate function, but
+      ## FIXME It would be nice to separate this out to its own function, but
       ## `substitute` doesn't seem to work right if I'm passing through multiple
       ## functions, even if I specify `env = .GlobalEnv`.
       dist_lab <- switch(deparse(substitute(rfn)),
@@ -53,19 +53,55 @@ make_prior <- function(rfn = NA, par1 = NULL, par2 = NULL, use = TRUE, label = N
 }
 
 
-##' This is a function to return a random sample from the log-uniform
-##' distribution.
+##' Return a random sample from the log-uniform distribution.
 ##'
 ##' @title The log-uniform distribution
 ##'
 ##' @param n Number of observations.
-##' @param min,max Limits of the distribution (must be strictly positive).
+##' @param min,max Limits of the distribution (must be strictly positive). These
+##'   will be the limits of the samples returned.
 ##'
 ##' @return A vector of length \code{n} containing random draws from the
 ##'   log-uniform distribution.
+##'
+##' Draws independent samples from Uniform(log(min), log(max)) and
+##' exponentiates.
+##' 
 ##' @export
 ##' @examples
 ##' rlunif(1, 0.01, 0.2)
 rlunif <- function(n, min = 1, max = 2) {
   exp(runif(n, log(min), log(max)))
+}
+
+##' @title Make a list of priors to be passed to the SIR function.
+##'
+##' @param r_max Population growth rate; defaults to Uniform(0, 0.106).
+##' @param K Carrying capacity, defaults to unused, and solution found using
+##'   recent observation and sampled \code{r_max}.
+##' @param N_obs Prior on a recent abundance estimate. Defaults to Uniform(500,
+##'   20,000).
+##' @param add_CV Defaults to unused. Additional variability.
+##' @param z Defaults to constant 2.39. Shape parameter for generalized logistic
+##'   population dynamics function.
+##' @param q_IA Defaults to unused. Prior on q for indices of abundance. If
+##'   \code{use = FALSE}, an analytic solution for q is used.
+##' @param q_count Defaults to unused. Prior for q on counts.
+##'
+##' @return A named list containing each of the specified priors in a form that
+##'   can be used by the SIR function.
+make_prior_list <- function(r_max = make_prior(runif, 0, 0.106),
+                            K = make_prior(use = FALSE),
+                            N_obs = make_prior(runif, 500, 20000),
+                            add_CV = make_prior(use = FALSE),
+                            z = make_prior(2.39),
+                            q_IA = make_prior(use = FALSE),
+                            q_count = make_prior(use = FALSE)) {
+  list(r_max = r_max,
+       K = K,
+       N_obs = N_obs,
+       add_CV = add_CV,
+       z = z,
+       q_IA = q_IA,
+       q_count = q_count)
 }
