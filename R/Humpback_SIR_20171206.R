@@ -136,8 +136,11 @@ HUMPBACK.SIR <- function(file.name = "NULL",
   final.trajectory <- matrix(NA, nrow = projection.Yrs, ncol = 6)
   Year <- seq(start_Yr, end.Yr, by = 1)
 
-  #Initiating the SIR loop
+  if (control$progress_bar) {
+    pb <- txtProgressBar(min = 0, max = n.resamples, style = 3)
+  }
 
+  #Initiating the SIR loop
   while (i < n.resamples) {
     #Sampling from Priors
     #-------------------------------
@@ -376,6 +379,9 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                     draw,
                                     save))
         i <- i+1
+        if (control$progress_bar) {
+          setTxtProgressBar(pb, i)
+        }
       }
     }
 

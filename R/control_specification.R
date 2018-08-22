@@ -13,9 +13,11 @@
 ##' @param verbose Integer, defaults to 0; See Details for specifics. Note that
 ##'   more intermediate output will slow down sampling.
 ##'
-##' The \code{verbose} argument takes an integer, controlling how much is
-##' output. All output uses \code{message}, so works with functions like
-##' \code{supressMessages}. These levels are
+##' Use of \code{progress_bar} and \code{verbose} together is not allowed. If
+##' both are set, only \code{progress_bar} will be shown. The \code{verbose}
+##' argument takes an integer, controlling how much is output. All output uses
+##' \code{message}, so works with functions like \code{supressMessages}. These
+##' levels are
 ##'
 ##' \itemize{
 ##'   \item \code{0} no output;
@@ -33,11 +35,9 @@ sir_control <- function(K_bisect_lims = c(1, 5e5),
                         threshold = 1e-17,
                         progress_bar = FALSE,
                         verbose = 0) {
-  if (progress_bar) {
-    stop("Progress bar not implemented.")
-  }
   if (progress_bar && verbose) {
-    warn("Progress bar may not be visible if verbose output used.")
+    warning("Progress bar supercedes verbose output.")
+    verbose <- 0
   }
   list(K_bisect_lims = K_bisect_lims,
        K_bisect_tol = K_bisect_tol,
