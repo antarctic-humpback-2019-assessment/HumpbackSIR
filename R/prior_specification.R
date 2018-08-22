@@ -53,8 +53,7 @@ make_prior <- function(rfn = NA, par1 = NULL, par2 = NULL, use = TRUE, label = N
 }
 
 
-##' This is a function to return a random sample from the log-uniform
-##' distribution. This is 
+##' Return a random sample from the log-uniform distribution.
 ##'
 ##' @title The log-uniform distribution
 ##'
@@ -64,6 +63,10 @@ make_prior <- function(rfn = NA, par1 = NULL, par2 = NULL, use = TRUE, label = N
 ##'
 ##' @return A vector of length \code{n} containing random draws from the
 ##'   log-uniform distribution.
+##'
+##' Draws independent samples from Uniform(log(min), log(max)) and
+##' exponentiates.
+##' 
 ##' @export
 ##' @examples
 ##' rlunif(1, 0.01, 0.2)
