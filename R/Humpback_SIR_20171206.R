@@ -325,8 +325,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                start_Yr,
                                q.sample.IA,
                                sample.add.CV,
-                               num.IA,
-                               log=TRUE)
+                               TRUE)
     } else {
       lnlike.IAs <- 0
     }
@@ -342,7 +341,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                  start_Yr,
                                  q.sample.Count,
                                  sample.add.CV,
-                                 num.Count,
                                  log=TRUE)
     } else {
       lnlike.Count <- 0
@@ -755,7 +753,6 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
 #' @param start_Yr Initial year
 #' @param q.values Scaling parameter
 #' @param add.CV Coefficient of variation
-#' @param num.IA Number of indices of abundance
 #' @param log Boolean, return log likelihood (default TRUE) or
 #'   likelihood.
 #'
@@ -764,18 +761,17 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
 #'
 #' @examples
 LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_Yr,
-                       q.values, add.CV, num.IA, log = TRUE) {
+                       q.values, add.CV, log = TRUE) {
     loglike.IA1 <- 0
+    IA.yrs <- Rel.Abundance$Year-start_Yr + 1
+    loglike.IA1 <- -sum(
+        dlnorm_zerb( # NOTE: can be changed to dlnorm
+        x = Rel.Abundance$IA.obs,
+        meanlog = log( q.values[Rel.Abundance$Index] * Pred_N[IA.yrs] ),
+        sdlog = Rel.Abundance$Sigma + add.CV,
+        log))
 
-    for(i in 1:num.IA) {
-        ## Subseting across each index of abundance
-        IA <- Rel.Abundance[Rel.Abundance$Index == i, ]
-        ## Years for which IAs are available
-        IA.yrs <- IA$Year-start_Yr + 1
-        ## This is the likelihood from Zerbini et al. 2011 (eq. 5)
-        loglike.IA1 <- loglike.IA1 + sum(dlnorm(IA$IA.obs, log(Pred_N[IA.yrs]),  IA$Sigma + add.CV, log = log))
-    }
-    -loglike.IA1
+    loglike.IA1
 }
 
 #' LOG LIKELIHOOD OF ABSOLUTE ABUNDANCE
