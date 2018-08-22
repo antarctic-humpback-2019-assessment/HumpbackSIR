@@ -285,9 +285,14 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                Pred_N$Pred_N,
                                start_Yr,
                                q.sample.IA,
+<<<<<<< HEAD
                                sample.add_CV,
                                num.IA,
                                log=TRUE)
+=======
+                               sample.add.CV,
+                               TRUE)
+>>>>>>> Included zerbini LNLIKE.IAs in Rcpp
     } else {
       lnlike.IAs <- 0
     }
@@ -300,8 +305,12 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                  Pred_N$Pred_N,
                                  start_Yr,
                                  q.sample.Count,
+<<<<<<< HEAD
                                  sample.add_CV,
                                  num.Count,
+=======
+                                 sample.add.CV,
+>>>>>>> Included zerbini LNLIKE.IAs in Rcpp
                                  log=TRUE)
     } else {
       lnlike.Count <- 0
@@ -709,8 +718,12 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
 #' @param Pred_N Predicted population size
 #' @param start_Yr Initial year
 #' @param q.values Scaling parameter
+<<<<<<< HEAD
 #' @param add_CV Coefficient of variation
 #' @param num.IA Number of indices of abundance
+=======
+#' @param add.CV Coefficient of variation
+>>>>>>> Included zerbini LNLIKE.IAs in Rcpp
 #' @param log Boolean, return log likelihood (default TRUE) or
 #'   likelihood.
 #'
@@ -723,11 +736,19 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_Yr,
     loglike.IA1 <- 0
     IA.yrs <- Rel.Abundance$Year-start_Yr + 1
     loglike.IA1 <- -sum(
+<<<<<<< HEAD
         dlnorm_zerb( # NOTE: can be changed to dlnorm_zerb to have the original likelihood
             x = Rel.Abundance$IA.obs,
             meanlog = log( q.values[Rel.Abundance$Index] * Pred_N[IA.yrs] ),
             sdlog = Rel.Abundance$Sigma + add.CV,
             log))
+=======
+        dlnorm_zerb( # NOTE: can be changed to dlnorm
+        x = Rel.Abundance$IA.obs,
+        meanlog = log( q.values[Rel.Abundance$Index] * Pred_N[IA.yrs] ),
+        sdlog = Rel.Abundance$Sigma + add.CV,
+        log))
+>>>>>>> Included zerbini LNLIKE.IAs in Rcpp
 
     loglike.IA1
 }

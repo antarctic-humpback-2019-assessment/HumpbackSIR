@@ -23,9 +23,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dlnorm_zerb
+NumericVector dlnorm_zerb(NumericVector x, NumericVector meanlog, NumericVector sdlog, bool return_log);
+RcppExport SEXP _HumpbackSIR_dlnorm_zerb(SEXP xSEXP, SEXP meanlogSEXP, SEXP sdlogSEXP, SEXP return_logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type meanlog(meanlogSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type sdlog(sdlogSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_log(return_logSEXP);
+    rcpp_result_gen = Rcpp::wrap(dlnorm_zerb(x, meanlog, sdlog, return_log));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_HumpbackSIR_GENERALIZED_LOGISTIC", (DL_FUNC) &_HumpbackSIR_GENERALIZED_LOGISTIC, 8},
+    {"_HumpbackSIR_dlnorm_zerb", (DL_FUNC) &_HumpbackSIR_dlnorm_zerb, 4},
     {NULL, NULL, 0}
 };
 

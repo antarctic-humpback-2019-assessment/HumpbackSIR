@@ -49,3 +49,18 @@ GENERALIZED_LOGISTIC <- function(r_max, K, N1, z, start_Yr, num_Yrs, catches, MV
     .Call(`_HumpbackSIR_GENERALIZED_LOGISTIC`, r_max, K, N1, z, start_Yr, num_Yrs, catches, MVP)
 }
 
+#' Adjusted lognormal likelihood from Zerbini et al. 2011 (eq. 5)
+#'
+#' \code{dlnorm_zerb} returns the density for the adjusted log normal distribution whose logarith has mean equal to \code{meanlog} and standard deviation equal to \code{sdlog}:
+#' $$f\left(x\right) = \frac{1}{\sigma * x} exp \left( \frac{ \left( ln\left( x \right) - \mu \right) ^ 2} {2 \sigma^2} \right)$$
+#'
+#' @param x vector of quantiles.
+#' @param meanlog mean of the distribution on the log scale with a default value of 0.
+#' @param sdlog standard deviation of the distribution on the log scale with a default value of 1.
+#' @param log logical; if TRUE, probabilities p are given as log(p).
+#'
+#' @return A vector of densities.
+dlnorm_zerb <- function(x, meanlog, sdlog, return_log = TRUE) {
+    .Call(`_HumpbackSIR_dlnorm_zerb`, x, meanlog, sdlog, return_log)
+}
+
