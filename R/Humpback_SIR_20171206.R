@@ -285,7 +285,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                Pred_N$Pred_N,
                                start_Yr,
                                q.sample.IA,
-                               sample.add.CV,
+                               sample.add_CV,
                                TRUE)
     } else {
       lnlike.IAs <- 0
@@ -299,7 +299,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                  Pred_N$Pred_N,
                                  start_Yr,
                                  q.sample.Count,
-                                 sample.add.CV,
+                                 sample.add_CV,
                                  log=TRUE)
     } else {
       lnlike.Count <- 0
