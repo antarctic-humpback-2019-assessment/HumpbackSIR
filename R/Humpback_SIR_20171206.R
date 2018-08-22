@@ -286,8 +286,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                start_Yr,
                                q.sample.IA,
                                sample.add_CV,
-                               num.IA,
-                               log=TRUE)
+                               TRUE)
     } else {
       lnlike.IAs <- 0
     }
@@ -301,7 +300,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                                  start_Yr,
                                  q.sample.Count,
                                  sample.add_CV,
-                                 num.Count,
                                  log=TRUE)
     } else {
       lnlike.Count <- 0
@@ -592,6 +590,7 @@ TARGET.K <- function(r_max, K, N1, z,
                      num_Yrs, start_Yr,
                      target.Pop, catches,
                      MVP = 0) {
+
   Pred_N <- GENERALIZED_LOGISTIC(r_max = r_max,
                                  K = K,
                                  N1 = K,
@@ -686,7 +685,7 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
 
   for (i in 1:num.IA) {
     ## Subseting across each index of abundance
-    IA <- subset(rel.Abundance, Index == i)
+    IA <- Rel.Abundance[Rel.Abundance$Index == i,]
     ## Years for which IAs are available
     IA.yrs <- IA$Year-start_Yr + 1
     ## Computing the value of sigma as in Zerbini et al. 2011
@@ -708,8 +707,7 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
 #' @param Pred_N Predicted population size
 #' @param start_Yr Initial year
 #' @param q.values Scaling parameter
-#' @param add_CV Coefficient of variation
-#' @param num.IA Number of indices of abundance
+#' @param add.CV Coefficient of variation
 #' @param log Boolean, return log likelihood (default TRUE) or
 #'   likelihood.
 #'
@@ -718,31 +716,19 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
 #'
 #' @examples
 LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_Yr,
-                       q.values, add_CV, num.IA, log = TRUE) {
-  loglike.IA1 <- 0
-  loglike.IA2 <- 0
+                       q.values, add.CV, log = TRUE) {
+    loglike.IA1 <- 0
+    IA.yrs <- Rel.Abundance$Year-start_Yr + 1
+    loglike.IA1 <- -sum(
+        dlnorm_zerb( # NOTE: can be changed to dlnorm
+        x = Rel.Abundance$IA.obs,
+        meanlog = log( q.values[Rel.Abundance$Index] * Pred_N[IA.yrs] ),
+        sdlog = Rel.Abundance$Sigma + add.CV,
+        log))
 
-  for(i in 1:num.IA) {
-    ## Subseting across each index of abundance
-    IA <- subset(Rel.Abundance, Index == i)
-    ## Years for which IAs are available
-    IA.yrs <- IA$Year-start_Yr + 1
-    ## This is the likelihood from Zerbini et al. 2011 (eq. 5)
-    loglike.IA1 <- loglike.IA1 +
-      ((sum(log(IA$Sigma) + log(IA$IA.obs) + 0.5 *
-            ((((log(q.values[i] * Pred_N[IA.yrs]) - log(IA$IA.obs))^2) /
-              (IA$Sigma*IA$Sigma))))))
-
-    ## This is the log-normal distribution from R (using function dnorm)
-    ## FIXME Why is this better than using builtin `dlnorm`?
-    loglike.IA2 <- loglike.IA2 +
-      CALC.LNLIKE(Obs.N = IA$IA.obs,
-                  Pred_N = (q.values[i] * Pred_N[IA.yrs]),
-                  CV =  sqrt(IA$Sigma * IA$Sigma + add_CV * add_CV),
-                  log = log)
-  }
-  list(loglike.IA1 = loglike.IA1, loglike.IA2 = loglike.IA2)
+    loglike.IA1
 }
+
 
 #' LOG LIKELIHOOD OF ABSOLUTE ABUNDANCE
 #'
