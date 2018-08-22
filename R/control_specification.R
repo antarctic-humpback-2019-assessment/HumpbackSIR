@@ -1,4 +1,5 @@
 ##' Set fitting parameters for SIR with reasonable defaults.
+
 ##'
 ##' @title Set parameters for SIR
 ##'
@@ -38,6 +39,7 @@ sir_control <- function(K_bisect_lims = c(1, 5e5),
   if (progress_bar && verbose) {
     warning("Progress bar supercedes verbose output.")
     verbose <- 0
+
   }
   list(K_bisect_lims = K_bisect_lims,
        K_bisect_tol = K_bisect_tol,

@@ -10,6 +10,7 @@
 #' @param n.resamples number of resamples to compute the marginal posterior
 #'   distributions
 #' @param priors List of priors, usually generated using \link{make_prior_list}.
+#'   Default is the default of \code{make_prior_list}. See details.
 #' @param target.Yr year of the target population estimate for the bisection
 #'   method. Default is 2008
 #' @param num.haplotypes number of haplotypes to compute minimum viable
@@ -40,6 +41,16 @@
 #'
 #' TODO: Add the negative binomial likelihood for the count data, which is not
 #' currently used even though it is defined in the main function call.
+#'
+#' Current default prior specification:
+#' \code{
+#' make_prior_list(r_max = make_prior(runif, 0, 0.106),
+#'                 K = make_prior(use = FALSE),
+#'                 N_obs = make_prior(runif, 500, 20000),
+#'                 add_CV = make_prior(use = FALSE),
+#'                 z = make_prior(2.39),
+#'                 q_IA = make_prior(use = FALSE),
+#'                 q_count = make_prior(use = FALSE)}
 #'
 #' @export
 #'

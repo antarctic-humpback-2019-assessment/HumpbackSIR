@@ -16,7 +16,7 @@ test_that("Example runs", {
                       growth.rate.obs = c(0.074, 0.033, TRUE),
                       growth.rate.Yrs = c(1995, 1996, 1997, 1998),
                       catch.data = Catch.data,
-                      control = sir_control(progress_bar = TRUE))
+                      control = sir_control())
   ## Results generated 2018-08-19
   ## Only using 100 samples so tests don't take forever
   ## Only checking a few of these; not clear which should be targeted for tests
