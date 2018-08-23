@@ -316,9 +316,10 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     # (4) growth rate if applicable
     if (growth.rate.obs[3]) {
-      Pred.GR <- PRED.GROWTH.RATE(growth.rate.Yrs=growth.rate.Yrs,
-                                  Pred_N=Pred_N$Pred_N,
-                                  start_Yr=start_Yr)
+      ## gr_idx <- 
+      Pred.GR <- calc_growth_rate(years = growth.rate.Yrs[c(1, 4)],
+                                  pred_pop = data.frame(Pred_N = Pred_N$Pred_N,
+                                                    year = start_Yr:end.Yr))
       lnlike.GR <- LNLIKE.GR(Obs.GR=growth.rate.obs[1],
                              Pred.GR=Pred.GR,
                              GR.SD.Obs=growth.rate.obs[2])
@@ -495,42 +496,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                      output.Years = output.Yrs))
 }
 
-
-#' PREDICTED GROWTH RATE
-#'
-#' \code{PRED.GROWTH.RATE} computes the predicted growth rate if such
-#' information is available from an independent estimate rather than being
-#' estimated from data. Growth rate is calculated as: $$r_{t_0 - t_{fin}}^{pred}
-#' = \frac{ \sum_{t = t_0} ^{t_{fin - 1}} ln \left( \frac{N_{t+1}^{pred}} {
-#' N_t^{pred}} \right) } { t_{fin} - t_0 } = \frac{ ln \left( N_{fin}^{pred}
-#' \right) - ln \left( N_{0}^{pred} \right)} { t_{fin} - t_0 }$$ where
-#' $N^{pred}$ is the model predicted population size, in numbers, at time $t$ or
-#' $t+1$ in years, $t_0$ is the start year of the equation (1995 in Zerbini et
-#' al. 2011), and $t_{fin}$ is the last year of the equation (1998 in Zerbini et
-#' al. 2011).
-#'
-#' @param growth.rate.Yrs The years to be used for growth rate computation. 1995 - 1998 are used in Zerbini et al. 2011.
-#' @param Pred_N Time series of predicted abundance, in numbers, from \code{\link{GENERALIZED_LOGISTIC}}.
-#' @param start_Yr The first year of the projection (assumed to be the first year in the catch series).
-#'
-#' @return A numeric scalar representing predicted growth rate.
-#'
-#' @examples
-#' growth.rate.Yrs  <-  c(1995:1998)
-#' Pred_N <- c(1000, 1500, 1500, 2000)
-#' start_Yr  <-  1995
-#' PRED.GROWTH.RATE(growth.rate.Yrs, Pred_N, start_Yr=start_Yr)
-PRED.GROWTH.RATE <- function(growth.rate.Yrs, Pred_N, start_Yr = start_Yr) {
-  ## Computing the growth rate years
-  GR.Yrs <- growth.rate.Yrs - start_Yr + 1
-  Pred_N.GR <- Pred_N[GR.Yrs]
-
-  ## FIXME Just return this line?
-  Pred.GR <- (log(Pred_N.GR[length(Pred_N.GR)]) -
-              log(Pred_N.GR[1])) / (length(Pred_N.GR) - 1)
-
-  Pred.GR
-}
 
 #' Computes the predicted rate of increase for a set of specified years for
 #' comparison with trends estimated separately with any of the indices of
@@ -796,10 +761,10 @@ LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs) {
   ## This is the likelihood from Zerbini et al. 2011 (eq. 6)
   loglike.GR1 <- loglike.GR1 + (((log(GR.SD.Obs) + 0.5 * (((Pred.GR-Obs.GR) / GR.SD.Obs)^2))))
 
-  loglike.GR2 <- loglike.GR2 + CALC.LNLIKE(Obs.N = Obs.GR,
-                                           Pred_N = Pred.GR,
-                                           CV = GR.SD.Obs,
-                                           log = FALSE)
+  ## loglike.GR2 <- loglike.GR2 + CALC.LNLIKE(Obs.N = Obs.GR,
+  ##                                          Pred_N = Pred.GR,
+  ##                                          CV = GR.SD.Obs,
+  ##                                          log = FALSE)
 
   list(loglike.GR1 = loglike.GR1, loglike.GR2 = loglike.GR2)
 }
