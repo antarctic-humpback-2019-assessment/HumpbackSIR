@@ -1,0 +1,62 @@
+##' Project population forward from code{N1} for \code{num_years} using
+##' Pella-Tomlinson dynamics. Note that this function assumes the initial
+##' population is at carrying capacity.
+##'
+##' @title Project population forward
+##'
+##' @param param_sample List of parameter values containing at least named
+##'   entries for \code{r_max}, \code{K}, and \code{z}.
+##' @param data List of data containing a vector of catches named \code{catch}.
+##' @param tspan Vector of length two indicating starting and ending years for
+##'   projection.
+##'
+##' @return A data frame with columns \code{year} and \code{N}.
+##' @export
+project_population <- function(param_sample, data, tspan) {
+  num_years <- diff(tspan) + 1
+  ## TODO Add interface for catch multipliers (struck and loss rates etc. here)
+  catch_series <- data$catch
+  if (length(catch_series) != (num_years - 1)) {
+    stop("Catch series length must be one less than number of years to project")
+  }
+  N <- generalized_logistic(param_sample[["r_max"]],
+                            param_sample[["K"]],
+                            param_sample[["K"]],
+                            param_sample[["z"]],
+                            num_years,
+                            catch_series)
+  data.frame(year = tspan[1]:tspan[2],
+             N = N)
+}
+
+##' Check whether the population violates the minimum viable population (MVP)
+##' constraint provided by the number of haplotypes found. MVP is typically
+##' considered to be \code{4 * num_haplotypes} (from Jackson et al. 2006 and
+##' IWC, 2007).
+##'
+##' @title Check for violation of MVP
+##'
+##' @param trajectory Data frame of population trajectory, as from
+##'   \code{\link{project_population}}.
+##' @param mvp Minimum viable population
+##'
+##' @return Logical; TRUE if population trajectory dips below MVP.
+check_mvp_violated <- function(trajectory, mvp) {
+  any(trajectory$N < mvp)
+}
+
+##' Find minimum population and year where it occured.
+##'
+##' @title Minimum population and year
+##'
+##' @param trajectory Data frame of population trajectory, as from
+##'   \code{\link{project_population}}.
+##'
+##' @return A data frame with columns \code{year} and \code{N}, corresponding to
+##'   the year where the minimum population occured and the population that year
+##'   respectively.
+minimum_population <- function(trajectory) {
+  min_N <- min(trajectory$N)
+  min_idx <- which(trajectory$N == min_N)
+  trajectory[min_idx, ]
+}
