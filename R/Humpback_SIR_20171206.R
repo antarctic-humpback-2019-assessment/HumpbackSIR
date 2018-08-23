@@ -208,14 +208,17 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 
     #Computing the predicted abundances with the samples from the priors
     #----------------------------------------
-    Pred_N <- GENERALIZED_LOGISTIC(r_max = sample.r_max,
-                                   K = sample.K,
-                                   N1 = sample.K,
-                                   z = sample.z,
-                                   start_Yr = start_Yr,
-                                   num_Yrs = projection.Yrs,
-                                   catches = catches,
-                                   MVP = MVP)
+    Pred_N <- project_population(param_sample = param_sample,
+                                 data = data,
+                                 tspan = tspan)
+    ## Pred_N <- GENERALIZED_LOGISTIC(r_max = sample.r_max,
+    ##                                K = sample.K,
+    ##                                N1 = sample.K,
+    ##                                z = sample.z,
+    ##                                start_Yr = start_Yr,
+    ##                                num_Yrs = projection.Yrs,
+    ##                                catches = catches,
+    ##                                MVP = MVP)
 
 
     #Computing the predicted ROI for the IAs and Count data, if applicable
@@ -525,146 +528,6 @@ COMPUTING.ROI <- function(data = data, Pred_N = Pred_N, start_Yr = NULL) {
   Pred.ROI
 }
 
-#' Calculate a target K for the bisection method
-#'
-#' @param r_max The maximum net recruitment rate ($r_{max}$).
-#' @param K Pre-expoitation population size in numbers or biomass
-#'   (depending on input).
-#' @param N1 Population size in numbers or biomass at year 1 (generally
-#'   assumed to be K).
-#' @param z Generalized logistic shape parameter, determines population
-#'   size where productivity is masimum (assumed to be 2.39 by the ISC
-#'   SC).
-#' @param num_Yrs The number of projection years. Set as the last year
-#'   in the catchor abundance series whichever is most recent, minus the
-#'   start year.
-#' @param start_Yr First year of the projection (assumed to be the first
-#'   year in the catch series).
-#' @param target.Pop Target population size.
-#' @param catches Catch time series. Cannot include NAs,
-#' @param MVP Minimum Viable Population Size; `4 * num.haplotypes`
-#'
-#' @return Vector of differences between predicted population and target
-#'   population.
-#' @export
-#'
-#' @examples
-#' TARGET.K(r_max, K, N1, z, start_Yr=start_Yr, num_Yrs=bisection.Yrs,
-#'          target.Pop=target.Pop, catches=catches, MVP=MVP)
-TARGET.K <- function(r_max, K, N1, z,
-                     num_Yrs, start_Yr,
-                     target.Pop, catches,
-                     MVP = 0) {
-
-  Pred_N <- GENERALIZED_LOGISTIC(r_max = r_max,
-                                 K = K,
-                                 N1 = K,
-                                 z = z,
-                                 start_Yr = start_Yr,
-                                 num_Yrs = num_Yrs,
-                                 catches = catches,
-                                 MVP = MVP)
-  Pred_N$Pred_N[num_Yrs] - target.Pop
-}
-
-#' LOGISTIC BISECTION
-#'
-#' Method of Butterworth and Punt (1995) where the prior distribution of the
-#' current absolute abundance $N_{2005}$ and maximum net recruitment rate
-#' \code{r_max} are sampled and then used to determine the unique value of the
-#' population abundance $N$ in \code{start_Yr} (assumed to correspond to
-#' carrying capacity $K$). Requires \code{\link{TARGET.K}} and subsequent
-#' dependencies.
-#'
-#' @param K.low Lower bound for $K$ when preforming the bisection method of Punt
-#'   and Butterworth (1995). Default is 1.
-#' @param K.high Upper bound for $K$ when preforming the bisection method of
-#'   Punt and Butterworth (1995). Default is 500,000.
-#' @param r_max The maximum net recruitment rate ($r_{max}$).
-#' @param z The parameter that determines the population size where productivity
-#'   is maximum (assumed to be 2.39 by the IWC SC).
-#' @param num_Yrs The number of projection years. Set as the last year in the
-#'   catch or abundance series, whichever is most recent, minus the
-#'   \code{start_Yr}.
-#' @param start_Yr The first year of the projection (assumed to be the first
-#'   year in the catch series).
-#' @param target.Pop A sample of the prior on population abundance $N$, in
-#'   numbers, set as \code{sample.N.obs} sampled from \code{priors$N.obs}
-#' @param catches The time series of catch in numbers or biomass. Currently does
-#'   not handle NAs and zeros will have to input a priori for years in which
-#'   there were no catches.
-#' @param MVP The minimum viable population size in numbers or biomass. Computed
-#'   as 4 * \code{\link{num.haplotypes}} to compute minimum viable population
-#'   (from Jackson et al., 2006 and IWC, 2007).
-#' @param tol The desired accuracy (convergence tolerance) of
-#'   \code{\link{stats::uniroot}}.
-#'
-#' @return A numeric scalar of an estimate of  carrying capacity $K$.
-#'
-#' @examples
-#' LOGISTIC.BISECTION.K(K.low = 1, K.high = 100000, r_max = r_max, z = z,
-#'                      num_Yrs = bisection.Yrs, start_Yr = start_Yr,
-#'                      target.Pop = target.Pop, catches = catches, MVP = MVP,
-#'                      tol = 0.001)
-LOGISTIC.BISECTION.K <- function(K.low,
-                                 K.high,
-                                 r_max,
-                                 z,
-                                 num_Yrs,
-                                 start_Yr,
-                                 target.Pop,
-                                 catches,
-                                 MVP,
-                                 tol = 0.001) {
-  Kmin <- uniroot(TARGET.K,
-                  tol = tol,
-                  c(K.low,
-                    K.high),
-                  r_max = r_max,
-                  z = z,
-                  num_Yrs = num_Yrs,
-                  start_Yr = start_Yr,
-                  target.Pop = target.Pop,
-                  catches = catches,
-                  MVP = MVP)
-  Kmin$root
-}
-
-#' Compute analytic estimates of q, the scaling parameter between indices and
-#' absolute population size
-#'
-#' @param rel.Abundance Relative abundance index
-#' @param add_CV Coefficient of variation
-#' @param Pred_N Predicted population
-#' @param start_Yr Initial year
-#' @param num.IA Index of abundance
-#'
-#' @return A numeric estimator for $q$.
-#' @export
-#'
-#' @examples
-CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
-                            add_CV = 0, num.IA) {
-  ## Vector to store the q values
-  analytic.Q <- rep(NA, num.IA)
-
-  for (i in 1:num.IA) {
-    ## Subseting across each index of abundance
-    IA <- Rel.Abundance[Rel.Abundance$Index == i,]
-    ## Years for which IAs are available
-    IA.yrs <- IA$Year-start_Yr + 1
-    ## Computing the value of sigma as in Zerbini et al. 2011
-    IA$Sigma <- sqrt(log(1 + IA$CV.IA.obs^2))
-    ## Numerator of the analytic q estimator (Zerbini et al., 2011 - eq. (3))
-    qNumerator <- sum((log(IA$IA.obs / Pred_N[IA.yrs])) /
-                      (IA$Sigma * IA$Sigma + add_CV * add_CV))
-    ## Denominator of the analytic q estimator (Zerbini et al., 2011 - eq. (3))
-    qDenominator <- sum(1 / (IA$Sigma * IA$Sigma))
-    ## Estimate of q
-    analytic.Q[i] <- exp(qNumerator / qDenominator)
-  }
-  analytic.Q
-}
 
 #' Compute the log-likelihood of indices of abundance
 #'
@@ -704,7 +567,7 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_Yr,
 #' @param Obs.N Observed absoluted abundance in numbers as a data.frame
 #'   containing year, estimate of absolute abundance, and CV.
 #' @param Pred_N Predicted absolute abundance in numbers from
-#'   \code{\link{GENERALIZED_LOGISTIC}}.
+#'   \code{\link{project_population}}.
 #' @param start_Yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param add_CV Additional CV to add to variance of lognormal distribution
