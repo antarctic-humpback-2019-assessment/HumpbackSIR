@@ -43,7 +43,7 @@ using namespace Rcpp;
 //' N1 <- K
 //' catches <- round(runif(10, min = 0, max = 150 ), 0)
 //' generalized_logistic(r_max, K, N1, z, start_Yr, catch_series)
-//' [[Rcpp::export]]
+// [[Rcpp::export]]
 NumericVector generalized_logistic(double r_max,
                                    double K,
                                    double N1,
@@ -63,3 +63,4 @@ NumericVector generalized_logistic(double r_max,
   }
   return N;
 }
+
