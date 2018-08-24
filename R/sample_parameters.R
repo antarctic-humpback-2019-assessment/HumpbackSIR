@@ -29,14 +29,6 @@ target_K <- function(K, param_sample,
   pred_N <- project_population(param_sample = param_sample,
                                data = data,
                                tspan = tspan)
-  ## Pred_N <- GENERALIZED_LOGISTIC(r_max = r_max,
-  ##                                K = K,
-  ##                                N1 = K,
-  ##                                z = z,
-  ##                                start_Yr = start_Yr,
-  ##                                num_Yrs = num_Yrs,
-  ##                                catches = catches,
-  ##                                MVP = MVP)
   pred_N$N[length(pred_N$N)] - target_N
 }
 
