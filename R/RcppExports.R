@@ -22,11 +22,11 @@
 #'   assumed to be K).
 #' @param z The parameter that determines the population size where productivity
 #'   is maximum (assumed to be 2.39 by the IWC SC).
-#' @param start_Yr The first year of the projection (assumed to be the first
+#' @param start_yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param num_Yrs The number of projection years. Set as the last year in the
 #'   catch or abundance series, whichever is most recent, minus the
-#'   \code{start_Yr}.
+#'   \code{start_yr}.
 #' @param catches The time series of catch in numbers or biomass. Currently does
 #'   not handle NAs and zeros will have to input a priori for years in which
 #'   there were no catches.
@@ -38,15 +38,15 @@
 #'
 #' @examples
 #' num_Yrs  <-  10
-#' start_Yr  <-  1
+#' start_yr  <-  1
 #' r_max  <-  0.2
 #' K  <-  1000
 #' N1  <-  K
 #' catches  <-  round(runif(10, min = 0, max = 150 ), 0 )
 #' MVP  <-  0
-#' GENERALIZED_LOGISTIC(r_max, K, N1, z, start_Yr, num_Yrs, catches)
-GENERALIZED_LOGISTIC <- function(r_max, K, N1, z, start_Yr, num_Yrs, catches, MVP) {
-    .Call(`_HumpbackSIR_GENERALIZED_LOGISTIC`, r_max, K, N1, z, start_Yr, num_Yrs, catches, MVP)
+#' GENERALIZED_LOGISTIC(r_max, K, N1, z, start_yr, num_Yrs, catches)
+GENERALIZED_LOGISTIC <- function(r_max, K, N1, z, start_yr, num_Yrs, catches, MVP) {
+    .Call(`_HumpbackSIR_GENERALIZED_LOGISTIC`, r_max, K, N1, z, start_yr, num_Yrs, catches, MVP)
 }
 
 #' Adjusted lognormal likelihood from Zerbini et al. 2011 (eq. 5)
