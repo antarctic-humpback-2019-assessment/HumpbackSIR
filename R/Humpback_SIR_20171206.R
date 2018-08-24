@@ -406,8 +406,14 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
     resamples.per.samples <- draw / n_resamples
     if(resamples.per.samples < 3){
-        message("WARNING: Number of resamples pre sample is ", round(resamples.per.samples, 4), ", use higher threshold value.")
-        }
+      warning("Number of resamples per sample is ",
+              round(resamples.per.samples, 1),
+              ", use higher threshold value.")
+    } else if (resamples.per.samples > 20) {
+      warning("Number of resamples per sample is ",
+              round(resamples.per.samples, 1),
+              ", use lower threshold value.")
+    }
 
     end.time <- Sys.time()
     if (control$verbose > 0) {
