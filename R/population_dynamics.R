@@ -6,7 +6,8 @@
 ##'
 ##' @param param_sample List of parameter values containing at least named
 ##'   entries for \code{r_max}, \code{K}, and \code{z}.
-##' @param data List of data containing a vector of catches named \code{catch}.
+##' @param data List of data containing at least a data frame \code{catch} with
+##'   columns \code{year} and \code{catch}.
 ##' @param tspan Vector of length two indicating starting and ending years for
 ##'   projection.
 ##'
@@ -15,9 +16,14 @@
 project_population <- function(param_sample, data, tspan) {
   num_years <- diff(tspan) + 1
   ## TODO Add interface for catch multipliers (struck and loss rates etc. here)
-  catch_series <- data$catch
-  if (length(catch_series) != (num_years - 1)) {
-    stop("Catch series length must be one less than number of years to project")
+  catch_series <- data$catch$catch
+  ## Make sure the catch series starts at the right time
+  if (min(data$catch$year[1] != tspan[1])) {
+    stop("Catch series and tspan must start the same year")
+  }
+  ## Make sure the catch series is long enough
+  if (length(catch_series) < (num_years - 1)) {
+    stop("Catch series must cover all but the final year")
   }
   N <- generalized_logistic(param_sample[["r_max"]],
                             param_sample[["K"]],
