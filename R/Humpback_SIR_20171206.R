@@ -157,6 +157,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     #-------------------------------
     save <- FALSE #variable to indicate whether a specific draw is kept
 
+    param_sample <- list()
     #Sampling for r_max
     sample.r_max <- 0.2 #setting sample.r_max outside of the bound
     ## FIXME Why is this check necessary; just set the bounds using the prior?
@@ -164,9 +165,11 @@ HUMPBACK.SIR <- function(file.name = "NULL",
       ## Prior on r_max, keep if within boundaries
       sample.r_max <- priors$r_max$rfn()
     }
+    param_sample$r_max <- sample.r_max
 
     ## Sampling from the N.obs prior
     sample.N.obs <- priors$N_obs$rfn()
+    param_sample$N_obs <- sample.N.obs
 
     ## Prior on additional CV
     if (priors$add_CV$use) {
@@ -174,9 +177,11 @@ HUMPBACK.SIR <- function(file.name = "NULL",
     } else {
       sample.add_CV <- 0
     }
+    param_sample$add_CV <- sample.add_CV
 
     ## Sample from prior for `z` (usually constant)
     sample.z <- priors$z$rfn()
+    param_sample$z <- sample.z
 
     ## Sampling from q priors if q.prior is TRUE; priors on q for indices of
     ## abundance
@@ -186,6 +191,7 @@ HUMPBACK.SIR <- function(file.name = "NULL",
       ## FIXME: -9999 is probably not a good sentinel value here; NA?
       q.sample.IA <- rep(-9999, length(unique(rel.abundance$Index)))
     }
+    param_sample$q.IA <- q.sample.IA
 
     ##priors on q for count data
     if (priors$q_count$use) {
@@ -194,48 +200,43 @@ HUMPBACK.SIR <- function(file.name = "NULL",
       ## FIXME: Sentinel -9999 again
       q.sample.Count <- rep(-9999, length(unique(count.data$Index)))
     }
+    param_sample$q.count <- q.sample.Count
 
-    sample.K <- LOGISTIC.BISECTION.K(K.low = control$K_bisect_lim[1],
-                                     K.high = control$K_bisect_lim[2],
-                                     r_max = sample.r_max,
-                                     z = sample.z,
-                                     num_Yrs = bisection.Yrs,
-                                     start_Yr = start_Yr,
-                                     target.Pop = sample.N.obs,
-                                     catches = catches,
-                                     MVP = MVP,
-                                     tol = control$K_bisect_tol)
+    data <- list(catch = catch.data)
+    names(data$catch) <- c("year", "catch")
+    sample.K <- find_K(param_sample = param_sample,
+                       target_N = sample.N.obs,
+                       tspan = c(start_Yr, target.Yr),
+                       data = data,
+                       control = control)
+    param_sample$K <- sample.K
 
     #Computing the predicted abundances with the samples from the priors
     #----------------------------------------
+    tspan <- c(start_Yr, end.Yr)
     Pred_N <- project_population(param_sample = param_sample,
                                  data = data,
                                  tspan = tspan)
-    ## Pred_N <- GENERALIZED_LOGISTIC(r_max = sample.r_max,
-    ##                                K = sample.K,
-    ##                                N1 = sample.K,
-    ##                                z = sample.z,
-    ##                                start_Yr = start_Yr,
-    ##                                num_Yrs = projection.Yrs,
-    ##                                catches = catches,
-    ##                                MVP = MVP)
-
 
     #Computing the predicted ROI for the IAs and Count data, if applicable
     #----------------------------------------
     #For IAs
+    ## Don't calculate ROIs inside the SIR function
+    rel.abundance.key <- FALSE
     if (rel.abundance.key) {
       Pred.ROI.IA <- COMPUTING.ROI(data = rel.abundance,
-                                   Pred_N = Pred_N$Pred_N,
+                                   Pred_N = Pred_N,
                                    start_Yr = start_Yr)
     } else {
       Pred.ROI.IA <- rep(0, num.IA)
     }
 
     #For Count Data
+    ## Don't calculate ROIs inside the SIR function
+    count.data.key <- FALSE
     if (count.data.key) {
       Pred.ROI.Count <- COMPUTING.ROI(data = count.data,
-                                      Pred_N = Pred_N$Pred_N,
+                                      Pred_N = Pred_N,
                                       start_Yr = start_Yr)
     } else {
       Pred.ROI.Count <- rep(0, num.Count)
@@ -500,155 +501,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 }
 
 
-#' Computes the predicted rate of increase for a set of specified years for
-#' comparison with trends estimated separately with any of the indices of
-#' abundance or count data
-#'
-#' @param data Count data or relative abundance index to use
-#' @param Pred_N Number of individuals predicted
-#' @param start_Yr Initial year
-#'
-#' @return Vector of rates of increase, one per index
-#' @export
-#'
-#' @examples
-COMPUTING.ROI <- function(data = data, Pred_N = Pred_N, start_Yr = NULL) {
-  num.indices <- max(data$Index)
-  Pred.ROI <- rep(NA, num.indices)
-
-  for (i in 1:num.indices) {
-    index.ini.year <- (head(subset(data, Index == i)$Year, 1) - start_Yr)
-    index.final.year <- (tail(subset(data, Index == i)$Year, 1) - start_Yr)
-    elapsed.years <- index.final.year - index.ini.year
-
-    Pred.ROI[i] <- exp((log(Pred_N[index.final.year]) -
-                        log(Pred_N[index.ini.year])) /
-                       (elapsed.years)) - 1
-  }
-  Pred.ROI
-}
-
-
-#' Compute the log-likelihood of indices of abundance
-#'
-#' @param Rel.Abundance Relative abundance
-#' @param Pred_N Predicted population size
-#' @param start_Yr Initial year
-#' @param q.values Scaling parameter
-#' @param add.CV Coefficient of variation
-#' @param log Boolean, return log likelihood (default TRUE) or
-#'   likelihood.
-#'
-#' @return List of likelihood based on Zerbini et al. (2011) eq. 5 or using `dnorm`
-#' @export
-#'
-#' @examples
-LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_Yr,
-                       q.values, add.CV, log = TRUE) {
-    loglike.IA1 <- 0
-    IA.yrs <- Rel.Abundance$Year-start_Yr + 1
-    loglike.IA1 <- -sum(
-        dlnorm_zerb( # NOTE: can be changed to dlnorm
-        x = Rel.Abundance$IA.obs,
-        meanlog = log( q.values[Rel.Abundance$Index] * Pred_N[IA.yrs] ),
-        sdlog = Rel.Abundance$Sigma + add.CV,
-        log))
-
-    loglike.IA1
-}
-
-
-#' LOG LIKELIHOOD OF ABSOLUTE ABUNDANCE
-#'
-#' This function computes two estimates of the log-likelihood of the estimated
-#' absolute abundance using the equation from Zerbini et al. 2011 (eq. 4) and a
-#' lognormal distribution from \code{\link{CALC.LNLIKE}}.
-#'
-#' @param Obs.N Observed absoluted abundance in numbers as a data.frame
-#'   containing year, estimate of absolute abundance, and CV.
-#' @param Pred_N Predicted absolute abundance in numbers from
-#'   \code{\link{project_population}}.
-#' @param start_Yr The first year of the projection (assumed to be the first
-#'   year in the catch series).
-#' @param add_CV Additional CV to add to variance of lognormal distribution
-#'   sampled from \code{priors$add_CV}.
-#' @param log Return the log of the likelihood (TRUE/FALSE)
-#'
-#' @return A list of two numeric scalars of estimates of log-likelihood.
-#'
-#' @examples
-#' Obs.N  <-  data.frame(Year = 2005, Sigma = 5, Obs.N = 1000)
-#' Pred_N  <-  1234
-#' start_Yr  <-  2005
-#' LNLIKE.Ns(Obs.N, Pred_N, start_Yr, add_CV = 0, log=TRUE)
-LNLIKE.Ns <- function(Obs.N, Pred_N, start_Yr, add_CV, log = TRUE) {
-  loglike.Ns1 <- 0
-  loglike.Ns2 <- 0
-
-  ## Years for which Ns are available
-  N.yrs <- Obs.N$Year-start_Yr+1
-  ## This is the likelihood from Zerbini et al. 2011 (eq. 4)
-  loglike.Ns1 <- loglike.Ns1 +
-    ((sum(log(Obs.N$Sigma) + log(Obs.N$N.obs) + 0.5 *
-          ((((log(Pred_N[N.yrs]) - log(Obs.N$N.obs))^2) /
-            (Obs.N$Sigma * Obs.N$Sigma + add_CV * add_CV))))))
-  ## This is the log-normal distribution from R (using function dnorm)
-  ## FIXME See comments above re: `dlnorm`
-  loglike.Ns2 <- loglike.Ns2 + CALC.LNLIKE(Obs.N = Obs.N$N.obs,
-                                           Pred_N = (Pred_N[N.yrs]),
-                                           CV = sqrt(Obs.N$Sigma * Obs.N$Sigma +
-                                                     add_CV * add_CV),
-                                           log = log)
-
-  list(loglike.Ns1 = loglike.Ns1, loglike.Ns2 = loglike.Ns2)
-}
-
-#' Calculate the log-likelihood of the growth rate
-#'
-#' Calculates the log-likelihood of the estimated growth rate given the observed
-#' growth rate and the standard deviation of the observed growth rate.
-#'
-#' @param Obs.GR Observed growth rate
-#' @param Pred.GR Predicted growth rate
-#' @param GR.SD.Obs Standard error of the observed growth rate
-#'
-#' @return A \code{list} containing \code{loglike.GR1} and \code{loglike.GR2}
-#'
-#' @examples
-#' LNLIKE.GR(0.1, 0.1, 0.1)
-LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs) {
-  ## TODO Does this need to recalculate and return *both* of these values?
-  loglike.GR1 <- 0
-  loglike.GR2 <- 0
-
-  ## This is the likelihood from Zerbini et al. 2011 (eq. 6)
-  loglike.GR1 <- loglike.GR1 + (((log(GR.SD.Obs) + 0.5 * (((Pred.GR-Obs.GR) / GR.SD.Obs)^2))))
-
-  ## loglike.GR2 <- loglike.GR2 + CALC.LNLIKE(Obs.N = Obs.GR,
-  ##                                          Pred_N = Pred.GR,
-  ##                                          CV = GR.SD.Obs,
-  ##                                          log = FALSE)
-
-  list(loglike.GR1 = loglike.GR1, loglike.GR2 = loglike.GR2)
-}
-
-#' Function to calculate the log-likelihood using a lognormal distribution
-#'
-#' @param Obs.N Time series of observed abundance
-#' @param Pred_N Time series of estimated abundance
-#' @param CV coefficient of variation
-#' @param log whether to export as log-likelihood
-#'
-#' @return returns a scalar of the likelihood
-#'
-#' @examples
-#' Obs.N <- 2000
-#' Pred_N <- 2340
-#' CV <- 4
-#' CALC.LNLIKE(Obs.N, Pred_N, CV)
-CALC.LNLIKE <- function(Obs.N, Pred_N, CV, log = FALSE) {
-  sum(dnorm(x = log(Obs.N), mean = log(Pred_N), sd = CV, log = log))
-}
 
 #' OUTPUT FUNCTION
 #'

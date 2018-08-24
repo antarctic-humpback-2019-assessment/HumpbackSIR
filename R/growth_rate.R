@@ -24,6 +24,42 @@
 #' gr_years <-  c(1995, 1998)
 #' gr_pop <- c(1000, 2000)
 #' calc_growth_rate(gr_years, gr_pop)
-calc_growth_rate <- function(years, pred_pop) {
-  (log(pred_pop[2]) - log(pred_pop[1])) / diff(years)
+calc_growth_rate <- function(tspan, pred_pop) {
+  (log(pred_pop[2]) - log(pred_pop[1])) / diff(tspan)
+}
+
+#' Computes the predicted rate of increase for a set of specified years for
+#' comparison with trends estimated separately with any of the indices of
+#' abundance or count data
+#'
+#' @param data Count data or relative abundance index to use
+#' @param Pred_N Number of individuals predicted
+#' @param start_Yr Initial year
+#'
+#' @return Vector of rates of increase, one per index
+#' @export
+#'
+#' @examples
+COMPUTING.ROI <- function(data = data, Pred_N = Pred_N, start_Yr = NULL) {
+  ## TODO Can this be combined with the calc_growth_rate function? Or be used
+  ## only in post-processing?
+  num.indices <- max(data$Index)
+  Pred.ROI <- rep(NA, num.indices)
+
+  for (i in 1:num.indices) {
+    ## index.ini.year <- (head(subset(data, Index == i)$Year, 1) - start_Yr)
+    ## index.final.year <- (tail(subset(data, Index == i)$Year, 1) - start_Yr)
+    ## elapsed.years <- index.final.year - index.ini.year
+    start_year <- min(data$Year[data$Index == i])
+    start_N <- Pred_N$N[Pred_N$year == start_year]
+    end_year <- max(data$Year[data$Index == i])
+    end_N <- Pred_N$N[Pred_N$year == start_year]
+
+    Pred.ROI[i] <- exp((log(end_N) - log(start_N)) /
+                       (end_year - start_year)) - 1
+    ## Pred.ROI[i] <- exp((log(Pred_N$N[index.final.year]) -
+    ##                     log(Pred_N$N[index.ini.year])) /
+    ##                    (elapsed.years)) - 1
+  }
+  Pred.ROI
 }
