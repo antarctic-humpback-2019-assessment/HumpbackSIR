@@ -126,12 +126,11 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         warning("Catch multiplier not specified, assuming no multiplier.")
     }
     if(length(catch_multipliers) != n_catch_period){
-        catch_multipliers <- make_multiplier_list(c_mult_1 = make_prior(1))
-        warning("Number of catch multipliers (",
-                length(catch_multipliers),
-                ") does not equal number of catch periods (",
-                n_catch_period,
-                "), using no multiplier.")
+        stop("Number of catch multipliers (",
+             length(catch_multipliers),
+             ") does not equal number of catch periods (",
+             n_catch_period,
+             "), using no multiplier.")
     }
 
     ## Determining the number of Indices of Abundance available
@@ -160,7 +159,8 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
     #Creating output vectors
     #-------------------------------------
-    sir_names <- c("r_max", "K", paste0("catch_multiplier_", 1:length(catch_multipliers)) , "sample.N.obs", "add_CV", "Nmin", "YearMin",
+    sir_names <- c("r_max", "K", paste0("catch_multiplier_", 1:length(catch_multipliers)) ,
+                   "sample.N.obs", "add_CV", "Nmin", "YearMin",
                    "violate_MVP", paste0("N", output.Yrs),
                    paste0("ROI_IA", unique(rel.abundance$Index)),
                    paste0("q_IA", unique(rel.abundance$Index)),
@@ -185,31 +185,13 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         save <- FALSE #variable to indicate whether a specific draw is kept
 
         #Sampling for catch_multiplier
-        sample_catch_multiplier <- c()
-
-        for(k in 1:length(catch_multipliers)){
-            sample_catch_multiplier[k] <- -1 # Make sure the catch multiplier is positive
-            while (sample_catch_multiplier[k] < 0) {
-                sample_catch_multiplier[k] <- catch_multipliers[[k]]$rfn() # Sample catch multipliers
-                if (control$verbose > 1) { message("Catch multiplier for period ", k, " is negative.")}
-            }
-
-        }
-
+        sample_catch_multiplier <- sapply(catch_multipliers, function(x) x$rfn())
         if(length(catch_multipliers) == n_catch_period){
             catches <- catch_original * sample_catch_multiplier[catch_period] # Multiply catches by multiplier
         }
-        if(length(catch_multipliers) != n_catch_period){
-            catches <- catch_original # If mismatch, use no multiplier
-        }
 
         #Sampling for r_max
-        sample.r_max <- 0.2 #setting sample.r_max outside of the bound
-        ## FIXME Why is this check necessary; just set the bounds using the prior?
-        while (sample.r_max < priors$r_max$pars[1] | sample.r_max > priors$r_max$pars[2]) {
-            ## Prior on r_max, keep if within boundaries
-            sample.r_max <- priors$r_max$rfn()
-        }
+        sample.r_max <- priors$r_max$rfn()
 
         ## Sampling from the N.obs prior
         sample.N.obs <- priors$N_obs$rfn()
