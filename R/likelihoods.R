@@ -1,4 +1,4 @@
-##' Construct likelihood for index of abundance
+##' Construct log-likelihood for index of abundance
 ##'
 ##' @title Index of abundance likelihood function generator
 ##'
@@ -7,16 +7,24 @@
 ##' @param par_name Name of the parameter to use as \code{q} for this index.
 ##' @param dfn Density function (e.g. dnorm, dlnorm).
 ##' @param data List containing at least a data frame named \code{datname} with
-##'   columns \code{year}
+##'   columns \code{year}, \code{obs}, and \code{sd}.
+##' @param mean_link Mean link function (e.g. \code{log} if \code{dfn} is
+##'   \code{dlnorm}). Defaults to \code{identity} for no transform.
 ##'
 ##' @return A function that takes arguments \code{trajectory},
 ##'   \code{param_sample}, and boolean \code{log} (with default FALSE).
-construct_ia_lik <- function(data_name, par_name, dfn, data) {
-  function(trajectory, param_sample, log = FALSE) {
-    q <- param_sample[[datname]]
-    obs <- data[[datname]]
-    pred <- q * trajectory[trajectory$year == data[[datname]]$year]
-    sum(mapply(dfn, obs, pred, data[[datname]]$sd))
+construct_ia_loglik <- function(data_name, par_name, dfn, data,
+                                mean_link = identity) {
+  available_names <- names(data[[data_name]])
+  required_names <- c("year", "obs", "sd")
+  if (!all(required_names %in% available_names)) {
+    stop("Data frame ", data_name, " must have columns ", paste(required_names))
+  }
+  index_data <- data[[data_name]]
+  function(trajectory, param_sample) {
+    q <- param_sample[[par_name]]
+    pred <- mean_link(q * trajectory$N[trajectory$year %in% index_data$year])
+    sum(mapply(dfn, index_data$obs, pred, index_data$sd, log = TRUE))
   }
 }
 
@@ -34,7 +42,7 @@ construct_ia_lik <- function(data_name, par_name, dfn, data) {
 ##' @return A function that takes arguments \code{trajectory},
 ##'   \code{param_sample}, and boolean \code{log} (with default FALSE).
 ##' .. content for \description{} (no empty lines) ..
-construct_abs_lik <- function(data_name, par_name, dfn, data) {
+construct_abs_loglik <- function(data_name, par_name, dfn, data) {
   function(trajectory, param_sample, log = FALSE) {
     obs <- data[[datname]]
     pred <- trajectory[trajectory$year == data[[datname]]$year]
@@ -79,34 +87,14 @@ dgamma_meansd <- function(x, mean, sd) {
   dgamma(x, shape = shape, rate = rate)
 }
 
-#' Compute the log-likelihood of indices of abundance
-#'
-#' @param Rel.Abundance Relative abundance
-#' @param Pred_N Predicted population size
-#' @param start_Yr Initial year
-#' @param q.values Scaling parameter
-#' @param add.CV Coefficient of variation
-#' @param log Boolean, return log likelihood (default TRUE) or
-#'   likelihood.
-#'
-#' @return List of likelihood based on Zerbini et al. (2011) eq. 5 or using `dnorm`
-#' @export
-#'
-#' @examples
-LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_Yr,
-                       q.values, add.CV, log = TRUE) {
-    loglike.IA1 <- 0
-    IA.yrs <- Rel.Abundance$Year-start_Yr + 1
-    loglike.IA1 <- -sum(
-        dlnorm_zerb( # NOTE: can be changed to dlnorm
-        x = Rel.Abundance$IA.obs,
-        meanlog = log( q.values[Rel.Abundance$Index] * Pred_N$N[IA.yrs] ),
-        sdlog = Rel.Abundance$Sigma + add.CV,
-        log))
-
-    loglike.IA1
+##' Convert CV to standard deviation for lognormal
+##'
+##' @title CV to SD
+##' @param cv Coefficient of variation
+##' @return Numeric standard deviation
+cv_to_sd <- function(cv) {
+  sqrt(log(1 + cv ^ 2))
 }
-
 
 #' LOG LIKELIHOOD OF ABSOLUTE ABUNDANCE
 #'
