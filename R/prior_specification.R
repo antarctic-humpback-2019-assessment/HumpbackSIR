@@ -27,29 +27,29 @@
 ##' make_prior(runif, 0, 1, TRUE)
 ##' make_prior(rlunif, 0.01, 0.2, "Log-uniform(0.01, 0.2)")
 make_prior <- function(rfn = NA, par1 = NULL, par2 = NULL, use = TRUE, label = NULL) {
-  if (is.function(rfn)) {
-    fn <- function() rfn(1, par1, par2)
-    if (is.null(label)) {
-      ## FIXME It would be nice to separate this out to its own function, but
-      ## `substitute` doesn't seem to work right if I'm passing through multiple
-      ## functions, even if I specify `env = .GlobalEnv`.
-      dist_lab <- switch(deparse(substitute(rfn)),
-                        "rnorm"  = "Normal",
-                        "rlnorm" = "Log-normal",
-                        "runif"  = "Uniform",
-                        "rlunif" = "Log-uniform",
-                        "User defined")
-      label <- paste0(dist_lab, "(", par1, ", ", par2, ")")
+    if (is.function(rfn)) {
+        fn <- function() rfn(1, par1, par2)
+        if (is.null(label)) {
+            ## FIXME It would be nice to separate this out to its own function, but
+            ## `substitute` doesn't seem to work right if I'm passing through multiple
+            ## functions, even if I specify `env = .GlobalEnv`.
+            dist_lab <- switch(deparse(substitute(rfn)),
+                               "rnorm"  = "Normal",
+                               "rlnorm" = "Log-normal",
+                               "runif"  = "Uniform",
+                               "rlunif" = "Log-uniform",
+                               "User defined")
+            label <- paste0(dist_lab, "(", par1, ", ", par2, ")")
+        }
+    } else if (is.numeric(rfn)) {
+        fn <- function() rfn
+        par1 <- rfn
+        label <- paste0("Constant(", rfn, ")")
+    } else {
+        fn <- function() NA
+        label <- "Not used"
     }
-  } else if (is.numeric(rfn)) {
-    fn <- function() rfn
-    par1 <- rfn
-    label <- paste0("Constant(", rfn, ")")
-  } else {
-    fn <- function() NA
-    label <- "Not used"
-  }
-  list(rfn = fn, pars = c(par1, par2), use = use, label = label)
+    list(rfn = fn, pars = c(par1, par2), use = use, label = label)
 }
 
 
@@ -66,12 +66,12 @@ make_prior <- function(rfn = NA, par1 = NULL, par2 = NULL, use = TRUE, label = N
 ##'
 ##' Draws independent samples from Uniform(log(min), log(max)) and
 ##' exponentiates.
-##' 
+##'
 ##' @export
 ##' @examples
 ##' rlunif(1, 0.01, 0.2)
 rlunif <- function(n, min = 1, max = 2) {
-  exp(runif(n, log(min), log(max)))
+    exp(runif(n, log(min), log(max)))
 }
 
 ##' @title Make a list of priors to be passed to the SIR function.
@@ -97,11 +97,30 @@ make_prior_list <- function(r_max = make_prior(runif, 0, 0.106),
                             z = make_prior(2.39),
                             q_IA = make_prior(use = FALSE),
                             q_count = make_prior(use = FALSE)) {
-  list(r_max = r_max,
-       K = K,
-       N_obs = N_obs,
-       add_CV = add_CV,
-       z = z,
-       q_IA = q_IA,
-       q_count = q_count)
+    list(r_max = r_max,
+         K = K,
+         N_obs = N_obs,
+         add_CV = add_CV,
+         z = z,
+         q_IA = q_IA,
+         q_count = q_count)
+}
+
+##' @title Make a list of priors for the catch multiplier to be passed to the SIR function.
+##'
+##' @param c_mult_1 Catch multiplier for the first catch period; defaults to 1 and used for the entire dataset
+##' @param ... Additional catch multipliers as defined using \code{make_prior}. Must be supplied in order of use.
+##'
+##' @return A named list containing each of the specified priors in a form that
+##'   can be used by the SIR function.
+make_multiplier_list <- function(c_mult_1 = make_prior(1), ...) {
+
+    add_mult_list <- list(...)
+    mult_list <- list(c_mult_1 = c_mult_1)
+
+    if(length(add_mult_list) > 0 ){
+        mult_list <- c(mult_list, add_mult_list)
+        names(mult_list) <- paste0("c_mult_", 1:length(mult_list))
+    }
+    mult_list
 }

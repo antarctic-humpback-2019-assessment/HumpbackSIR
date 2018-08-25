@@ -11,6 +11,8 @@
 #'   distributions
 #' @param priors List of priors, usually generated using \link{make_prior_list}.
 #'   Default is the default of \code{make_prior_list}. See details.
+#' @param catch_multipliers List of catch multipliers, generated using \link{make_multiplier_list}
+#'   Can either be estimated or explicitly provided. Default is \code{make_multiplier_list}.
 #' @param target.Yr year of the target population estimate for the bisection
 #'   method. Default is 2008
 #' @param num.haplotypes number of haplotypes to compute minimum viable
@@ -50,7 +52,9 @@
 #'                 add_CV = make_prior(use = FALSE),
 #'                 z = make_prior(2.39),
 #'                 q_IA = make_prior(use = FALSE),
-#'                 q_count = make_prior(use = FALSE)}
+#'                 q_count = make_prior(use = FALSE)
+#'
+#'  make_multiplier_list(c_mult_1 = make_prior(1))}
 #'
 #' @export
 #'
@@ -60,6 +64,7 @@
 #' HUMPBACK.SIR(file_name = "test.N2005",
 #'              n_resamples = 100,
 #'              priors = make_prior_list(),
+#'              catch_multipliers = make_multiplier_list(),
 #'              Klim = c(1, 500000),
 #'              target.Yr = 2005,
 #'              num.haplotypes = 0,
@@ -77,6 +82,7 @@
 HUMPBACK.SIR <- function(file_name = "NULL",
                          n_resamples = 1000,
                          priors = make_prior_list(),
+                         catch_multipliers = make_multiplier_list(),
                          target.Yr = 2008,
                          num.haplotypes = 66,
                          output.Yrs = c(2008),
@@ -109,17 +115,40 @@ HUMPBACK.SIR <- function(file_name = "NULL",
     projection.Yrs <- end_yr-start_yr + 1
 
     ## Assigning the catch data
-    catches <- catch.data$Catch
+    catch_original <- catch.data$Catch
+    if(is.null(Catch.data$Period)){ catch.data$Period <- 1 }# If there are not supplied catch periods, default to 1
+    catch_period <- catch.data$Period
+    n_catch_period <- length(unique(catch_period))
+
+    # Catch multiplier check
+    if(length(catch_multipliers) == 0){ # If no catch multipliers are provided - assume 1
+        catch_multipliers <- make_multiplier_list(c_mult_1 = make_prior(1))
+        warning("Catch multiplier not specified, assuming no multiplier.")
+    }
+    if(length(catch_multipliers) != n_catch_period){
+        catch_multipliers <- make_multiplier_list(c_mult_1 = make_prior(1))
+        warning("Number of catch multipliers (",
+                length(catch_multipliers),
+                ") does not equal number of catch periods (",
+                n_catch_period,
+                "), using no multiplier.")
+    }
+
     ## Determining the number of Indices of Abundance available
     num.IA <- max(rel.abundance$Index)
+
     ## Determining the number of Count Data sets available
     num.Count <- max(count.data$Index)
+
     ## Computing the value of sigma as in Zerbini et al. 2011
     rel.abundance$Sigma <- sqrt(log(1 + rel.abundance$CV.IA.obs^2))
+
     ## Computing the value of sigma for the count data as in Zerbini et al. (2011)
     count.data$Sigma <- sqrt(log(1 + count.data$CV.IA.obs^2))
+
     ## Computing the value of sigma as in Zerbini et al. 2011
     abs.abundance$Sigma <- sqrt(log(1 + abs.abundance$CV.obs^2))
+
     ## Computing the minimum viable population, if num.haplotypes=0, assumes no MVP
     MVP <- 4 * num.haplotypes
 
@@ -131,12 +160,12 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
     #Creating output vectors
     #-------------------------------------
-    sir_names <- c("r_max", "K", "sample.N.obs", "add_CV", "Nmin", "YearMin",
-                   "violate_MVP", paste("N", output.Yrs, sep = ""),
-                   paste("ROI_IA", unique(rel.abundance$Index), sep = ""),
-                   paste("q_IA", unique(rel.abundance$Index), sep = ""),
-                   paste("ROI_Count", unique(count.data$Index), sep = ""),
-                   paste("q_Count", unique(count.data$Index), sep = ""),
+    sir_names <- c("r_max", "K", paste0("catch_multiplier_", 1:length(catch_multipliers)) , "sample.N.obs", "add_CV", "Nmin", "YearMin",
+                   "violate_MVP", paste0("N", output.Yrs),
+                   paste0("ROI_IA", unique(rel.abundance$Index)),
+                   paste0("q_IA", unique(rel.abundance$Index)),
+                   paste0("ROI_Count", unique(count.data$Index)),
+                   paste0("q_Count", unique(count.data$Index)),
                    "NLL.IAs", "NLL.Count", "NLL.N", "NLL.GR", "NLL", "Likelihood",
                    "Max_Dep", paste("status", output.Yrs, sep = ""), "draw", "save")
 
@@ -154,6 +183,24 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         #Sampling from Priors
         #-------------------------------
         save <- FALSE #variable to indicate whether a specific draw is kept
+
+        #Sampling for catch_multiplier
+        sample_catch_multiplier <- c()
+
+        for(k in 1:length(catch_multipliers)){
+            sample_catch_multiplier[k] <- -1 # Make sure the catch multiplier is positive
+            while (sample_catch_multiplier[k] < 0) {
+                sample_catch_multiplier[k] <- catch_multipliers[[k]]$rfn() # Sample catch multipliers
+            }
+
+        }
+
+        if(length(catch_multipliers) == n_catch_period){
+            catches <- catch_original * sample_catch_multiplier[catch_period] # Multiply catches by multiplier
+        }
+        if(length(catch_multipliers) != n_catch_period){
+            catches <- catch_original # If mismatch, use no multiplier
+        }
 
         #Sampling for r_max
         sample.r_max <- 0.2 #setting sample.r_max outside of the bound
@@ -363,6 +410,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                 resamples_trajectories[i+1,] <- Pred_N$Pred_N
                 resamples_output[i+1,] <- c(sample.r_max,
                                             sample.K,
+                                            sample_catch_multiplier,
                                             sample.N.obs,
                                             sample.add_CV,
                                             Pred_N$Min_Pop,
@@ -406,13 +454,13 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
     resamples.per.samples <- draw / n_resamples
     if(resamples.per.samples < 3){
-      warning("Number of resamples per sample is ",
-              round(resamples.per.samples, 1),
-              ", use higher threshold value.")
+        warning("Number of resamples per sample is ",
+                round(resamples.per.samples, 1),
+                ", use higher threshold value.")
     } else if (resamples.per.samples > 20) {
-      warning("Number of resamples per sample is ",
-              round(resamples.per.samples, 1),
-              ", use lower threshold value.")
+        warning("Number of resamples per sample is ",
+                round(resamples.per.samples, 1),
+                ", use lower threshold value.")
     }
 
     end.time <- Sys.time()
@@ -434,6 +482,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
          inputs = list(draws = draw,
                        n_resamples = n_resamples,
                        prior_r_max = priors$r_max,
+                       catch_multipliers = catch_multipliers,
                        priors_N.obs = priors$N.obs,
                        target.Yr = target.Yr,
                        MVP = paste("num.haplotypes = ",
