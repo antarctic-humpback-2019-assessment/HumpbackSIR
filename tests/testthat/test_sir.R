@@ -5,6 +5,7 @@ test_that("Example runs", {
   sir <- HUMPBACK.SIR(file_name = "test.N2005",
                       n_resamples = 100,
                       priors = make_prior_list(),
+                      catch_multipliers = make_multiplier_list(),
                       target.Yr = 2005,
                       num.haplotypes = 0,
                       output.Yrs = c(2005, 2006),
