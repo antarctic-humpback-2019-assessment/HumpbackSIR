@@ -24,8 +24,8 @@
 #' gr_years <-  c(1995, 1998)
 #' gr_pop <- c(1000, 2000)
 #' calc_growth_rate(gr_years, gr_pop)
-calc_growth_rate <- function(tspan, pred_pop) {
-  (log(pred_pop[2]) - log(pred_pop[1])) / diff(tspan)
+calc_growth_rate <- function(start_year, end_year, start_N, end_N) {
+  (log(end_N) - log(start_N)) / (end_year - start_year)
 }
 
 #' Computes the predicted rate of increase for a set of specified years for

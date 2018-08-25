@@ -1,3 +1,29 @@
+##' Check data frame for required columns
+##'
+##' Data frames used as data for SIR likelihoods must have columns "year",
+##' "obs", and "sd". If standard deviations are not available but coefficients
+##' of variation are, the \code{\link{cv_to_sd}} function can be used.
+##'
+##' @param data List of data passed to a likelihood constructor.
+##' @param data_name Name of the entry used by the particular likelihood.
+##'
+##' @return Nothing; throws an error if required columns are not present.
+check_lik_data <- function(data, data_name) {
+  if (is.null(data[[data_name]])) {
+    stop("Data does not contain \"", data_name, "\"")
+  }
+  available_names <- names(data[[data_name]])
+  required_names <- c("year", "obs", "sd")
+  if (!all(required_names %in% available_names)) {
+    stop("Data frame must have columns ",
+         paste(required_names, collapse = ", "))
+  }
+  if (!all(complete.cases(data[[data_name]]))) {
+    stop("Missing data not allowed.")
+  }
+  NULL
+}
+
 ##' Construct log-likelihood for index of abundance
 ##'
 ##' @title Index of abundance likelihood function generator
@@ -11,20 +37,20 @@
 ##' @param mean_link Mean link function (e.g. \code{log} if \code{dfn} is
 ##'   \code{dlnorm}). Defaults to \code{identity} for no transform.
 ##'
-##' @return A function that takes arguments \code{trajectory},
-##'   \code{param_sample}, and boolean \code{log} (with default FALSE).
+##' @return A function that takes arguments \code{trajectory} and
+##'   \code{param_sample} and returns the log-likelihood of the observations
+##'   given the parameter values.
 construct_ia_loglik <- function(data_name, par_name, dfn, data,
                                 mean_link = identity) {
-  available_names <- names(data[[data_name]])
-  required_names <- c("year", "obs", "sd")
-  if (!all(required_names %in% available_names)) {
-    stop("Data frame ", data_name, " must have columns ", paste(required_names))
-  }
+  check_lik_data(data, data_name)
   index_data <- data[[data_name]]
   function(trajectory, param_sample) {
     q <- param_sample[[par_name]]
-    pred <- mean_link(q * trajectory$N[trajectory$year %in% index_data$year])
-    sum(mapply(dfn, index_data$obs, pred, index_data$sd, log = TRUE))
+    ## Using merge here ensures that observations and predictions are associated
+    ## by year even if they are not sequential.
+    ia_df <- merge(index_data, trajectory, by = "year", all.x = TRUE, all.y = FALSE)
+    ia_df$pred <- mean_link(q * ia_df$N)
+    sum(mapply(dfn, ia_df$obs, ia_df$pred, ia_df$sd, log = TRUE))
   }
 }
 
@@ -34,20 +60,41 @@ construct_ia_loglik <- function(data_name, par_name, dfn, data,
 ##'
 ##' @param data_name String specifying the name of the data frame in \code{data}
 ##'   containing the relevant indices of abundance.
-##' @param par_name Name of the parameter to use as \code{q} for this index.
 ##' @param dfn Density function (e.g. dnorm, dlnorm).
 ##' @param data List containing at least a data frame named \code{datname} with
-##'   columns \code{year}
+##'   columns \code{year}, \code{obs}, and \code{sd}.
+##' @param mean_link Mean link function (e.g. \code{log} if \code{dfn} is
+##'   \code{dlnorm}). Defaults to \code{identity} for no transform.
 ##'
-##' @return A function that takes arguments \code{trajectory},
-##'   \code{param_sample}, and boolean \code{log} (with default FALSE).
-##' .. content for \description{} (no empty lines) ..
-construct_abs_loglik <- function(data_name, par_name, dfn, data) {
-  function(trajectory, param_sample, log = FALSE) {
-    obs <- data[[datname]]
-    pred <- trajectory[trajectory$year == data[[datname]]$year]
-    sum(mapply(dfn, obs, pred, data[[datname]]$sd))
+##' @return A function that takes arguments \code{trajectory} and
+##'   \code{param_sample}, and returns the log-likelihood of the observed
+##'   abundance given the parameter values.
+construct_abs_loglik <- function(data_name, dfn, data, mean_link = identity) {
+  check_lik_data(data, data_name)
+  abs_data <- data[[data_name]]
+  function(trajectory, param_sample) {
+    ab_df <- merge(abs_data, trajectory,
+                   by = "year", all.x = TRUE, all.y = FALSE)
+    ab_df$pred <- mean_link(ab_df$N)
+    sum(mapply(dfn, ab_df$obs, ab_df$pred, ab_df$sd, log = TRUE))
   }
+}
+
+check_growth_data <- function(data, data_name) {
+  if (is.null(data[[data_name]])) {
+    stop("Data does not contain \"", data_name, "\"")
+  }
+  available_names <- names(data[[data_name]])
+  required_names <- c("start_year", "end_year", "obs", "sd")
+  if (!all(required_names %in% available_names)) {
+    stop("Data frame must have columns ",
+         paste(required_names, collapse = ", "))
+  }
+  if (!all(complete.cases(data[[data_name]]))) {
+    stop("Missing data not allowed.")
+  }
+  NULL
+
 }
 
 ##' Construct likelihood for observations of absolute abundance
@@ -58,19 +105,29 @@ construct_abs_loglik <- function(data_name, par_name, dfn, data) {
 ##'   containing the relevant indices of abundance.
 ##' @param par_name Name of the parameter to use as \code{q} for this index.
 ##' @param dfn Density function (e.g. dnorm, dlnorm).
-##' @param data List containing at least a list named \code{data_name} with
-##'   entries \code{year}, vector with start and end years, \code{growth_rate},
-##'   and \code{sd}.
+##' @param data List containing at least a data frame named \code{data_name}
+##'   with columns \code{start_year}, \code{end_year}, \code{obs}, and
+##'   \code{sd}.
+##' @param mean_link Mean link function (e.g. \code{log} if \code{dfn} is
+##'   \code{dlnorm}). Defaults to \code{identity} for no transformation.
 ##'
-##' @return A function that takes arguments \code{trajectory},
-##'   \code{param_sample}, and boolean \code{log} (with default FALSE).
-##' .. content for \description{} (no empty lines) ..
-construct_growth_lik <- function(datname, dfn, data) {
-  function(trajectory, param_sample, log = FALSE) {
-    obs <- data[[datname]]$growth_rate
-    pred_pop <- trajectory[trajectory$year == data[[datname]]$year]
-    pred <- PRED.GROWTH.RATE(data[[datname]]$years,
-                             pred_pop, start_Yr = 0L)
+##' @return A function that takes arguments \code{trajectory} and
+##'   \code{param_sample}, and returns the log-likelihood of the observed value
+##'   given the parameter values.
+construct_growth_loglik <- function(data_name, dfn, data, mean_link = identity) {
+  check_growth_data(data, data_name)
+  growth_data <- data[[data_name]]
+  function(trajectory, param_sample) {
+    gr_df <- merge(growth_data, trajectory,
+                   by.x = "start_year", by.y = "year",
+                   all.x = TRUE, all.y = FALSE)
+    gr_df <- merge(gr_df, trajectory,
+                   by.x = "end_year", by.y = "year",
+                   all.x = TRUE, all.y = FALSE)
+    gr_df$pred_gr <- calc_growth_rate(gr_df$start_year, gr_df$end_year,
+                                      gr_df$N.x, gr_df$N.y)
+    gr_df$pred <- mean_link(gr_df$pred_gr)
+    sum(mapply(dfn, gr_df$obs, gr_df$pred, gr_df$sd, log = TRUE))
   }
 
 }
