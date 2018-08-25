@@ -191,6 +191,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
             sample_catch_multiplier[k] <- -1 # Make sure the catch multiplier is positive
             while (sample_catch_multiplier[k] < 0) {
                 sample_catch_multiplier[k] <- catch_multipliers[[k]]$rfn() # Sample catch multipliers
+                if (control$verbose > 1) { message("Catch multiplier for period ", k, " is negative.")}
             }
 
         }
@@ -335,8 +336,6 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         } else {
             lnlike.IAs <- 0
         }
-        if (control$verbose > 1) {
-        }
 
         # (2) count data (if count.data.key is TRUE)
         if (count.data.key) {
@@ -348,8 +347,6 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                        log=TRUE)
         } else {
             lnlike.Count <- 0
-        }
-        if (control$verbose > 1) {
         }
 
         # (3) absolute abundance
