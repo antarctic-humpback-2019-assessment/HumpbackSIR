@@ -130,6 +130,28 @@ construct_growth_loglik <- function(data_name, dfn, data, mean_link = identity) 
     sum(mapply(dfn, gr_df$obs, gr_df$pred, gr_df$sd, log = TRUE))
   }
 }
+##' Construct a likelihood for checking minimum viable population size
+##'
+##' Returns \code{-Inf} if constraint violated, \code{0} otherwise. Can either specify \code{data_name} and list \code{data} that holds the number of haplotypes as a single number, or just specify the number of haplotypes with the \code{num_haplotypes} (named) argument.
+##' @title Check MVP constraint
+##' @param data_name Name of list element in \code{data} specifying the number of haplotypes.
+##' @param data List of data that constains \code{data_name}.
+##' @param num_haplotypes Single number specifying number of haplotypes.
+##' @return Log-likelihood of the population trajectory.
+construct_mvp_loglik <- function(data_name = NULL, data = NULL, num_haplotypes = NULL) {
+  if (is.null(num_haplotypes)) {
+    num_haplotypes = data[[data_name]]
+  }
+  mvp <- num_haplotypes * 4
+  function(trajectory, param_sample) {
+    if (check_mvp_violated(trajectory, mvp)) {
+      loglik = -Inf
+    } else {
+      loglik = 0
+    }
+    loglik
+  }
+}
 
 ##' Gamma density parameterized by mean and standard deviation
 ##'

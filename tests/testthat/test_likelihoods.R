@@ -1,5 +1,14 @@
 context("Test likelihood constructors")
 
+## Declare parameter values
+tspan = c(min(data$catch$year), max(data$catch$year))
+param <- list(r_max = 0.10,
+              K = 22000,
+              z = 2.39,
+              q1 = 2,
+              q2 = 1.2)
+pred_N <- project_population(param, data, tspan)
+
 ## Construct data for abundance likelihoods
 data <- list(catch = Catch.data,
              index1 = Rel.Abundance[Rel.Abundance$Index == 1, ],
@@ -14,15 +23,6 @@ names(data$abs_abund) <- c("year", "obs", "cv")
 data$abs_abund$sd <- cv_to_sd(data$abs_abund$cv)
 data$missing <- data$abs_abund
 data$missing$obs[1] <- NA
-
-
-tspan <- c(min(data$catch$year), max(data$catch$year))
-param <- list(r_max = 0.10,
-              z = 2.39,
-              K = 22000,
-              q1 = 2,
-              q2 = 1.2)
-pred_N <- project_population(param, data, tspan)
 
 test_that("Likelihood data checks are correct", {
   expect_true(is.null(check_lik_data(data, "index1")))
@@ -96,13 +96,25 @@ test_that("Growth rate likelihoods construct", {
   expect_equal(gr2, 4.74120053121326)
 })
 
+## Test MVP likelihood
+data$num_haplo <- 66
+mvplow_lik <- construct_mvp_loglik(num_haplotypes = 0)
+mvpreal_lik <- construct_mvp_loglik("num_haplo", data)
+
+test_that("MVP likelihoods work", {
+  expect_equal(mvplow_lik(pred_N, param), 0)
+  expect_equal(mvpreal_lik(pred_N, param), -Inf)
+})
+
+
 liklist_ia1 <- list(ia1_likfun = ia1_likfun)
 liklist_abs <- list(abs_likfun = abs_likfun_lnorm)
 liklist_growth <- list(growth1_loglik = growth1_loglik)
 liklist <- list(ia1_likfun = ia1_likfun,
                 ia2_likfun = ia2_likfun,
                 abs_likfun = abs_likfun_lnorm,
-                growth_lik = growth1_loglik)
+                growth_lik = growth1_loglik,
+                mvp_lik = mvplow_lik)
 
 test_that("Lists of likelihoods return expected values", {
   expect_equal(calc_lik(pred_N, param, liklist_ia1, log = TRUE),
