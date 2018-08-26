@@ -129,8 +129,8 @@ construct_growth_loglik <- function(data_name, dfn, data, mean_link = identity) 
     gr_df$pred <- mean_link(gr_df$pred_gr)
     sum(mapply(dfn, gr_df$obs, gr_df$pred, gr_df$sd, log = TRUE))
   }
-
 }
+
 ##' Gamma density parameterized by mean and standard deviation
 ##'
 ##' @title Gamma density parameterized by mean and standard deviation
@@ -151,6 +151,29 @@ dgamma_meansd <- function(x, mean, sd) {
 ##' @return Numeric standard deviation
 cv_to_sd <- function(cv) {
   sqrt(log(1 + cv ^ 2))
+}
+##' Calculate the (log-)likelihood of the data
+##'
+##' Takes a list of likelihoods constructed using the \code{construct_*_loglik}
+##' functions, or any other function that accepts a population trajectory and a
+##' parameter sample and returns a log-likelihood.
+##' 
+##' @param trajectory Population trajectory, as produced by
+##'   \code{\link{project_population}}.
+##' @param param_sample List of parameter values, including any used in the
+##'   likelihood functions.
+##' @param loglik_list List of likelihoods.
+##' @param log Default FALSE; return log-likelihood?
+##' @return (log-)likelihood value
+calc_lik <- function(trajectory, param_sample, loglik_list, log = FALSE) {
+  loglik_comp <- vapply(loglik_list,
+                        function(llfn) llfn(trajectory, param_sample),
+                        FUN.VALUE = 1.0)
+  lik <- sum(loglik_comp)
+  if (!log) {
+    lik <- exp(lik)
+  }
+  lik
 }
 
 #' LOG LIKELIHOOD OF ABSOLUTE ABUNDANCE
@@ -244,3 +267,4 @@ LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs) {
 CALC.LNLIKE <- function(Obs.N, Pred_N, CV, log = FALSE) {
   sum(dnorm(x = log(Obs.N), mean = log(Pred_N), sd = CV, log = log))
 }
+
