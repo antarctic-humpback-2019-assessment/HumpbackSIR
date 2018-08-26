@@ -92,16 +92,18 @@ rlunif <- function(n, min = 1, max = 2) {
 ##'   can be used by the SIR function.
 make_prior_list <- function(r_max = make_prior(runif, 0, 0.106),
                             K = make_prior(use = FALSE),
+                            z = make_prior(2.39),
                             N_obs = make_prior(runif, 500, 20000),
                             add_CV = make_prior(use = FALSE),
-                            z = make_prior(2.39),
-                            q_IA = make_prior(use = FALSE),
-                            q_count = make_prior(use = FALSE)) {
+                            ...) {
+  ## Need either prior on K or on N_obs
+  if (!(K$use | N_obs$use)) {
+    stop("Must declare a prior for either K or N_obs")
+  }
   list(r_max = r_max,
        K = K,
+       z = z,
        N_obs = N_obs,
        add_CV = add_CV,
-       z = z,
-       q_IA = q_IA,
-       q_count = q_count)
+       ...)
 }
