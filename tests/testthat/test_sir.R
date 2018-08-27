@@ -55,24 +55,21 @@ test_that("Example runs", {
   r_max_summ <- c(0.0747308365546679, 0.0785385308959521, 0.0325653742793947,
                   0.103600497766363, 0.0427498911390547, 0.101975065643247,
                   0.0246829054611735, 0.104749660704751, 100)
-  expect_equal(sir$resamples.output.summary$r_max, r_max_summ)
+  expect_equal(resample_summary$output_summary$r_max, r_max_summ)
   K_summ <- c(24341.0440866569, 24013.5352974968, 22809.4671260726,
               27420.3612174263, 22881.3564593546, 26393.1754034563,
               22759.0720310569, 28434.3853907956, 100)
-  expect_equal(sir$resamples.output.summary$K, K_summ)
+  expect_equal(resample_summary$output_summary$K, K_summ)
   Nmin_summ <- c(523.562366839516, 387.891026320824, 176.885416772425,
                  1724.51699097789, 183.140884857596, 1266.76707418949,
                  163.174008013952, 2201.98115521626, 100)
-  expect_equal(sir$resamples.output.summary$Nmin, Nmin_summ)
+  expect_equal(resample_summary$output_summary$Nmin, Nmin_summ)
   ## make sure that relevant files are created (and then removed)
   wd <- getwd()
-  outfiles <- c(paste0(wd, "/test.N2005_samples.output.csv"),
-                paste0(wd, "/test.N2005_resample.trajectories.csv"),
-                paste0(wd, "/test.N2005_resamples.output.csv"))
+  outfiles <- c(paste0(wd, "/test.N2005_resamples_trajectories.csv"),
+                paste0(wd, "/test.N2005_resamples_output.csv"))
   expect_true(file.exists(outfiles[1]))
   file.remove(outfiles[1])
   expect_true(file.exists(outfiles[2]))
   file.remove(outfiles[2])
-  expect_true(file.exists(outfiles[3]))
-  file.remove(outfiles[3])
 })

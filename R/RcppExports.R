@@ -26,7 +26,7 @@ NULL
 #'   is maximum (assumed to be 2.39 by the IWC SC).
 #' @param num_Yrs The number of projection years. Set as the last year in the
 #'   catch or abundance series, whichever is most recent, minus the
-#'   \code{start_Yr}.
+#'   \code{start_yr}.
 #' @param catches The time series of catch in numbers or biomass. Currently does
 #'   not handle NAs and zeros will have to be input a priori for years in which
 #'   there were no catches.

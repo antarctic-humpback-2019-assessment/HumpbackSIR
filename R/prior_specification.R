@@ -74,7 +74,7 @@ make_prior <- function(rfn = NA, par1 = NULL, par2 = NULL,
 ##' @examples
 ##' rlunif(1, 0.01, 0.2)
 rlunif <- function(n, min = 1, max = 2) {
-  exp(runif(n, log(min), log(max)))
+    exp(runif(n, log(min), log(max)))
 }
 
 ##' @title Make a list of priors to be passed to the SIR function.

@@ -5,13 +5,14 @@
 #' HUMPBACK SIR controls the sampling from the priors, the bisection and
 #' likelihoods and the output functions
 #'
-#' @param file.name name of a file to identified the files exported by the
+#' @param file_name name of a file to identified the files exported by the
 #'   function
-#' @param n.resamples number of resamples to compute the marginal posterior
+#' @param n_resamples number of resamples to compute the marginal posterior
 #'   distributions
 #' @param priors List of priors, usually generated using \link{make_prior_list}.
 #'   Default is the default of \code{make_prior_list}. See details.
-#' @param target_year year of the target population estimate for the bisection
+#' @param catch_multipliers List of catch multipliers, generated using \link{make_multiplier_list}
+#'   Can either be estimated or explicitly provided. Default is \code{make_multiplier_list}.
 #'   method. Default is 2008
 #' @param num.haplotypes number of haplotypes to compute minimum viable
 #'   population (from Jackson et al., 2006 and IWC, 2007)
@@ -50,7 +51,9 @@
 #'                 add_CV = make_prior(use = FALSE),
 #'                 z = make_prior(2.39),
 #'                 q_IA = make_prior(use = FALSE),
-#'                 q_count = make_prior(use = FALSE)}
+#'                 q_count = make_prior(use = FALSE)
+#'
+#'  make_multiplier_list(c_mult_1 = make_prior(1))}
 #'
 #' @export
 #'
@@ -285,7 +288,9 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 #'   lnlike.Count[[1]], lnlike.Ns[[1]], lnlike.GR[[1]], LL, Likelihood,
 #'   Pred_N$Min_Pop/sample.K, c(Pred_N$Pred_N[output.Yrs-start_year+1]/sample.K),
 #'   draw, save)
-#' @param scenario Name of the model run and object as specified by the user.
+#' @param object Name of the model object as specified by the user.
+#' @param file_name name of a file to identified the files exported by the
+#'   function.
 #'
 #' @return Returns a data.frame with summary of SIR outputs
 #'
@@ -293,32 +298,35 @@ HUMPBACK.SIR <- function(file.name = "NULL",
 #' x  <-  rnorm(1000, 5, 7)
 #' y  <-  rnorm(1000, 6, 9)
 #' df <- data.frame(x = x, y = y)
-#' SUMMARY.SIR( df , scenario = "example_summary")
-SUMMARY.SIR <- function(x, scenario = "USERDEFINED") {
-  num.col <- dim(x)[2]
-  col.names <- names(x)
-  row.names <- c("mean", "median",
-                 "2.5%PI", "97.5%PI",
-                 "5%PI", "95%PI",
-                 "min", "max", "n")
+#' summary_sir( df , object = "example_summary")
+summary_sir <- function(x, object = "USERDEFINED", file_name = "NULL") {
 
-  ## FIXME Only call quantile once?
-  output.summary <- matrix(nrow = length(row.names), ncol = num.col)
-  output.summary[1, ] <- sapply(x, mean)
-  output.summary[2, ] <- sapply(x, median)
-  output.summary[3, ] <- sapply(x, quantile, probs=0.025)
-  output.summary[4, ] <- sapply(x, quantile, probs=0.975)
-  output.summary[5, ] <- sapply(x, quantile, probs=0.05)
-  output.summary[6, ] <- sapply(x, quantile, probs=0.95)
-  output.summary[7, ] <- sapply(x, min)
-  output.summary[8, ] <- sapply(x, max)
-  output.summary[9, ] <- sapply(x, length)
+    # Change name if not supplied
+    if(object == "USERDEFINED"){
+        if(TRUE %in% grepl(pattern = "N_", names(x), ignore.case = FALSE)){object == "trajectory_summary"}
+        if(TRUE %in% grepl(pattern = "r_max", names(x), ignore.case = FALSE)){object == "parameter_summary"}
+    }
 
-  output.table <- data.frame(output.summary)
-  names(output.table) <- col.names
-  row.names(output.table) <- row.names
-  noquote(format(output.table, digits = 3, scientific = FALSE))
+    row_names <- c("mean", "median",
+                   "2.5%PI", "97.5%PI",
+                   "5%PI", "95%PI",
+                   "min", "max", "n")
 
-  list(scenario=scenario, date=Sys.time(), output.table=output.table)
+    output_summary <- matrix(nrow = length(row_names), ncol = dim(x)[2])
+    output_summary[1, ] <- sapply(x, mean)
+    output_summary[2:6, ] <- sapply(x, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+    output_summary[7, ] <- sapply(x, min)
+    output_summary[8, ] <- sapply(x, max)
+    output_summary[9, ] <- sapply(x, length)
+
+    output_summary <- data.frame(output_summary)
+    names(output_summary) <- names(x)
+    row.names(output_summary) <- row_names
+    noquote(format(output_summary, digits = 3, scientific = FALSE))
+
+    write.csv(output_summary,
+              paste0(file_name, "_", object, ".csv"))
+
+    list(object = object, date=Sys.time(), output_summary = output_summary)
 }
 
