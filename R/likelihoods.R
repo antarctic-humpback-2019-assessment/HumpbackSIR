@@ -187,8 +187,8 @@ cv_to_sd <- function(cv) {
 ##' @param loglik_list List of likelihoods.
 ##' @param log Default FALSE; return log-likelihood?
 ##' @return (log-)likelihood value
-calc_lik <- function(trajectory, param_sample, loglik_list, log = FALSE) {
-  loglik_comp <- vapply(loglik_list,
+calc_lik <- function(trajectory, param_sample, liklist, log = FALSE) {
+  loglik_comp <- vapply(liklist,
                         function(llfn) llfn(trajectory, param_sample),
                         FUN.VALUE = 1.0)
   lik <- sum(loglik_comp)

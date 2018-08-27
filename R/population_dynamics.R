@@ -9,11 +9,16 @@
 ##' @param data List of data containing at least a data frame \code{catch} with
 ##'   columns \code{year} and \code{catch}.
 ##' @param tspan Vector of length two indicating starting and ending years for
-##'   projection.
+##'   projection. If default \code{NULL} is used, the entries of \code{tspan}
+##'   will be taken as the first and last rows in \code{data$catch$year}.
 ##'
 ##' @return A data frame with columns \code{year} and \code{N}.
 ##' @export
-project_population <- function(param_sample, data, tspan) {
+project_population <- function(param_sample, data, tspan = NULL) {
+  if (is.null(tspan)) {
+    tspan <- c(head(data$catch$year, 1),
+               tail(data$catch$year, 1))
+  }
   num_years <- diff(tspan) + 1
   ## TODO Add interface for catch multipliers (struck and loss rates etc. here)
   catch_series <- data$catch$catch

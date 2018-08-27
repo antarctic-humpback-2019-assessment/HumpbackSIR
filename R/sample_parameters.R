@@ -22,17 +22,15 @@
 #' tspan <- c(1990, 2000)
 #' data <- list(catch = runif(10, 10, 100))
 #' target_K(K, param_sample, target_N, data, tspan)
-target_K <- function(K, param_sample,
-                     target_N, data,
-                     tspan) {
+target_K <- function(K, param_sample, data, tspan) {
   param_sample$K <- K
   pred_N <- project_population(param_sample = param_sample,
                                data = data,
                                tspan = tspan)
-  pred_N$N[length(pred_N$N)] - target_N
+  tail(pred_N$N, 1) - param_sample$N_obs
 }
 
-#' LOGISTIC BISECTION
+#' Find K given r_max and N_obs
 #'
 #' Method of Butterworth and Punt (1995) where the prior distribution of the
 #' current absolute abundance $N_{2005}$ and maximum net recruitment rate
@@ -71,12 +69,11 @@ target_K <- function(K, param_sample,
 #'                      num_Yrs = bisection.Yrs, start_Yr = start_Yr,
 #'                      target.Pop = target.Pop, catches = catches, MVP = MVP,
 #'                      tol = 0.001)
-find_K <- function(param_sample, target_N, tspan, data, control) {
+find_K <- function(param_sample, tspan, data, control) {
   Kmin <- uniroot(target_K,
                   interval = control$K_bisect_lims,
                   tol = control$K_bisect_tol,
                   param_sample = param_sample,
-                  target_N = target_N,
                   data = data,
                   tspan = tspan)
   Kmin$root
@@ -95,25 +92,48 @@ find_K <- function(param_sample, target_N, tspan, data, control) {
 #' @export
 #'
 #' @examples
-CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_Yr,
-                            add_CV = 0, num.IA) {
-  ## Vector to store the q values
-  analytic.Q <- rep(NA, num.IA)
+calc_analytic_q <- function(trajectory, data, data_name) {
+  ia_df <- merge(ia_data[[data_name]], trajectory,
+                 by = "year", all.x = TRUE, all.y = FALSE)
 
-  for (i in 1:num.IA) {
-    ## Subseting across each index of abundance
-    IA <- Rel.Abundance[Rel.Abundance$Index == i,]
-    ## Years for which IAs are available
-    IA.yrs <- IA$Year-start_Yr + 1
-    ## Computing the value of sigma as in Zerbini et al. 2011
-    IA$Sigma <- sqrt(log(1 + IA$CV.IA.obs^2))
-    ## Numerator of the analytic q estimator (Zerbini et al., 2011 - eq. (3))
-    qNumerator <- sum((log(IA$IA.obs / Pred_N[IA.yrs])) /
-                      (IA$Sigma * IA$Sigma + add_CV * add_CV))
-    ## Denominator of the analytic q estimator (Zerbini et al., 2011 - eq. (3))
-    qDenominator <- sum(1 / (IA$Sigma * IA$Sigma))
-    ## Estimate of q
-    analytic.Q[i] <- exp(qNumerator / qDenominator)
+  q_num <- sum((log(ia_df$obs / ia_df$N)) / (ia_df$sd ^ 2))
+  q_den <- sum(ia_df$sd ^ -2)
+  q_num / q_den
+}
+
+sample_params <- function(priors, data, control) {
+  param_sample <- list()
+  param_sample$r_max <- priors$r_max$rfn()
+  param_sample$z <- priors$z$rfn()
+
+  ## Sample N_obs from prior if necessary
+  if (priors$N_obs$use) {
+    param_sample$N_obs <- priors$N_obs$rfn()
   }
-  analytic.Q
+
+  ## Find K either using the prior or using N_obs
+  if (priors$K$use) {
+    param_sample$K <- priors$K$rfn()
+  } else {
+    param_sample$K <- find_K(param_sample = param_sample,
+                             tspan = c(start_year, priors$N_obs$year),
+                             data = data,
+                             control = control)
+  }
+
+  pred_N <- project_population(param_sample = param_sample,
+                               data = data)
+
+  ## FIXME Better to specify an S3 type for each parameter, and add methods for
+  ## random sampling vs analytic approximations somehow?
+  other_pars <- setdiff(names(priors), c("r_max", "K", "z", "N_obs"))
+  for (par in other_pars) {
+    if (priors[[par]]$use) {
+      param_sample[[par]] <- priors[[par]]$rfn()
+    } else {
+      data_name <- priors[[par]]$data_name
+      param_sample[[par]] <- calc_analytic_q(pred_N, data, data_name)
+    }
+  }
+  list(param_sample, pred_N)
 }
