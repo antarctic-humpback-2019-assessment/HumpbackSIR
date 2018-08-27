@@ -59,20 +59,10 @@
 #' \dontrun{
 #' HUMPBACK.SIR(file.name = "test.N2005",
 #'              n.resamples = 100,
-#'              priors = make_prior_list(),
-#'              Klim = c(1, 500000),
-#'              target_year = 2005,
-#'              num.haplotypes = 0,
-#'              tolerance.for.bisection = 0.0001,
+#'              data,
+#'              priors,
+#'              liklist,
 #'              output.Yrs = c(2005, 2006),
-#'              abs.abundance = Abs.Abundance.2005,
-#'              rel.abundance = Rel.Abundance,
-#'              rel.abundance.key = TRUE,
-#'              count.data = Count.Data,
-#'              count.data.key = FALSE,
-#'              growth.rate.obs = c(0.074, 0.033, TRUE),
-#'              growth.rate.Yrs = c(1995, 1996, 1997, 1998),
-#'              catch.data = Catch.data,
 #'              control = sir_control())
 HUMPBACK.SIR <- function(file.name = "NULL",
                          n.resamples = 1000,
@@ -90,17 +80,6 @@ HUMPBACK.SIR <- function(file.name = "NULL",
   ## catch series
   start_year <- head(data$catch$year, 1)
   end_year <- tail(data$catch$year, 1)
-
-  ## start_year <- catch.data$Year[1]
-  ## ## The last year of the projection is set as the last year in the catch or
-  ## ## abundance series, whichever is most recent
-  ## end_year <- max(tail(catch.data$Year, 1),
-  ##               max(abs.abundance$Year),
-  ##               max(rel.abundance$Year))
-  ## Setting the target year for the bisection method
-  ## bisection.Yrs <- target_year-start_year + 1
-  ## Setting the years to project
-  ## projection.Yrs <- end_year-start_year + 1
 
   ## Start the loop
   i <- 0
@@ -140,211 +119,15 @@ HUMPBACK.SIR <- function(file.name = "NULL",
                             data = data,
                             control = control)
 
-    ## param_sample <- list()
-    ## #Sampling for r_max
-    ## sample.r_max <- 0.2 #setting sample.r_max outside of the bound
-    ## ## FIXME Why is this check necessary; just set the bounds using the prior?
-    ## while (sample.r_max < priors$r_max$pars[1] | sample.r_max > priors$r_max$pars[2]) {
-    ##   ## Prior on r_max, keep if within boundaries
-    ##   sample.r_max <- priors$r_max$rfn()
-    ## }
-    ## param_sample$r_max <- sample.r_max
-
-    ## ## Sampling from the N.obs prior
-    ## sample.N.obs <- priors$N_obs$rfn()
-    ## param_sample$N_obs <- sample.N.obs
-
-    ## ## Prior on additional CV
-    ## if (priors$add_CV$use) {
-    ##   sample.add_CV <- priors$add_CV$rfn()
-    ## } else {
-    ##   sample.add_CV <- 0
-    ## }
-    ## param_sample$add_CV <- sample.add_CV
-
-    ## ## Sample from prior for `z` (usually constant)
-    ## sample.z <- priors$z$rfn()
-    ## param_sample$z <- sample.z
-
-    ## ## Sampling from q priors if q.prior is TRUE; priors on q for indices of
-    ## ## abundance
-    ## if (priors$q_IA$use) {
-    ##   q.sample.IA <- replicate(num.IA, priors$q_IA$rfn())
-    ## } else {
-    ##   ## FIXME: -9999 is probably not a good sentinel value here; NA?
-    ##   q.sample.IA <- rep(-9999, length(unique(rel.abundance$Index)))
-    ## }
-    ## param_sample$q.IA <- q.sample.IA
-
-    ## ##priors on q for count data
-    ## if (priors$q_count$use) {
-    ##   q.sample.Count <- replicate(num.Count, priors$q_count$rfn())
-    ## } else {
-    ##   ## FIXME: Sentinel -9999 again
-    ##   q.sample.Count <- rep(-9999, length(unique(count.data$Index)))
-    ## }
-    ## param_sample$q.count <- q.sample.Count
-
-    ## data <- list(catch = catch.data)
-    ## names(data$catch) <- c("year", "catch")
-    ## sample.K <- find_K(param_sample = param_sample,
-    ##                    target_N = sample.N.obs,
-    ##                    tspan = c(start_year, priors$N_obs$year),
-    ##                    data = data,
-    ##                    control = control)
-    ## param_sample$K <- sample.K
-
-    ## #Computing the predicted abundances with the samples from the priors
-    ## #----------------------------------------
-    ## tspan <- c(start_year, end_year)
-    ## Pred_N <- project_population(param_sample = param_sample,
-    ##                              data = data,
-    ##                              tspan = tspan)
-
-    #Computing the predicted ROI for the IAs and Count data, if applicable
-    #----------------------------------------
-    #For IAs
-    ## Don't calculate ROIs inside the SIR function
-    ## rel.abundance.key <- FALSE
-    ## if (rel.abundance.key) {
-    ##   Pred.ROI.IA <- COMPUTING.ROI(data = rel.abundance,
-    ##                                Pred_N = Pred_N,
-    ##                                start_year = start_year)
-    ## } else {
-    ##   Pred.ROI.IA <- rep(0, num.IA)
-    ## }
-
-    #For Count Data
-    ## Don't calculate ROIs inside the SIR function
-    ## count.data.key <- FALSE
-    ## if (count.data.key) {
-    ##   Pred.ROI.Count <- COMPUTING.ROI(data = count.data,
-    ##                                   Pred_N = Pred_N,
-    ##                                   start_year = start_year)
-    ## } else {
-    ##   Pred.ROI.Count <- rep(0, num.Count)
-    ## }
-
-    #Calculate Analytical Qs if rel.abundance.key is TRUE
-    #---------------------------------------------------------
-    ## if (rel.abundance.key) {
-    ##   if (!priors$q_IA$use) {
-    ##     q.sample.IA <- CALC.ANALYTIC.Q(rel.abundance,
-    ##                                    Pred_N$Pred_N,
-    ##                                    start_year,
-    ##                                    sample.add_CV,
-    ##                                    num.IA)
-    ##   } else {
-    ##   q.sample.IA <- q.sample.IA
-    ##   }
-    ## }
-
-    #browser()
-
-    ## Calculate Analytical Qs if count.data.key is TRUE
-    ## (NOT USED YET - AZerbini, Feb 2013)
-    ## if (rel.abundance.key) {
-    ##   if (!priors$q_count$use) {
-    ##     q.sample.Count <- CALC.ANALYTIC.Q(count.data,
-    ##                                       Pred_N$Pred_N,
-    ##                                       start_year,
-    ##                                       sample.add_CV,
-    ##                                       num.Count)
-    ##   } else {
-    ##   q.sample.Count <- q.sample.Count
-    ##   }
-    ## }
-
-    ## if (control$verbose > 3) {
-    ##   message("r_max = ", sample.r_max,
-    ##           " N.obs = ", sample.N.obs,
-    ##           " K = ", sample.K,
-    ##           " Pred_N.target = ", Pred_N$N[Pred_N$year == priors$N_obs$year],
-    ##           " q.IAs = ", q.sample.IA,
-    ##           " q.Count = ", q.sample.Count)
-    ## }
-
     ## Compute the likelihoods
     lik <- calc_lik(trajectory = sample$pred_N,
                     param_sample = sample$param_sample,
                     liklist = liklist,
                     log = FALSE)
-    #--------------------------------
-    # (1) relative indices (if rel.abundance.key is TRUE)
-    ## if (rel.abundance.key) {
-    ##   lnlike.IAs <- LNLIKE.IAs(rel.abundance,
-    ##                            Pred_N$Pred_N,
-    ##                            start_year,
-    ##                            q.sample.IA,
-    ##                            sample.add_CV,
-    ##                            TRUE)
-    ## } else {
-    ##   lnlike.IAs <- 0
-    ## }
-    ## if (control$verbose > 1) {
-    ## }
-
-    # (2) count data (if count.data.key is TRUE)
-    ## if (count.data.key) {
-    ##   lnlike.Count <- LNLIKE.IAs(count.data,
-    ##                              Pred_N$Pred_N,
-    ##                              start_year,
-    ##                              q.sample.Count,
-    ##                              sample.add_CV,
-    ##                              log=TRUE)
-    ## } else {
-    ##   lnlike.Count <- 0
-    ## }
-    ## if (control$verbose > 1) {
-    ## }
-
-    # (3) absolute abundance
-    ## lnlike.Ns <- LNLIKE.Ns(abs.abundance,
-    ##                        Pred_N$Pred_N,
-    ##                        start_year,
-    ##                       sample.add_CV,
-    ##                        log=TRUE)
-
-    ## # (4) growth rate if applicable
-    ## if (growth.rate.obs[3]) {
-    ##   ## gr_idx <- 
-    ##   Pred.GR <- calc_growth_rate(years = growth.rate.Yrs[c(1, 4)],
-    ##                               pred_pop = data.frame(Pred_N = Pred_N$Pred_N,
-    ##                                                 year = start_year:end_year))
-    ##   lnlike.GR <- LNLIKE.GR(Obs.GR=growth.rate.obs[1],
-    ##                          Pred.GR=Pred.GR,
-    ##                          GR.SD.Obs=growth.rate.obs[2])
-    ## } else {
-    ##   lnlike.GR <- 0
-    ## }
-
-    ## if (control$verbose > 2) {
-    ##   message("lnlike.IAs = ", lnlike.IAs,
-    ##           " lnlike.Count = ", lnlike.Count,
-    ##           " lnlike.Ns = ", lnlike.Ns,
-    ##           " lnlike.GR = ", lnlike.GR)
-    ## }
-
-    ## ## These use the likelihoods in Zerbini et al. (2011)
-    ## LL <- lnlike.IAs[[1]] + lnlike.Count[[1]] + lnlike.Ns[[1]] + lnlike.GR[[1]]
-    ## Likelihood <- exp(-LL)
-    ## if (control$verbose > 1) {
-    ##   message("NLL = ", LL,
-    ##           " Likelihood = ", Likelihood)
-    ## }
-
-    ## if (Pred_N$Violate_Min_Viable_Pop) {
-    ##   Likelihood <- 0
-    ##   if (control$verbose > 0) {
-    ##     message("MVP violated on draw", draw)
-    ##   }
-    ## }
 
     cum_lik <- cum_lik + lik
     ## Cumulative.Likelihood <- Cumulative.Likelihood + Likelihood
 
-    ## if (!Pred_N$Violate_Min_Viable_Pop) {
-      ## while (Cumulative.Likelihood > control$threshold) {
     while(cum_lik > control$threshold) {
       if (control$verbose > 0) {
         message("sample = ", i, " draw = ", draw)
