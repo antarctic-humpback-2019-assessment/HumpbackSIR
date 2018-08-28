@@ -115,16 +115,10 @@ HUMPBACK.SIR <- function(file_name = "NULL",
     projection.Yrs <- end_yr-start_yr + 1
 
     ## Assigning the catch data
-    catch_original <- catch.data$Catch
-    if(is.null(Catch.data$Period)){ catch.data$Period <- 1 }# If there are not supplied catch periods, default to 1
-    catch_period <- catch.data$Period
-    n_catch_period <- length(unique(catch_period))
+    catch_original <- as.matrix(subset(catch.data, select = -Year))
+    n_catch_period<- ncol(catch_original)
 
     # Catch multiplier check
-    if(length(catch_multipliers) == 0){ # If no catch multipliers are provided - assume 1
-        catch_multipliers <- make_multiplier_list(c_mult_1 = make_prior(1))
-        warning("Catch multiplier not specified, assuming no multiplier.")
-    }
     if(length(catch_multipliers) != n_catch_period){
         stop("Number of catch multipliers (",
              length(catch_multipliers),
@@ -186,8 +180,9 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
         #Sampling for catch_multiplier
         sample_catch_multiplier <- sapply(catch_multipliers, function(x) x$rfn())
-        if(length(catch_multipliers) == n_catch_period){
-            catches <- catch_original * sample_catch_multiplier[catch_period] # Multiply catches by multiplier
+        catches <- rep(0, length(Year))
+        for(p in 1:length(sample_catch_multiplier)){
+            catches <- catches + (catch_original[,p] * sample_catch_multiplier[p]) # Multiply catches by multiplier and add
         }
 
         #Sampling for r_max
