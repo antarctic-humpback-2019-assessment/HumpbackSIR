@@ -284,7 +284,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
         ## Calculate Analytical Qs if count.data.key is TRUE
         ## (NOT USED YET - AZerbini, Feb 2013)
-        if (rel.abundance.key) {
+        if (count.data.key) {
             if (!priors$q_count$use) {
                 q.sample.Count <- CALC.ANALYTIC.Q(count.data,
                                                   Pred_N$Pred_N,

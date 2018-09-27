@@ -28,19 +28,19 @@ NumericVector dlnorm_zerb(
     // 2. Estimate likelihood
     if( (n_mu == 1) & ( n_sd == 1) ){ // 1 mu and 1 sdlog
         for(int i = 0; i < n_x; i++){
-            like[i] = 1 / (sdlog[0] * x[i]) * exp(- pow( log( x[i] ) - meanlog[0], 2)/ (2 * sdlog[0] * sdlog[0] ) );
+            like[i] = -log(sdlog[0]) - log(x[i]) - (pow( log( x[i] ) - meanlog[0], 2)/ (2 * sdlog[0] * sdlog[0] ) );
         }
 
     } else {
         if( (n_mu == n_x) & (n_sd == 1) ){ // Unique mu
             for(int i = 0; i < n_x; i++){
-                like[i] = 1 / (sdlog[0] * x[i]) * exp(- pow( log( x[i] ) - meanlog[i], 2)/ (2 * sdlog[0] * sdlog[0] ) );
+                like[i] = -log(sdlog[0]) -log(x[i]) - (pow( log( x[i] ) - meanlog[i], 2)/ (2 * sdlog[0] * sdlog[0] ) );
             }
         }
         else{
             if( (n_mu == n_x) & (n_sd == n_x) ){ // unique mu and sdlog
                 for(int i = 0; i < n_x; i++){
-                    like[i] = 1 / (sdlog[i] * x[i]) * exp(- pow( log( x[i] ) - meanlog[i], 2)/ (2 * sdlog[i] * sdlog[i] ) );
+                    like[i] =  -log(sdlog[i]) - log(x[i]) - (pow( log( x[i] ) - meanlog[i], 2)/ (2 * sdlog[i] * sdlog[i] ) );
                 }
             }
             else{// Errors
@@ -51,8 +51,8 @@ NumericVector dlnorm_zerb(
         }
     }
 
-    if(return_log == true){ // log transform
-        like = log(like);
+    if(return_log == false){ // log transform
+        like = exp(like);
     }
     return like;
 }
