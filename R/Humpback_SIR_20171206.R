@@ -447,7 +447,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         message("Time to Compute = ", (end.time-begin.time))
     }
 
-    list(call = call,
+    return_list <- list(call = call,
          file_name = file_name,
          Date.Time = Sys.time(),
          Time.to.compute.in.minutes = paste((end.time-begin.time) / 60),
@@ -462,14 +462,20 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                        n_resamples = n_resamples,
                        prior_r_max = priors$r_max,
                        catch_multipliers = catch_multipliers,
-                       priors_N.obs = priors$N.obs,
+                       priors_N_obs = priors$N_obs,
                        target.Yr = target.Yr,
                        MVP = paste("num.haplotypes = ",
                                    num.haplotypes,
                                    "MVP = ",
                                    4 * num.haplotypes),
                        tolerance = control$K_bisect_tol,
-                       output.Years = output.Yrs))
+                       output.Years = output.Yrs,
+                       abs.abundance = abs.abundance,
+                       catch.data = catch.data ))
+    if(rel.abundance.key){ return_list$inputs$rel.abundance = rel.abundance}
+    if(count.data.key){ return_list$inputs$count.data = count.data}
+
+    return(return_list)
 }
 
 
@@ -697,7 +703,7 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_yr,
     loglike.IA1 <- 0
     IA.yrs <- Rel.Abundance$Year-start_yr + 1
     loglike.IA1 <- -sum(
-        dlnorm_zerb( # NOTE: can be changed to dlnorm
+        dlnorm( # NOTE: can be changed to dlnorm_zerb
             x = Rel.Abundance$IA.obs,
             meanlog = log( q.values[Rel.Abundance$Index] * Pred_N[IA.yrs] ),
             sdlog = Rel.Abundance$Sigma + add.CV,
