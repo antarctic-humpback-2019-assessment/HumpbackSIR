@@ -651,7 +651,7 @@ LOGISTIC.BISECTION.K <- function(K.low,
 #' Compute analytic estimates of q, the scaling parameter between indices and
 #' absolute population size
 #'
-#' @param rel.Abundance Relative abundance index
+#' @param rel.abundance Relative abundance index
 #' @param add_CV Coefficient of variation
 #' @param Pred_N Predicted population
 #' @param start_yr Initial year
@@ -661,14 +661,14 @@ LOGISTIC.BISECTION.K <- function(K.low,
 #' @export
 #'
 #' @examples
-CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_yr,
+CALC.ANALYTIC.Q <- function(rel.abundance, Pred_N, start_yr,
                             add_CV = 0, num.IA) {
     ## Vector to store the q values
     analytic.Q <- rep(NA, num.IA)
 
     for (i in 1:num.IA) {
         ## Subseting across each index of abundance
-        IA <- Rel.Abundance[Rel.Abundance$Index == i,]
+        IA <- rel.abundance[rel.abundance$Index == i,]
         ## Years for which IAs are available
         IA.yrs <- IA$Year-start_yr + 1
         ## Computing the value of sigma as in Zerbini et al. 2011
@@ -686,7 +686,7 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_yr,
 
 #' Compute the log-likelihood of indices of abundance
 #'
-#' @param Rel.Abundance Relative abundance
+#' @param rel.abundance Relative abundance
 #' @param Pred_N Predicted population size
 #' @param start_yr Initial year
 #' @param q.values Scaling parameter
@@ -698,15 +698,15 @@ CALC.ANALYTIC.Q <- function(rel.Abundance, Pred_N, start_yr,
 #' @export
 #'
 #' @examples
-LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_yr,
+LNLIKE.IAs <- function(rel.abundance, Pred_N, start_yr,
                        q.values, add.CV, log = TRUE) {
     loglike.IA1 <- 0
-    IA.yrs <- Rel.Abundance$Year-start_yr + 1
+    IA.yrs <- rel.abundance$Year-start_yr + 1
     loglike.IA1 <- -sum(
-        dlnorm( # NOTE: can be changed to dlnorm_zerb
-            x = Rel.Abundance$IA.obs,
-            meanlog = log( q.values[Rel.Abundance$Index] * Pred_N[IA.yrs] ),
-            sdlog = Rel.Abundance$Sigma + add.CV,
+        dlnorm_zerb( # NOTE: can be changed to dlnorm_zerb
+            x = rel.abundance$IA.obs,
+            meanlog = log( q.values[rel.abundance$Index] * Pred_N[IA.yrs] ),
+            sdlog = rel.abundance$Sigma + add.CV,
             log))
 
     loglike.IA1
@@ -738,7 +738,7 @@ LNLIKE.IAs <- function(Rel.Abundance, Pred_N, start_yr,
 #' LNLIKE.Ns(Obs.N, Pred_N, start_yr, add_cv = 0, log=TRUE)
 LNLIKE.Ns <- function(Obs.N, Pred_N, start_yr, add_cv, log = TRUE) {
     N.yrs <- Obs.N$Year-start_yr+1
-    IA.yrs <- Rel.Abundance$Year-start_yr + 1
+    IA.yrs <- rel.abundance$Year-start_yr + 1
     nll_n <- -sum(
         dlnorm( # NOTE: can be changed to dlnorm_zerb
             x = Obs.N$N.obs,
