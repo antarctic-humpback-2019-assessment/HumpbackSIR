@@ -738,7 +738,6 @@ LNLIKE.IAs <- function(rel.abundance, Pred_N, start_yr,
 #' LNLIKE.Ns(Obs.N, Pred_N, start_yr, add_cv = 0, log=TRUE)
 LNLIKE.Ns <- function(Obs.N, Pred_N, start_yr, add_cv, log = TRUE) {
     N.yrs <- Obs.N$Year-start_yr+1
-    IA.yrs <- rel.abundance$Year-start_yr + 1
     nll_n <- -sum(
         dlnorm( # NOTE: can be changed to dlnorm_zerb
             x = Obs.N$N.obs,
