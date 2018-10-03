@@ -762,7 +762,7 @@ LNLIKE.Ns <- function(Obs.N, Pred_N, start_yr, add_cv, log = TRUE) {
 #' LNLIKE.GR(0.1, 0.1, 0.1)
 LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs, log = T) {
     ## This can be converted the likelihood from Zerbini et al. 2011 (eq. 6)
-    -sum( dnorm( x = Pred.GR , mean = GR.SD.Obs , sd = GR.SD.Obs, log = log ) )
+    -sum( dnorm( x = Obs.GR , mean = Pred.GR , sd = GR.SD.Obs, log = log ) )
 }
 
 #' Function to calculate the log-likelihood using a lognormal distribution
