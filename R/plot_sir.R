@@ -92,42 +92,43 @@ plot_sir <- function(SIR, file_name = "NULL") {
 
 
     # Plot IOA
-    IA.yrs <- rel.abundance$Year
-    IA.yr.range <- c((min(IA.yrs) - 1):(max(IA.yrs) + 1)) # Range +- 1 of IOA years
-
-    # Predict IOA
-    N_hat <- SIR$resamples_trajectories[, paste0("N_", IA.yr.range)] # Estimates of N within IOA years
-    q_cols <- grep("q_IA", colnames(SIR$resamples_output)) # Columns of resample Q estimates
-    q_est <- SIR$resamples_output[, q_cols]
-
-
-    IA_pread <- list()
-    IA_summary <- list()
-    for(i in 1:length(q_cols)){
-        # Predict
-        IA_pread[[i]] <- N_hat * q_est
-
-        # Summarize
-        IA_summary[[i]] <-  matrix(nrow = length(row_names), ncol = dim(IA_pread[[i]])[2])
-        IA_summary[[i]][1, ] <- sapply(IA_pread[[i]], mean)
-        IA_summary[[i]][2:6, ] <- sapply(IA_pread[[i]], quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
-        IA_summary[[i]][7, ] <- sapply(IA_pread[[i]], min)
-        IA_summary[[i]][8, ] <- sapply(IA_pread[[i]], max)
-        IA_summary[[i]][9, ] <- sapply(IA_pread[[i]], length)
-
-
-
-        IA_summary[[i]] <- data.frame(IA_summary[[i]])
-        names(IA_summary[[i]]) <- paste0("IA", i, "_", IA.yr.range)
-        row.names(IA_summary[[i]]) <- row_names
-    }
-
-
-
-    ymax <- max(c(sapply(IA_summary, function(x) max(x[2:6,])), rel.abundance$Lower95, rel.abundance$Upper95))
-    ymin <- 0
-
     if(!is.null(rel.abundance)){
+        IA.yrs <- rel.abundance$Year
+        IA.yr.range <- c((min(IA.yrs) - 1):(max(IA.yrs) + 1)) # Range +- 1 of IOA years
+
+        # Predict IOA
+        N_hat <- SIR$resamples_trajectories[, paste0("N_", IA.yr.range)] # Estimates of N within IOA years
+        q_cols <- grep("q_IA", colnames(SIR$resamples_output)) # Columns of resample Q estimates
+        q_est <- SIR$resamples_output[, q_cols]
+
+
+        IA_pread <- list()
+        IA_summary <- list()
+        for(i in 1:length(q_cols)){
+            # Predict
+            IA_pread[[i]] <- N_hat * q_est
+
+            # Summarize
+            IA_summary[[i]] <-  matrix(nrow = length(row_names), ncol = dim(IA_pread[[i]])[2])
+            IA_summary[[i]][1, ] <- sapply(IA_pread[[i]], mean)
+            IA_summary[[i]][2:6, ] <- sapply(IA_pread[[i]], quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+            IA_summary[[i]][7, ] <- sapply(IA_pread[[i]], min)
+            IA_summary[[i]][8, ] <- sapply(IA_pread[[i]], max)
+            IA_summary[[i]][9, ] <- sapply(IA_pread[[i]], length)
+
+
+
+            IA_summary[[i]] <- data.frame(IA_summary[[i]])
+            names(IA_summary[[i]]) <- paste0("IA", i, "_", IA.yr.range)
+            row.names(IA_summary[[i]]) <- row_names
+        }
+
+
+
+        ymax <- max(c(sapply(IA_summary, function(x) max(x[2:6,])), rel.abundance$Lower95, rel.abundance$Upper95))
+        ymin <- 0
+
+
         for(j in 1:2){
             if(j == 1){
                 filename <- paste0(file_name, "_IOA_fit", ".tiff")

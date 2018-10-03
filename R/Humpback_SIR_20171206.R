@@ -720,7 +720,7 @@ LNLIKE.IAs <- function(rel.abundance, Pred_N, start_yr,
 #' lognormal distribution from \code{\link{CALC.LNLIKE}}.
 #'
 #' @param Obs.N Observed absoluted abundance in numbers as a data.frame
-#'   containing year, estimate of absolute abundance, and CV.
+#'   containing year, estimate of absolute abundance, and standard deviation
 #' @param Pred_N Predicted absolute abundance in numbers from
 #'   \code{\link{GENERALIZED_LOGISTIC}}.
 #' @param start_yr The first year of the projection (assumed to be the first
