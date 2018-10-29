@@ -113,18 +113,13 @@ HUMPBACK.SIR <- function(file_name = "NULL",
     bisection.Yrs <- target.Yr-start_yr + 1
     ## Setting the years to project
     projection.Yrs <- end_yr-start_yr + 1
+    Year <- seq(start_yr, end_yr, by = 1)
 
     ## Assigning the catch data
-    catch_original <- catch.data$Catch
-    if(is.null(Catch.data$Period)){ catch.data$Period <- 1 }# If there are not supplied catch periods, default to 1
-    catch_period <- catch.data$Period
-    n_catch_period <- length(unique(catch_period))
+    catch_original <- as.matrix(catch.data[,grep("catch", colnames(catch.data), ignore.case = T)]) # Extract catch series
+    n_catch_period<- ncol(catch_original)
 
     # Catch multiplier check
-    if(length(catch_multipliers) == 0){ # If no catch multipliers are provided - assume 1
-        catch_multipliers <- make_multiplier_list(c_mult_1 = make_prior(1))
-        warning("Catch multiplier not specified, assuming no multiplier.")
-    }
     if(length(catch_multipliers) != n_catch_period){
         stop("Number of catch multipliers (",
              length(catch_multipliers),
@@ -169,10 +164,10 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                    "NLL.IAs", "NLL.Count", "NLL.N", "NLL.GR", "NLL", "Likelihood",
                    "Max_Dep", paste("status", output.Yrs, sep = ""), "draw", "save")
 
-    Year <- seq(start_yr, end_yr, by = 1)
-
     resamples_output <- matrix(NA, nrow = n_resamples, ncol = length(sir_names))
     resamples_trajectories <- matrix(NA, nrow = n_resamples, ncol = projection.Yrs)
+    catch_trajectories <- matrix(NA, nrow = n_resamples, ncol = projection.Yrs)
+    colnames(catch_trajectories) =  paste0("Catch_", Year)
 
     if (control$progress_bar) {
         pb <- txtProgressBar(min = 0, max = n_resamples, style = 3)
@@ -184,10 +179,11 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         #-------------------------------
         save <- FALSE #variable to indicate whether a specific draw is kept
 
-        #Sampling for catch_multiplier
+        # Sampling for catch_multiplier
         sample_catch_multiplier <- sapply(catch_multipliers, function(x) x$rfn())
-        if(length(catch_multipliers) == n_catch_period){
-            catches <- catch_original * sample_catch_multiplier[catch_period] # Multiply catches by multiplier
+        catches <- rep(0, length(Year))
+        for(p in 1:length(sample_catch_multiplier)){
+            catches <- catches + (catch_original[,p] * sample_catch_multiplier[p]) # Multiply catches by multiplier and add
         }
 
         #Sampling for r_max
@@ -387,6 +383,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                 save <- TRUE
                 Cumulative.Likelihood <- Cumulative.Likelihood-control$threshold
                 resamples_trajectories[i+1,] <- Pred_N$Pred_N
+                catch_trajectories[i+1,] <- catches
                 resamples_output[i+1,] <- c(sample.r_max,
                                             sample.K,
                                             sample_catch_multiplier,
@@ -431,6 +428,11 @@ HUMPBACK.SIR <- function(file_name = "NULL",
     write.csv(resamples_trajectories,
               paste0(file_name, "_", "resamples_trajectories.csv"))
 
+    catch_trajectories <- data.frame(catch_trajectories)
+    names(catch_trajectories) <- paste0("Catch_", Year)
+    write.csv(catch_trajectories,
+              paste0(file_name, "_", "catch_trajectories.csv"))
+
     resamples.per.samples <- draw / n_resamples
     if(resamples.per.samples < 3){
         warning("Number of resamples per sample is ",
@@ -458,6 +460,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                             "samples"),
          resamples_output = resamples_output,
          resamples_trajectories = resamples_trajectories,
+         catch_trajectories = catch_trajectories,
          inputs = list(draws = draw,
                        n_resamples = n_resamples,
                        prior_r_max = priors$r_max,
