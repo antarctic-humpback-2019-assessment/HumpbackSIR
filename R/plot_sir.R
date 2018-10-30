@@ -11,39 +11,17 @@
 #' @return Returns and saves a figure with the population trajectory.
 plot_trajectory <- function(SIR, file_name = "NULL") {
 
-    # Extract SIR objects
-    x <- SIR$resamples_trajectories
-    abs.abundance <- SIR$inputs$abs.abundance
-    catch.data <- SIR$inputs$catch.data
-    N_priors <- SIR$inputs$priors_N_obs$pars
 
-    row_names <- c("mean", "median",
-                   "2.5%PI", "97.5%PI",
-                   "5%PI", "95%PI",
-                   "min", "max", "n")
+    # Vars of interest
+    vars <- c("r_max", "K", "Nmin", paste0("N", SIR$inputs$output.Years), "Max_Dep", paste0("status", SIR$inputs$output.Years))
+    vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", SIR$inputs$output.Years, "}$"), "Max depletion", paste0("Depletion in ", SIR$inputs$output.Years))
+    pop_vars <- c("K", "Nmin", paste0("N", SIR$inputs$output.Years))
+    depletion_vars <- c("Max_Dep", paste0("status", SIR$inputs$output.Years))
 
-    # Extract values
-    output_summary <- matrix(nrow = length(row_names), ncol = dim(x)[2])
-    output_summary[1, ] <- sapply(x, mean)
-    output_summary[2:6, ] <- sapply(x, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
-    output_summary[7, ] <- sapply(x, min)
-    output_summary[8, ] <- sapply(x, max)
-    output_summary[9, ] <- sapply(x, length)
+    results <- data.frame(matrix(NA, nrow = length(vars), ncol = 7))
+    colnames(results) <- c("Parameter","Mean", "Median", "2.5% CI", "5% CI", "95% CI", "97.5% CI")
 
-    output_summary <- data.frame(output_summary)
-    names(output_summary) <- names(x)
-    row.names(output_summary) <- row_names
-
-
-    # Get 95% CI and range
-    Years <- as.numeric(gsub("N_", "", colnames(output_summary)))
-    abs.abundance$Upper95 <- qlnorm(0.975, log(abs.abundance$N.obs), abs.abundance$Sigma)
-    abs.abundance$Lower95 <- qlnorm(0.025, log(abs.abundance$N.obs), abs.abundance$Sigma)
-    ymax <- max(c(max(output_summary[2:6, ]), abs.abundance$N.obs, abs.abundance$Lower95, abs.abundance$Upper95, N_priors))
-    ymin <- 0
-
-
-
+    x <- SIR$resamples_output[,vars]
 
     # Plot trajectory
     for(i in 1:2){
@@ -199,3 +177,67 @@ plot_ioa <- function(SIR, file_name = "NULL"){
     }
 }
 
+
+#' OUTPUT FUNCTION
+#'
+#' Function that provides a plot of the estimated posterior densities of parameters from  SIR  model.
+#'
+#' @param SIR A fit SIR model or list of SIR models. Plots in the order provided.
+#' @param file_name name of a file to identified the files exported by the
+#'   function.
+#' @param multiple_sirs Logical whether or not multiple SIRS are provided as a list.
+#'
+#' @return Returns and saves a figure with the posterior densities of parameters.
+plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE){
+
+    if(multiple_sirs == FALSE){
+        sir_list <- list(SIR)
+    }
+    if(multiple_sirs == TRUE){
+        sir_list <- SIR
+    }
+
+    # Vars of interest
+    years <- sir_list[[1]]$inputs$output.Years
+    vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
+    vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
+
+    # Plot
+    for(j in 1:2){
+        if(j == 1){
+            filename <- paste0(file_name, "_pposterior_density", ".tiff")
+            tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+        }
+
+        par(mfrow = c(2,length(vars)/2))
+        par( mar=c(3, 3 , 0.5 , 0.25) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+
+        # Loop through vars
+        for(i in 1:length(vars)){
+
+            # Extract posterio densities
+            posterior_dens <- list()
+            for(k in 1:length(sir_list)){
+                posterior_dens[[k]] <- density(sir_list[[k]]$resamples_output[,vars[i]])
+            }
+            posteriors_lwd <- rep(3, length(posterior_dens))
+            posteriors_lty <- c(1:length(posterior_dens))
+
+            # Extract prior densities
+            # prior_dens <- list()
+            # for(k in 1:length(sir_list)){
+            #     prior_dens[[k]] <- density(sir_list[[k]]$resamples_output[,vars[i]])
+            # }
+            # priors_lwd <- rep(3, length(prior_dens))
+            # priors_lty <- c(1:length(prior_dens))
+
+            # Plot them
+            plot(NA,
+                 xlim = quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.02, 0.95)),
+                 ylim = range(sapply(posterior_dens, "[", "y")),
+                 ylab = "Density", xlab = latex2exp::TeX(vars_latex[i]))
+            mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty)
+        }
+        if(j == 1){ dev.off()}
+    }
+}
