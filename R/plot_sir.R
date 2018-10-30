@@ -5,7 +5,6 @@
 #' credible interval, 90% credible interval, catch, and observed absolute abundance.
 #'
 #' @param SIR A fit SIR model
-#' @param object Name of the model object as specified by the user.
 #' @param file_name name of a file to identified the files exported by the
 #'   function.
 #'
