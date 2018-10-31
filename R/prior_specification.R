@@ -108,3 +108,18 @@ make_prior_list <- function(r_max = make_prior(runif, 0, 0.106),
          q_IA = q_IA,
          q_count = q_count)
 }
+
+#' Probability density for correction factor as determined by Best et al 2010
+#'
+#' @param n number of samples
+#' @param crit_95 Struck and loss rate such that there is only a 5% probability of struck and loss rate exceeding this value
+#' @param upper Upper limit for struck and loss rate
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rbest <- function(n = 1, crit_95 = 0.139, upper = 0.30){
+    dom <- runif(n)
+    sapply(dom, function(d) ifelse(d < 0.95, runif(1, 1, 1/(1-crit_95)), runif(1, 1/(1-crit_95), 1/(1-upper))))
+}
