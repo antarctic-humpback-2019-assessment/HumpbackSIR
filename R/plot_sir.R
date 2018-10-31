@@ -61,7 +61,7 @@ plot_trajectory <- function(SIR, file_name = "NULL") {
         }
 
         # Plot configuration
-        par( mar=c(3, 3 , 0.5 , 0.25) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+        par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
         plot(y = NA, x = NA,
              ylim = c(ymin, ymax),
              xlim = c(min(Years), max(Years)),
@@ -184,7 +184,7 @@ plot_ioa <- function(SIR, file_name = "NULL"){
             rel.abundance.sub <- rel.abundance[which(rel.abundance$Index == i),]
 
             # Plot configuration
-            par( mar=c(3, 3 , 0.5 , 0.25) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+            par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
             plot(y = NA, x = NA,
                  ylim = c(ymin, ymax),
                  xlim = c(min(IA.yr.range), max(IA.yr.range)),
@@ -249,12 +249,12 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE){
     # Plot
     for(j in 1:2){
         if(j == 1){
-            filename <- paste0(file_name, "_pposterior_density", ".tiff")
+            filename <- paste0(file_name, "_posterior_density", ".tiff")
             tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
 
         par(mfrow = c(2,length(vars)/2))
-        par( mar=c(3, 3 , 0.5 , 0.25) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+        par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
 
         # Loop through vars
         for(i in 1:length(vars)){
