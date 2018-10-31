@@ -117,6 +117,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
     end_yr <- max(tail(catch.data$Year, 1),
                   max(abs.abundance$Year),
                   max(rel.abundance$Year),
+                  output.Yrs,
                   ifelse(is.null(premodern_catch_data),  catch.data$Year, premodern_catch_data$Year)) #FIXME: note should be able to handle if premodern_catch_data is NULL
     ## Setting the target year for the bisection method
     bisection.Yrs <- target.Yr-start_yr + 1
@@ -197,13 +198,13 @@ HUMPBACK.SIR <- function(file_name = "NULL",
     sir_names <- c("r_max", "K", paste0("catch_multiplier_", 1:length(catch_multipliers)) ,
                    paste0("premodern_catch_multiplier_", 1:length(premodern_catch_multipliers)),
                    "sample.N.obs", "add_CV", "sample_premodern_catch", "Nmin", "YearMin",
-                   "violate_MVP", paste0("N", output.Yrs),
+                   "violate_MVP", paste0("N", target.Yr), paste0("N", output.Yrs),
                    paste0("ROI_IA", unique(rel.abundance$Index)),
                    paste0("q_IA", unique(rel.abundance$Index)),
                    paste0("ROI_Count", unique(count.data$Index)),
                    paste0("q_Count", unique(count.data$Index)),
                    "NLL.IAs", "NLL.Count", "NLL.N", "NLL.GR", "NLL", "Likelihood",
-                   "Max_Dep", paste("status", output.Yrs, sep = ""), "draw", "save")
+                   "Max_Dep",paste0("status", target.Yr), paste("status", output.Yrs, sep = ""), "draw", "save")
 
     resamples_output <- matrix(NA, nrow = n_resamples, ncol = length(sir_names))
     resamples_trajectories <- matrix(NA, nrow = n_resamples, ncol = projection.Yrs)
@@ -446,6 +447,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                             Pred_N$Min_Pop,
                                             Pred_N$Min_Yr,
                                             Pred_N$Violate_Min_Viable_Pop,
+                                            c(Pred_N$Pred_N[target.Yr - start_yr + 1]),
                                             c(Pred_N$Pred_N[output.Yrs - start_yr + 1]),
                                             Pred.ROI.IA,
                                             q.sample.IA,
@@ -458,6 +460,8 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                             NLL,
                                             Likelihood,
                                             Pred_N$Min_Pop / sample.K,
+                                            c(Pred_N$Pred_N[target.Yr - start_yr + 1] /
+                                                  sample.K),
                                             c(Pred_N$Pred_N[output.Yrs - start_yr + 1] /
                                                   sample.K),
                                             draw,

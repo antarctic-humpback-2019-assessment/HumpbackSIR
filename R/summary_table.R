@@ -2,13 +2,14 @@
 #'
 #' @param SIR Resample summary from hympbackSIR
 #' @param file_name Desired filename to where csv file will be saved
-zerbini_table <- function( SIR, file_name = "Scenario_1"){
+zerbini_table <- function( SIR, file_name = "NULL"){
 
     # Vars of interest
-    vars <- c("r_max", "K", "Nmin", paste0("N", SIR$inputs$output.Years), "Max_Dep", paste0("status", SIR$inputs$output.Years))
-    vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", SIR$inputs$output.Years, "}$"), "Max depletion", paste0("Depletion in ", SIR$inputs$output.Years))
-    pop_vars <- c("K", "Nmin", paste0("N", SIR$inputs$output.Years))
-    depletion_vars <- c("Max_Dep", paste0("status", SIR$inputs$output.Years))
+    years <- c( SIR$inputs$target.Yr, SIR$inputs$output.Years)
+    vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
+    vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
+    pop_vars <- c("K", "Nmin", paste0("N", years))
+    depletion_vars <- c("Max_Dep", paste0("status", years))
 
     results <- data.frame(matrix(NA, nrow = length(vars), ncol = 7))
     colnames(results) <- c("Parameter","Mean", "Median", "2.5% CI", "5% CI", "95% CI", "97.5% CI")

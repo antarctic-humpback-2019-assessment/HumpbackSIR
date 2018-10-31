@@ -12,16 +12,46 @@
 plot_trajectory <- function(SIR, file_name = "NULL") {
 
 
-    # Vars of interest
-    vars <- c("r_max", "K", "Nmin", paste0("N", SIR$inputs$output.Years), "Max_Dep", paste0("status", SIR$inputs$output.Years))
-    vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", SIR$inputs$output.Years, "}$"), "Max depletion", paste0("Depletion in ", SIR$inputs$output.Years))
-    pop_vars <- c("K", "Nmin", paste0("N", SIR$inputs$output.Years))
-    depletion_vars <- c("Max_Dep", paste0("status", SIR$inputs$output.Years))
+    # Extract SIR objects
+    x <- SIR$resamples_trajectories
+    abs.abundance <- SIR$inputs$abs.abundance
+    rel.abundance <- SIR$inputs$rel.abundance
+    catch.data <- SIR$catch_trajectories
+    N_priors <- SIR$inputs$priors_N_obs$pars
 
-    results <- data.frame(matrix(NA, nrow = length(vars), ncol = 7))
-    colnames(results) <- c("Parameter","Mean", "Median", "2.5% CI", "5% CI", "95% CI", "97.5% CI")
+    row_names <- c("mean", "median",
+                   "2.5%PI", "97.5%PI",
+                   "5%PI", "95%PI",
+                   "min", "max", "n")
 
-    x <- SIR$resamples_output[,vars]
+    # Extract N trajectories
+    output_summary <- matrix(nrow = length(row_names), ncol = dim(x)[2])
+    output_summary[1, ] <- sapply(x, mean)
+    output_summary[2:6, ] <- sapply(x, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+    output_summary[7, ] <- sapply(x, min)
+    output_summary[8, ] <- sapply(x, max)
+    output_summary[9, ] <- sapply(x, length)
+
+    output_summary <- data.frame(output_summary)
+    names(output_summary) <- names(x)
+    row.names(output_summary) <- row_names
+
+    # Extract catch trajectories
+    catch_summary <- matrix(nrow = length(row_names), ncol = dim(catch.data)[2])
+    catch_summary[1, ] <- sapply(catch.data, mean)
+    catch_summary[2:6, ] <- sapply(catch.data, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+    catch_summary[7, ] <- sapply(catch.data, min)
+    catch_summary[8, ] <- sapply(catch.data, max)
+    catch_summary[9, ] <- sapply(catch.data, length)
+
+
+    # Get 95% CI and range
+    Years <- as.numeric(gsub("N_", "", colnames(output_summary)))
+    abs.abundance$Upper95 <- qlnorm(0.975, log(abs.abundance$N.obs), abs.abundance$Sigma)
+    abs.abundance$Lower95 <- qlnorm(0.025, log(abs.abundance$N.obs), abs.abundance$Sigma)
+    ymax <- max(c(max(output_summary[2:6, ]), abs.abundance$N.obs, abs.abundance$Lower95, abs.abundance$Upper95, N_priors))
+    ymin <- 0
+
 
     # Plot trajectory
     for(i in 1:2){
@@ -37,6 +67,7 @@ plot_trajectory <- function(SIR, file_name = "NULL") {
              xlim = c(min(Years), max(Years)),
              xlab = "Year", ylab = "Number of individuals")
 
+        # N Trajectory
         # Credible interval
         polygon(
             x = c(Years,rev(Years)),
@@ -46,9 +77,22 @@ plot_trajectory <- function(SIR, file_name = "NULL") {
                  y = c(output_summary[5, ], rev(output_summary[6, ])),
                  col = "Grey60", border = NA) # 90% CI
 
-        # Median and catch series
+        # Median
         lines( x = Years, y = output_summary[2, ], lwd = 3) # Median
-        lines( x = catch.data$Year, y = catch.data$Catch, lty = 2, lwd = 3, col = 1) # Catch
+
+        # Catch trajectory
+        # Credible interval
+        polygon(
+            x = c(Years,rev(Years)),
+            y = c(catch_summary[3, ],rev(catch_summary[4, ])),
+            col = "Grey80", border = NA) # 95% CI
+        polygon( x = c(Years,rev(Years)),
+                 y = c(catch_summary[5, ], rev(catch_summary[6, ])),
+                 col = "Grey60", border = NA) # 90% CI
+
+        # Median
+        lines( x = Years, y = catch_summary[2, ], lty = 2, lwd = 3, col = 1) # Median
+
 
         # Absolute abundance
         points( x = abs.abundance$Year,
@@ -198,7 +242,7 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE){
     }
 
     # Vars of interest
-    years <- sir_list[[1]]$inputs$output.Years
+    years <- c( sir_list[[1]]$inputs$target.Yr, sir_list[[1]]$inputs$output.Years)
     vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
@@ -238,6 +282,7 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE){
                  ylab = "Density", xlab = latex2exp::TeX(vars_latex[i]))
             mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty)
         }
+
         if(j == 1){ dev.off()}
     }
 }
