@@ -232,7 +232,7 @@ plot_ioa <- function(SIR, file_name = "NULL"){
 #' @param multiple_sirs Logical whether or not multiple SIRS are provided as a list.
 #'
 #' @return Returns and saves a figure with the posterior densities of parameters.
-plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE){
+plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE, lower = NULL, upper = NULL){
 
     if(multiple_sirs == FALSE){
         sir_list <- list(SIR)
@@ -242,7 +242,8 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE){
     }
 
     # Vars of interest
-    years <- c( sir_list[[1]]$inputs$target.Yr, sir_list[[1]]$inputs$output.Years)
+    years <- sort(unique(c( sapply(sir_list, function(x) x$inputs$target.Yr),
+                     sapply(sir_list, function(x) x$inputs$output.Years))))
     vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
@@ -265,7 +266,8 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE){
                 posterior_dens[[k]] <- density(sir_list[[k]]$resamples_output[,vars[i]])
             }
             posteriors_lwd <- rep(3, length(posterior_dens))
-            posteriors_lty <- c(1:length(posterior_dens))
+            posteriors_lty <- c(1, 1:(length(posterior_dens)-1))
+            posteriors_col <- c("grey", rep(1, length(posterior_dens)-1))
 
             # Extract prior densities
             # prior_dens <- list()
@@ -275,12 +277,31 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE){
             # priors_lwd <- rep(3, length(prior_dens))
             # priors_lty <- c(1:length(prior_dens))
 
+            # Get x range
+            if(is.null(lower[i])){
+                xlow <- quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.025))
+            } else if(is.na(lower[i])){
+                xlow <- quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.025))
+            } else{
+                xlow <- lower[i]
+            }
+
+            if(is.null(upper[i])){
+                xup <- quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.975))
+            }
+            else if(is.na(upper[i])){
+                xup <- quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.975))
+            } else{
+                xup <- upper[i]
+            }
+
+
             # Plot them
             plot(NA,
-                 xlim = quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.02, 0.95)),
+                 xlim = c(xlow, xup),
                  ylim = range(sapply(posterior_dens, "[", "y")),
                  ylab = "Density", xlab = latex2exp::TeX(vars_latex[i]))
-            mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty)
+            mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty, col = posteriors_col)
         }
 
         if(j == 1){ dev.off()}

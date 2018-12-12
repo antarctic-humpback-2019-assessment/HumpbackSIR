@@ -41,6 +41,7 @@
 #' @param premodern_catch_multipliers List of historic catch multipliers, generated using \link{make_multiplier_list}
 #'   Can either be estimated or explicitly provided. Default is \code{make_multiplier_list}.
 #' @param premodern_catch_data R object containing the years maximum and minimum premodern catches
+#' @param realized_prior Key to specify if realized prior is to be extracted. Default is FALSE.
 #'
 #' @return A \code{list} containing posterior samples and metadata
 #'
@@ -101,6 +102,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                          growth.rate.Yrs = c(1995, 1996, 1997, 1998),
                          catch.data = Catch.data,
                          premodern_catch_data = NULL,
+                         realized_prior = FALSE,
                          control = sir_control()) {
     begin.time <- Sys.time()
 
@@ -421,9 +423,17 @@ HUMPBACK.SIR <- function(file_name = "NULL",
             }
         }
 
+
+
         Cumulative.Likelihood <- Cumulative.Likelihood + Likelihood
 
+        # Trick to just extract realized prior
+        if(realized_prior){
+            Cumulative.Likelihood <- 2 * control$threshold
+        }
+
         if (!Pred_N$Violate_Min_Viable_Pop) {
+
             while (Cumulative.Likelihood > control$threshold & i < n_resamples) {
                 if (control$verbose > 0) {
                     message("sample = ", i, " draw = ", draw)
@@ -532,7 +542,8 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                       tolerance = control$K_bisect_tol,
                                       output.Years = output.Yrs,
                                       abs.abundance = abs.abundance,
-                                      catch.data = catch.data ))
+                                      catch.data = catch.data,
+                                      realized_prior = realized_prior))
     if(rel.abundance.key){ return_list$inputs$rel.abundance = rel.abundance}
     if(count.data.key){ return_list$inputs$count.data = count.data}
 
