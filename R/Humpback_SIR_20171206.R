@@ -535,6 +535,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                       catch_multipliers = catch_multipliers,
                                       priors_N_obs = priors$N_obs,
                                       target.Yr = target.Yr,
+                                      start_yr = start_yr,
                                       MVP = paste("num.haplotypes = ",
                                                   num.haplotypes,
                                                   "MVP = ",
@@ -784,6 +785,28 @@ LNLIKE.IAs <- function(rel.abundance, Pred_N, start_yr,
     loglike.IA1
 }
 
+
+#' Predict indices of abundance
+#'
+#' @param SIR SIR object
+#'
+#' @return List of predicted indices based on Zerbini et al. (2011) eq. 5 or using `dnorm`
+#' @export
+#'
+#' @examples
+PREDICT.IAs <- function(rel.abundance, Pred_N, start_yr,
+                       q.values, add.CV, log = TRUE) {
+    loglike.IA1 <- 0
+    IA.yrs <- rel.abundance$Year-start_yr + 1
+    loglike.IA1 <- -sum(
+        rlnorm( # NOTE: can be changed to dlnorm_zerb
+            x = rel.abundance$IA.obs,
+            meanlog = log( q.values[rel.abundance$Index] * Pred_N[IA.yrs] ),
+            sdlog = rel.abundance$Sigma + add.CV,
+            log))
+
+    loglike.IA1
+}
 
 #' LOG LIKELIHOOD OF ABSOLUTE ABUNDANCE
 #'

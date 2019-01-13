@@ -43,7 +43,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = "NULL") {
         reference_summary[1, ] <- sapply(ref, mean)
         reference_summary[2:6, ] <- sapply(ref, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
         reference_summary[7, ] <- sapply(ref, min)
-        reference_summary[8, ] <- sapply(ref, maref)
+        reference_summary[8, ] <- sapply(ref, max)
         reference_summary[9, ] <- sapply(ref, length)
         reference_summary <- data.frame(reference_summary)
         names(reference_summary) <- names(ref)
@@ -135,10 +135,12 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = "NULL") {
 #'
 #' @param SIR A fit SIR model
 #' @param file_name name of a file to identified the files exported by the
+#' @param posterior_pred Logical. If true, includes a posterior predictive distribution of the estimated IOA
 #'   function.
+#' @param ioa_names names of indices of abundance used.
 #'
 #' @return Returns and saves a figure with the IOA trajectories.
-plot_ioa <- function(SIR, file_name = "NULL"){
+plot_ioa <- function(SIR, file_name = "NULL", ioa_names = NULL, posterior_pred = FALSE){
 
     rel.abundance <- SIR$inputs$rel.abundance
     row_names <- c("mean", "median",
@@ -153,22 +155,29 @@ plot_ioa <- function(SIR, file_name = "NULL"){
     rel.abundance$Upper95 <- qlnorm(0.975, log(rel.abundance$IA.obs), rel.abundance$Sigma)
     rel.abundance$Lower95 <- qlnorm(0.025, log(rel.abundance$IA.obs), rel.abundance$Sigma)
 
-    # Plot IOA
-
-    IA.yrs <- rel.abundance$Year
-    IA.yr.range <- c((min(IA.yrs) - 1):(max(IA.yrs) + 1)) # Range +- 1 of IOA years
-
     # Predict IOA
-    N_hat <- SIR$resamples_trajectories[, paste0("N_", IA.yr.range)] # Estimates of N within IOA years
     q_cols <- grep("q_IA", colnames(SIR$resamples_output)) # Columns of resample Q estimates
     q_est <- SIR$resamples_output[, q_cols]
 
-
+    # Setup objects
+    ymax <- c()           # Maximum predicted IOA
+    IA.yr.range <- list() # Year range for each IOA
     IA_pread <- list()
     IA_summary <- list()
+    IA_posterior_pred <- list()
+    IA_posterior_pred_sum <- list()
+
+    # Predict and calculate summary
     for(i in 1:length(q_cols)){
+
+        # Get IOA specifications
+        rel.abundance.sub <- rel.abundance[which(rel.abundance$Index == i),]
+        IA.yrs <- rel.abundance.sub$Year
+        IA.yr.range[[i]] <- c((min(IA.yrs) - 1):(max(IA.yrs) + 1)) # Range +- 1 of IOA years
+
         # Predict
-        IA_pread[[i]] <- N_hat * q_est
+        N_hat <- SIR$resamples_trajectories[, paste0("N_", IA.yr.range[[i]])] # Estimates of N within IOA years
+        IA_pread[[i]] <- N_hat * q_est[,i]
 
         # Summarize
         IA_summary[[i]] <-  matrix(nrow = length(row_names), ncol = dim(IA_pread[[i]])[2])
@@ -178,16 +187,45 @@ plot_ioa <- function(SIR, file_name = "NULL"){
         IA_summary[[i]][8, ] <- sapply(IA_pread[[i]], max)
         IA_summary[[i]][9, ] <- sapply(IA_pread[[i]], length)
 
-
-
         IA_summary[[i]] <- data.frame(IA_summary[[i]])
-        names(IA_summary[[i]]) <- paste0("IA", i, "_", IA.yr.range)
+        names(IA_summary[[i]]) <- paste0("IA", i, "_", IA.yr.range[[i]])
         row.names(IA_summary[[i]]) <- row_names
+
+
+        # Get posterior predictive
+        if(posterior_pred){
+            IA_posterior_pred[[i]] <- matrix(NA, nrow = nrow(SIR$resamples_trajectories), ncol = length(IA.yrs))
+            IA_posterior_pred_sum[[i]] <-  matrix(nrow = length(row_names), ncol = length(IA.yrs))
+
+            for(j in 1:length(IA.yrs)){
+                IA_posterior_pred[[i]][,j] <- rlnorm(
+                    n = nrow(IA_posterior_pred[[i]]),
+                    meanlog = log( q_est[,rel.abundance.sub$Index[j]] * SIR$resamples_trajectories[, paste0("N_", IA.yrs[j])] ),
+                    sdlog = rel.abundance.sub$Sigma[j] + SIR$resamples_output$add_CV[1])
+            }
+
+            IA_posterior_pred[[i]] <- data.frame(IA_posterior_pred[[i]])
+
+            # Summarize
+            IA_posterior_pred_sum[[i]] <-  matrix(nrow = length(row_names), ncol = dim(IA_posterior_pred[[i]])[2])
+            IA_posterior_pred_sum[[i]][1, ] <- sapply(IA_posterior_pred[[i]], mean)
+            IA_posterior_pred_sum[[i]][2:6, ] <- sapply(IA_posterior_pred[[i]], quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+            IA_posterior_pred_sum[[i]][7, ] <- sapply(IA_posterior_pred[[i]], min)
+            IA_posterior_pred_sum[[i]][8, ] <- sapply(IA_posterior_pred[[i]], max)
+            IA_posterior_pred_sum[[i]][9, ] <- sapply(IA_posterior_pred[[i]], length)
+
+            IA_posterior_pred_sum[[i]] <- data.frame(IA_posterior_pred_sum[[i]])
+            names(IA_posterior_pred_sum[[i]]) <- paste0("IA", i, "_", IA.yrs)
+            row.names(IA_posterior_pred_sum[[i]]) <- row_names
+        }
+
+        # Get plot limits
+        ymax[i] <- max(unlist(c(IA_summary[[i]][2:6,], rel.abundance.sub$Lower95, rel.abundance.sub$Upper95))) # Max of posterior
+        if(posterior_pred){
+            ymax[i] <- max(unlist(c(ymax[i], IA_posterior_pred_sum[[i]][2:6,], rel.abundance.sub$Lower95, rel.abundance.sub$Upper95))) # Max of posterior predictive
+        }
     }
 
-
-
-    ymax <- max(c(sapply(IA_summary, function(x) max(x[2:6,])), rel.abundance$Lower95, rel.abundance$Upper95))
     ymin <- 0
 
 
@@ -197,33 +235,32 @@ plot_ioa <- function(SIR, file_name = "NULL"){
             tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
 
-        par(mfrow = c(1,length(IA_summary)))
+        par(mfrow = c(1,length(IA_summary)), mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
 
         # Loop through inices
         for(i in 1:length(IA_summary)){
             rel.abundance.sub <- rel.abundance[which(rel.abundance$Index == i),]
 
             # Plot configuration
-            par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
             plot(y = NA, x = NA,
-                 ylim = c(ymin, ymax),
-                 xlim = c(min(IA.yr.range), max(IA.yr.range)),
+                 ylim = c(ymin, ymax[i]),
+                 xlim = c(min(IA.yr.range[[i]]), max(IA.yr.range[[i]])),
                  xlab = "Year", ylab = "Relative abundance")
 
 
             # Credible interval
             polygon(
-                x = c(IA.yr.range, rev(IA.yr.range)),
+                x = c(IA.yr.range[[i]], rev(IA.yr.range[[i]])),
                 y = c(IA_summary[[i]][3, ],rev(IA_summary[[i]][4, ])),
                 col = "Grey80", border = NA) # 95% CI
 
-            polygon( x = c(IA.yr.range, rev(IA.yr.range)),
+            polygon( x = c(IA.yr.range[[i]], rev(IA.yr.range[[i]])),
                      y = c(IA_summary[[i]][5, ], rev(IA_summary[[i]][6, ])),
                      col = "Grey60", border = NA) # 90% CI
 
 
             # Median and catch series
-            lines( x = IA.yr.range, y = IA_summary[[i]][2, ], lwd = 3) # Median
+            lines( x = IA.yr.range[[i]], y = IA_summary[[i]][2, ], lwd = 3) # Median
 
 
             # Relative abundance
@@ -236,10 +273,29 @@ plot_ioa <- function(SIR, file_name = "NULL"){
                     y1 = rel.abundance.sub$Upper95,
                     length=0.05, angle=90, code=3, lwd = 3, col = 1)
 
+            # Posterior predictive
+            if(posterior_pred){
+                # Mean
+                points( x = rel.abundance.sub$Year + 0.25,
+                        y = IA_posterior_pred_sum[[i]][1,],
+                        col = "Grey80", pch = 16, cex = 2)
+                arrows( x0 = rel.abundance.sub$Year + 0.25,
+                        y0 = as.numeric(IA_posterior_pred_sum[[i]][3,]),
+                        x1 = rel.abundance.sub$Year + 0.25,
+                        y1 = as.numeric(IA_posterior_pred_sum[[i]][4,]),
+                        length=0.05, angle=90, code=3, lwd = 3, col = "Grey80")
+
+            }
+
+            if(!is.null(ioa_names)){
+                legend("topleft", legend = ioa_names[i] ,bty = "n")
+            }
+
         }
         if(j == 1){ dev.off()}
     }
 }
+
 
 
 #' OUTPUT FUNCTION
@@ -266,20 +322,20 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE, lower =
     }
 
 
-    posteriors_lwd <- rep(3, length(posterior_dens))
-    posteriors_lty <- c(1, 1:(length(posterior_dens)-1))
-    posteriors_col <- c("grey", rep(1, length(posterior_dens)-1))
+    posteriors_lwd <- rep(3, length(sir_list))
+    posteriors_lty <- c(1, 1:(length(sir_list)-1))
+    posteriors_col <- c("grey", rep(1, length(sir_list)-1))
 
-    if(!is.null(priors)){
-        posteriors_lwd <- c(posteriors_lwd, rep(1, length(priors)))
-        posteriors_lty <- c(posteriors_lty, c(1, 1:(length(priors)-1)))
-        posteriors_col <- c(posteriors_col, c("grey", rep(1, length(priors)-1)))
-        sir_list <- c(sir_list, priors)
+    if(!is.null(prior_list)){
+        posteriors_lwd <- c(posteriors_lwd, rep(1, length(prior_list)))
+        posteriors_lty <- c(posteriors_lty, c(1, 1:(length(prior_list)-1)))
+        posteriors_col <- c(posteriors_col, c("grey", rep(1, length(prior_list)-1)))
+        sir_list <- c(sir_list, prior_list)
     }
 
     # Vars of interest
     years <- sort(unique(c( sapply(sir_list, function(x) x$inputs$target.Yr),
-                     sapply(sir_list, function(x) x$inputs$output.Years))))
+                            sapply(sir_list, function(x) x$inputs$output.Years))))
     vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
