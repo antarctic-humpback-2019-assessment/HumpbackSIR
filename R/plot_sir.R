@@ -6,11 +6,12 @@
 #'
 #' @param SIR A fit SIR model
 #' @param file_name name of a file to identified the files exported by the
-#'   function.
+#'   function. If NULL, does not save.
 #' @param Reference A fit SIR model for the reference case
+#' @param posterior_pred Logical. If true, includes a posterior predictive distribution of the estimated N
 #'
 #' @return Returns and saves a figure with the population trajectory.
-plot_trajectory <- function(SIR, Reference = NULL, file_name = "NULL") {
+plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_pred = TRUE) {
 
 
     # Extract SIR objects
@@ -51,6 +52,31 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = "NULL") {
         ref_years <- as.numeric(gsub("N_", "", colnames(reference_summary)))
     }
 
+
+
+    if(posterior_pred){
+        N_posterior_pred <- matrix(NA, ncol = nrow(abs.abundance), nrow = nrow(x))
+
+        for(i in 1:ncol(N_posterior_pred)){
+            N_posterior_pred[,i] <- rlnorm(
+            n = nrow(N_posterior_pred),
+            meanlog = log( x[,paste0("N_", abs.abundance$Year[i]) ] ),
+            sdlog = abs.abundance$Sigma[i] + SIR$resamples_output$add_CV[1]
+            )
+        }
+
+        N_posterior_pred <- as.data.frame(N_posterior_pred)
+        posterior_pred_summary <- matrix(nrow = length(row_names), ncol = dim(N_posterior_pred)[2])
+        posterior_pred_summary[1, ] <- sapply(N_posterior_pred, mean)
+        posterior_pred_summary[2:6, ] <- sapply(N_posterior_pred, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+        posterior_pred_summary[7, ] <- sapply(N_posterior_pred, min)
+        posterior_pred_summary[8, ] <- sapply(N_posterior_pred, max)
+        posterior_pred_summary[9, ] <- sapply(N_posterior_pred, length)
+
+        colnames(posterior_pred_summary) <- paste0("Posterior_predictive_N_", abs.abundance$Year)
+        rownames(posterior_pred_summary) <- row_names
+    }
+
     # Extract catch trajectories
     catch_summary <- matrix(nrow = length(row_names), ncol = dim(catch.data)[2])
     catch_summary[1, ] <- sapply(catch.data, mean)
@@ -69,8 +95,8 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = "NULL") {
 
 
     # Plot trajectory
-    for(i in 1:2){
-        if(i == 1){
+    for(i in 1: (1 + !is.null(file_name))){
+        if(i == 2){
             filename <- paste0(file_name, "_trajectory_summary", ".tiff")
             tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
@@ -124,7 +150,18 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = "NULL") {
                 y1 = abs.abundance$Upper95,
                 length=0.05, angle=90, code=3, lwd = 3)
 
-        if(i == 1){ dev.off()}
+        if(posterior_pred){
+            points( x = abs.abundance$Year + 0.25,
+                    y = posterior_pred_summary[2,],
+                    col = "Grey80", pch = 16, cex = 2)
+            arrows( x0 = abs.abundance$Year + 0.25,
+                    y0 = as.numeric(posterior_pred_summary[3,]),
+                    x1 = abs.abundance$Year + 0.25,
+                    y1 = as.numeric(posterior_pred_summary[4,]),
+                    length=0.05, angle=90, code=3, lwd = 3, col = "Grey80")
+        }
+
+        if(i == 2){ dev.off()}
     }
 }
 
@@ -135,12 +172,12 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = "NULL") {
 #'
 #' @param SIR A fit SIR model
 #' @param file_name name of a file to identified the files exported by the
+#'   function. If NULL, does not save.
 #' @param posterior_pred Logical. If true, includes a posterior predictive distribution of the estimated IOA
-#'   function.
 #' @param ioa_names names of indices of abundance used.
 #'
 #' @return Returns and saves a figure with the IOA trajectories.
-plot_ioa <- function(SIR, file_name = "NULL", ioa_names = NULL, posterior_pred = FALSE){
+plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = TRUE){
 
     rel.abundance <- SIR$inputs$rel.abundance
     row_names <- c("mean", "median",
@@ -158,6 +195,8 @@ plot_ioa <- function(SIR, file_name = "NULL", ioa_names = NULL, posterior_pred =
     # Predict IOA
     q_cols <- grep("q_IA", colnames(SIR$resamples_output)) # Columns of resample Q estimates
     q_est <- SIR$resamples_output[, q_cols]
+    q_est <- as.matrix(q_est, ncol = length(q_cols))
+
 
     # Setup objects
     ymax <- c()           # Maximum predicted IOA
@@ -229,8 +268,8 @@ plot_ioa <- function(SIR, file_name = "NULL", ioa_names = NULL, posterior_pred =
     ymin <- 0
 
 
-    for(j in 1:2){
-        if(j == 1){
+    for(j in 1:(1 + !is.null(file_name))){
+        if(j == 2){
             filename <- paste0(file_name, "_IOA_fit", ".tiff")
             tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
@@ -292,7 +331,7 @@ plot_ioa <- function(SIR, file_name = "NULL", ioa_names = NULL, posterior_pred =
             }
 
         }
-        if(j == 1){ dev.off()}
+        if(j == 2){ dev.off()}
     }
 }
 
@@ -304,7 +343,7 @@ plot_ioa <- function(SIR, file_name = "NULL", ioa_names = NULL, posterior_pred =
 #'
 #' @param SIR A fit SIR model or list of SIR models. Plots in the order provided.
 #' @param file_name name of a file to identified the files exported by the
-#'   function.
+#'   function. If NULL, does not save.
 #' @param multiple_sirs Logical whether or not multiple SIRS are provided as a list.
 #' @param lower Vector of lower bounds for x-axis
 #' @param upper Vector of upper bounds for x-axis
@@ -312,7 +351,7 @@ plot_ioa <- function(SIR, file_name = "NULL", ioa_names = NULL, posterior_pred =
 #' @param reference Default = NULL, wether reference case is included in SIR
 #'
 #' @return Returns and saves a figure with the posterior densities of parameters.
-plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE, lower = NULL, upper = NULL, prior_list = NULL, inc_reference = FALSE){
+plot_density <- function(SIR, file_name = NULL, multiple_sirs = FALSE, lower = NULL, upper = NULL, prior_list = NULL, inc_reference = FALSE){
 
     if(multiple_sirs == FALSE){
         sir_list <- list(SIR)
@@ -340,8 +379,8 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE, lower =
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
     # Plot
-    for(j in 1:2){
-        if(j == 1){
+    for(j in 1:(1 + !is.null(file_name))){
+        if(j == 2){
             filename <- paste0(file_name, "_posterior_density", ".tiff")
             tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
@@ -393,6 +432,6 @@ plot_density <- function(SIR, file_name = "NULL", multiple_sirs = FALSE, lower =
             mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty, col = posteriors_col)
         }
 
-        if(j == 1){ dev.off()}
+        if(j == 2){ dev.off()}
     }
 }
