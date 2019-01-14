@@ -40,7 +40,8 @@
 #'   \code{sir_control}.
 #' @param premodern_catch_multipliers List of historic catch multipliers, generated using \link{make_multiplier_list}
 #'   Can either be estimated or explicitly provided. Default is \code{make_multiplier_list}.
-#' @param premodern_catch_data R object containing the years maximum and minimum premodern catches
+#' @param premodern_catch_data R object containing the years maximum and minimum premodern catches.
+#' @param beached_data R object containing the years and beached whale sightings
 #' @param realized_prior Key to specify if realized prior is to be extracted. Default is FALSE.
 #'
 #' @return A \code{list} containing posterior samples and metadata
@@ -84,6 +85,7 @@
 #'              growth.rate.Yrs = c(1995, 1996, 1997, 1998),
 #'              catch.data = Catch.data,
 #'              premodern_catch_data = NULL,
+#'              beached_data = NULL,
 #'              control = sir_control())
 HUMPBACK.SIR <- function(file_name = "NULL",
                          n_resamples = 1000,
@@ -102,6 +104,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                          growth.rate.Yrs = c(1995, 1996, 1997, 1998),
                          catch.data = Catch.data,
                          premodern_catch_data = NULL,
+                         beached_data = NULL,
                          realized_prior = FALSE,
                          control = sir_control()) {
     begin.time <- Sys.time()
@@ -205,7 +208,9 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                    paste0("q_IA", unique(rel.abundance$Index)),
                    paste0("ROI_Count", unique(count.data$Index)),
                    paste0("q_Count", unique(count.data$Index)),
-                   "NLL.IAs", "NLL.Count", "NLL.N", "NLL.GR", "NLL", "Likelihood",
+                   "q_anthro" , "d_anthro" ,
+                   "p_anthro" ,
+                   "NLL.IAs", "NLL.Count", "NLL.N", "NLL.GR", "NLL.beached", "NLL", "Likelihood",
                    "Max_Dep",paste0("status", target.Yr), paste("status", output.Yrs, sep = ""), "draw", "save")
 
     resamples_output <- matrix(NA, nrow = n_resamples, ncol = length(sir_names))
@@ -239,6 +244,17 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         } else{
             sample_premodern_catch_multiplier <- -999
             sample_premodern_catch <- -999
+        }
+
+        # Sample anthropogenic mortality
+        if(!is.null(beached_data)){
+            sample_q_anthro = priors$q_anthro$rfn()
+            sample_d_anthro = priors$d_anthro$rfn()
+            sample_p_anthro = priors$p_anthro$rfn()
+        } else {
+            sample_q_anthro = 0
+            sample_d_anthro = -999
+            sample_p_anthro = -999
         }
 
         #Sampling for r_max
@@ -278,6 +294,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                          K.high = control$K_bisect_lim[2],
                                          r_max = sample.r_max,
                                          z = sample.z,
+                                         q = sample_q_anthro,
                                          num_Yrs = bisection.Yrs,
                                          start_yr = start_yr,
                                          target.Pop = sample.N.obs,
@@ -291,6 +308,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                        K = sample.K,
                                        N1 = sample.K,
                                        z = sample.z,
+                                       q = sample_q_anthro,
                                        start_yr = start_yr,
                                        num_Yrs = projection.Yrs,
                                        catches = catches,
@@ -401,15 +419,29 @@ HUMPBACK.SIR <- function(file_name = "NULL",
             lnlike.GR <- 0
         }
 
+        # (5) Beached whale sightings
+        if(!is.null(beached_data)){
+            lnlike.beached = LNLIKE.BEACHED(beached_data,
+                                       Pred_N$Pred_N,
+                                       start_yr,
+                                       sample_q_anthro,
+                                       sample_d_anthro,
+                                       sample_p_anthro,
+                                       log=TRUE)
+        } else {
+            lnlike.beached = 0
+        }
+
         if (control$verbose > 2) {
             message("lnlike.IAs = ", lnlike.IAs,
                     " lnlike.Count = ", lnlike.Count,
                     " lnlike.Ns = ", lnlike.Ns,
-                    " lnlike.GR = ", lnlike.GR)
+                    " lnlike.GR = ", lnlike.GR,
+                    " lnlike.beached = ", lnlike.beached)
         }
 
         ## These use the likelihoods in Zerbini et al. (2011)
-        NLL <- lnlike.IAs[[1]] + lnlike.Count[[1]] + lnlike.Ns[[1]] + lnlike.GR[[1]]
+        NLL <- lnlike.IAs[[1]] + lnlike.Count[[1]] + lnlike.Ns[[1]] + lnlike.GR[[1]] + lnlike.beached[[1]]
         Likelihood <- exp(-NLL)
         if (control$verbose > 1) {
             message("NLL = ", NLL,
@@ -463,10 +495,14 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                             q.sample.IA,
                                             Pred.ROI.Count,
                                             q.sample.Count,
+                                            sample_q_anthro,
+                                            sample_d_anthro,
+                                            sample_p_anthro,
                                             lnlike.IAs[[1]],
                                             lnlike.Count[[1]],
                                             lnlike.Ns[[1]],
                                             lnlike.GR[[1]],
+                                            lnlike.beached[[1]],
                                             NLL,
                                             Likelihood,
                                             Pred_N$Min_Pop / sample.K,
@@ -642,7 +678,7 @@ COMPUTING.ROI <- function(data = data, Pred_N = Pred_N, start_yr = NULL) {
 #' @examples
 #' TARGET.K(r_max, K, N1, z, start_yr=start_yr, num_Yrs=bisection.Yrs,
 #'          target.Pop=target.Pop, catches=catches, MVP=MVP)
-TARGET.K <- function(r_max, K, N1, z,
+TARGET.K <- function(r_max, K, N1, z, q_anthro,
                      num_Yrs, start_yr,
                      target.Pop, catches,
                      MVP = 0) {
@@ -651,6 +687,7 @@ TARGET.K <- function(r_max, K, N1, z,
                                    K = K,
                                    N1 = K,
                                    z = z,
+                                   q = q_anthro,
                                    start_yr = start_yr,
                                    num_Yrs = num_Yrs,
                                    catches = catches,
@@ -858,6 +895,39 @@ LNLIKE.Ns <- function(Obs.N, Pred_N, start_yr, add_cv, log = TRUE) {
 LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs, log = T) {
     ## This can be converted the likelihood from Zerbini et al. 2011 (eq. 6)
     -sum( dnorm( x = Obs.GR , mean = Pred.GR , sd = GR.SD.Obs, log = log ) )
+}
+
+#' Calculate the log-likelihood of the beach whale data
+#'
+#' @param beached_data Data on whale strandingsas a data.frame
+#'   containing year, estimate of absolute abundance, and standard deviation
+#' @param Pred_N Predicted absolute abundance in numbers from
+#'   \code{\link{GENERALIZED_LOGISTIC}}.
+#' @param start_yr The first year of the projection (assumed to be the first
+#'   year in the catch series).
+#' @param add_CV Additional CV to add to variance of lognormal distribution
+#'   sampled from \code{priors$add_CV}.
+#' @param q_anthro is the proportion of the population that will be killed each year from anthropogenic mortality
+#' @param d_anthro is the detection probability of carcasses on the beach (including the probability of washing up on shore)
+#' @param p_anthro is the proportion of the range of the species covered by monitoring
+#' @param log Return the log of the likelihood (TRUE/FALSE)
+#'
+#' @return the negative log-likelihood
+LNLIKE.BEACHED <- function(beached_data,
+                                 Pred_N,
+                                 start_yr,
+                                 q_anthro,
+                                 d_anthro,
+                                 p_anthro,
+                                 log=TRUE){
+
+    N.yrs <- beached_data$Year-start_yr+1
+    nll_n <- -sum(
+        dpois( # NOTE: can be changed to dlnorm_zerb
+            x = beached_data$N.obs,
+            lambda = q_anthro * d_anthro * p_anthro * Pred_N[N.yrs],
+            log))  ## Years for which Ns are available
+    nll_n
 }
 
 #' Function to calculate the log-likelihood using a lognormal distribution
