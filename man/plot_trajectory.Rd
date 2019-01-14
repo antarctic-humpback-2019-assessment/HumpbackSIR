@@ -4,7 +4,8 @@
 \alias{plot_trajectory}
 \title{OUTPUT FUNCTION}
 \usage{
-plot_trajectory(SIR, Reference = NULL, file_name = "NULL")
+plot_trajectory(SIR, Reference = NULL, file_name = NULL,
+  posterior_pred = TRUE)
 }
 \arguments{
 \item{SIR}{A fit SIR model}
@@ -12,7 +13,9 @@ plot_trajectory(SIR, Reference = NULL, file_name = "NULL")
 \item{Reference}{A fit SIR model for the reference case}
 
 \item{file_name}{name of a file to identified the files exported by the
-function.}
+function. If NULL, does not save.}
+
+\item{posterior_pred}{Logical. If true, includes a posterior predictive distribution of the estimated N}
 }
 \value{
 Returns and saves a figure with the population trajectory.

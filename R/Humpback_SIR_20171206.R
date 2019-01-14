@@ -925,4 +925,3 @@ summary_sir <- function(x, object = "USERDEFINED", file_name = "NULL") {
 
     list(object = object, date=Sys.time(), output_summary = output_summary)
 }
-

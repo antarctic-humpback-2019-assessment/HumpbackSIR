@@ -4,7 +4,7 @@
 \alias{plot_density}
 \title{OUTPUT FUNCTION}
 \usage{
-plot_density(SIR, file_name = "NULL", multiple_sirs = FALSE,
+plot_density(SIR, file_name = NULL, multiple_sirs = FALSE,
   lower = NULL, upper = NULL, prior_list = NULL,
   inc_reference = FALSE)
 }
@@ -12,7 +12,7 @@ plot_density(SIR, file_name = "NULL", multiple_sirs = FALSE,
 \item{SIR}{A fit SIR model or list of SIR models. Plots in the order provided.}
 
 \item{file_name}{name of a file to identified the files exported by the
-function.}
+function. If NULL, does not save.}
 
 \item{multiple_sirs}{Logical whether or not multiple SIRS are provided as a list.}
 

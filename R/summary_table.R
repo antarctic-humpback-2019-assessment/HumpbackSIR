@@ -1,8 +1,8 @@
 #' Function to write tables of logistic model parameter and derived quantities for HumpbackSIR similar to Table 5 from Zerbini et al (2011).
 #'
 #' @param SIR Resample summary from hympbackSIR
-#' @param file_name Desired filename to where csv file will be saved
-zerbini_table <- function( SIR, file_name = "NULL"){
+#' @param file_name Desired filename to where csv file will be saved. If NULL, will not save.
+zerbini_table <- function( SIR, file_name = NULL){
 
     # Vars of interest
     years <- c( SIR$inputs$target.Yr, SIR$inputs$output.Years)
@@ -28,6 +28,8 @@ zerbini_table <- function( SIR, file_name = "NULL"){
     results[which(vars %in% pop_vars),2:7] <- format(round(results[which(vars %in% pop_vars),2:7], 0),big.mark=",",scientific=FALSE)
     results[,8] <- format(round(results[,8], 0),big.mark=",",scientific=FALSE)
 
-    write.csv(results, file = paste0(file_name, "_zerbini_table_5.csv"))
+    if(!is.null(file_name)){
+      write.csv(results, file = paste0(file_name, "_zerbini_table_5.csv"))
+    }
     return(results)
 }

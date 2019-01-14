@@ -4,12 +4,12 @@
 \alias{zerbini_table}
 \title{Function to write tables of logistic model parameter and derived quantities for HumpbackSIR similar to Table 5 from Zerbini et al (2011).}
 \usage{
-zerbini_table(SIR, file_name = "NULL")
+zerbini_table(SIR, file_name = NULL)
 }
 \arguments{
 \item{SIR}{Resample summary from hympbackSIR}
 
-\item{file_name}{Desired filename to where csv file will be saved}
+\item{file_name}{Desired filename to where csv file will be saved. If NULL, will not save.}
 }
 \description{
 Function to write tables of logistic model parameter and derived quantities for HumpbackSIR similar to Table 5 from Zerbini et al (2011).

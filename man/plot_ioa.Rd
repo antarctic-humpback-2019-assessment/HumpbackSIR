@@ -4,18 +4,18 @@
 \alias{plot_ioa}
 \title{OUTPUT FUNCTION}
 \usage{
-plot_ioa(SIR, file_name = "NULL", ioa_names = NULL,
-  posterior_pred = FALSE)
+plot_ioa(SIR, file_name = NULL, ioa_names = NULL,
+  posterior_pred = TRUE)
 }
 \arguments{
 \item{SIR}{A fit SIR model}
 
-\item{file_name}{name of a file to identified the files exported by the}
+\item{file_name}{name of a file to identified the files exported by the
+function. If NULL, does not save.}
 
 \item{ioa_names}{names of indices of abundance used.}
 
-\item{posterior_pred}{Logical. If true, includes a posterior predictive distribution of the estimated IOA
-function.}
+\item{posterior_pred}{Logical. If true, includes a posterior predictive distribution of the estimated IOA}
 }
 \value{
 Returns and saves a figure with the IOA trajectories.

@@ -59,9 +59,9 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
 
         for(i in 1:ncol(N_posterior_pred)){
             N_posterior_pred[,i] <- rlnorm(
-            n = nrow(N_posterior_pred),
-            meanlog = log( x[,paste0("N_", abs.abundance$Year[i]) ] ),
-            sdlog = abs.abundance$Sigma[i] + SIR$resamples_output$add_CV[1]
+                n = nrow(N_posterior_pred),
+                meanlog = log( x[,paste0("N_", abs.abundance$Year[i]) ] ),
+                sdlog = abs.abundance$Sigma[i] + SIR$resamples_output$add_CV[1]
             )
         }
 
@@ -97,8 +97,8 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
     # Plot trajectory
     for(i in 1: (1 + !is.null(file_name))){
         if(i == 2){
-            filename <- paste0(file_name, "_trajectory_summary", ".tiff")
-            tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+            filename <- paste0(file_name, "_trajectory_summary", ".png")
+            png( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
 
         # Plot configuration
@@ -151,14 +151,14 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
                 length=0.05, angle=90, code=3, lwd = 3)
 
         if(posterior_pred){
-            points( x = abs.abundance$Year + 0.25,
+            points( x = abs.abundance$Year + 1,
                     y = posterior_pred_summary[2,],
-                    col = "Grey80", pch = 16, cex = 2)
-            arrows( x0 = abs.abundance$Year + 0.25,
+                    col = adjustcolor("Grey80", alpha.f = 1) , pch = 16, cex = 2)
+            arrows( x0 = abs.abundance$Year + 1,
                     y0 = as.numeric(posterior_pred_summary[3,]),
-                    x1 = abs.abundance$Year + 0.25,
+                    x1 = abs.abundance$Year + 1,
                     y1 = as.numeric(posterior_pred_summary[4,]),
-                    length=0.05, angle=90, code=3, lwd = 3, col = "Grey80")
+                    length=0.05, angle=90, code=3, lwd = 3, col = adjustcolor("Grey80", alpha.f = 1))
         }
 
         if(i == 2){ dev.off()}
@@ -270,8 +270,8 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
 
     for(j in 1:(1 + !is.null(file_name))){
         if(j == 2){
-            filename <- paste0(file_name, "_IOA_fit", ".tiff")
-            tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+            filename <- paste0(file_name, "_IOA_fit", ".png")
+            png( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
 
         par(mfrow = c(1,length(IA_summary)), mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
@@ -317,12 +317,12 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
                 # Mean
                 points( x = rel.abundance.sub$Year + 0.25,
                         y = IA_posterior_pred_sum[[i]][1,],
-                        col = "Grey80", pch = 16, cex = 2)
+                        col = "Grey60", pch = 16, cex = 2)
                 arrows( x0 = rel.abundance.sub$Year + 0.25,
                         y0 = as.numeric(IA_posterior_pred_sum[[i]][3,]),
                         x1 = rel.abundance.sub$Year + 0.25,
                         y1 = as.numeric(IA_posterior_pred_sum[[i]][4,]),
-                        length=0.05, angle=90, code=3, lwd = 3, col = "Grey80")
+                        length=0.05, angle=90, code=3, lwd = 3, col = "Grey60")
 
             }
 
@@ -381,8 +381,8 @@ plot_density <- function(SIR, file_name = NULL, multiple_sirs = FALSE, lower = N
     # Plot
     for(j in 1:(1 + !is.null(file_name))){
         if(j == 2){
-            filename <- paste0(file_name, "_posterior_density", ".tiff")
-            tiff( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+            filename <- paste0(file_name, "_posterior_density", ".png")
+            png( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
 
         par(mfrow = c(2,length(vars)/2))
@@ -435,3 +435,74 @@ plot_density <- function(SIR, file_name = NULL, multiple_sirs = FALSE, lower = N
         if(j == 2){ dev.off()}
     }
 }
+
+
+#' Function to compare posters
+#'
+#' @param sir_list list of SIR objects
+#' @param model_names names of sir objects
+#' @param file_name name of a file to identified the files exported by the
+#'   function. If NULL, does not save.
+#' @param reference_sir Default = NULL, wether reference SIR fit
+compare_posteriors <- function(reference_sir = NULL, sir_list, model_names = NULL, file_name = NULL){
+
+    # Extract range of values
+    if(!is.null(reference_sir)){
+        sir_list <- c(list(reference_sir), sir_list)
+    }
+    table_results <- list()
+    for(i in 1:length(sir_list)){
+        table_results[[i]] <- zerbini_table(sir_list[[i]], file_name = NULL)
+    }
+
+    # Vars of interest
+    years <- sort(unique(c( sapply(sir_list, function(x) x$inputs$target.Yr),
+                            sapply(sir_list, function(x) x$inputs$output.Years))))
+    vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
+    vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
+
+    for(k in 1:length(vars)){ # Loop through vars
+        for(j in 1:(1 + !is.null(file_name))){
+            if(j == 2){
+                filename <- paste0(file_name, "_posterior_comparison_", vars[k], ".png")
+                png( file = filename , width=7, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+            }
+
+            par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+
+            values <- matrix(NA, nrow = nrow(sir_list[[1]]$resamples_output), ncol = length(sir_list))
+
+            for( i in 1:length(sir_list)){
+                values[,i] <- sir_list[[i]]$resamples_output[,vars[k]]
+            }
+
+
+            boxplot(values, ylab = TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = "grey", outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
+
+            # Add x-lab
+            if(is.null(model_names)){
+                axis(side = 1, at = 1:length(sir_list), labels = as.character(1:length(sir_list)))
+            }
+            if(!is.null(model_names)){
+                axis(side = 1, at = 1:length(sir_list), labels = model_names, cex.axis = 0.75)
+            }
+
+            # Add lines for reference
+            if(!is.null(reference_sir)){
+                ref_box <- boxplot(values[,1], plot = FALSE)
+
+                abline(h = ref_box$stats[1,1], lty = 2, col = "grey30", lwd = 2)
+                abline(h = ref_box$stats[3,1], lty = 2, col = "grey30", lwd = 2)
+                abline(h = ref_box$stats[5,1], lty = 2, col = "grey30", lwd = 2)
+            }
+
+            boxplot(values, ylab = TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = "grey", outline = FALSE, cex.axis = 0.75, add = TRUE)
+
+            if(j == 2){ dev.off()}
+        }
+    }
+}
+
+
+
+
