@@ -4,13 +4,13 @@
 \alias{compare_posteriors}
 \title{Function to compare posters}
 \usage{
-compare_posteriors(reference_sir = NULL, sir_list, model_names = NULL,
+compare_posteriors(reference_sir = NULL, SIR, model_names = NULL,
   file_name = NULL)
 }
 \arguments{
 \item{reference_sir}{Default = NULL, wether reference SIR fit}
 
-\item{sir_list}{list of SIR objects}
+\item{SIR}{list of SIR objects}
 
 \item{model_names}{names of sir objects}
 

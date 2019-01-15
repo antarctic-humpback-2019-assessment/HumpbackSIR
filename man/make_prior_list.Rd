@@ -9,7 +9,9 @@ make_prior_list(r_max = make_prior(runif, 0, 0.106), K = make_prior(use
   add_CV = make_prior(use = FALSE),
   premodern_catch_sample = make_prior(runif, 0, 1),
   z = make_prior(2.39), q_IA = make_prior(use = FALSE),
-  q_count = make_prior(use = FALSE))
+  q_count = make_prior(use = FALSE), q_anthro = make_prior(use =
+  FALSE), d_anthro = make_prior(use = FALSE), p_anthro = make_prior(use
+  = FALSE))
 }
 \arguments{
 \item{r_max}{Population growth rate; defaults to Uniform(0, 0.106).}
@@ -31,6 +33,12 @@ population dynamics function.}
 \code{use = FALSE}, an analytic solution for q is used.}
 
 \item{q_count}{Defaults to unused. Prior for q on counts.}
+
+\item{q_anthro}{is the proportion of the population that will be killed each year from anthropogenic mortality.}
+
+\item{d_anthro}{is the detection probability of carcasses on the beach (including the probability of washing up on shore)}
+
+\item{p_anthro}{is the proportion of the range of the species covered by monitoring}
 }
 \value{
 A named list containing each of the specified priors in a form that

@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // GENERALIZED_LOGISTIC
-List GENERALIZED_LOGISTIC(double r_max, double K, double N1, double z, double start_yr, double num_Yrs, NumericVector catches, double MVP);
-RcppExport SEXP _HumpbackSIR_GENERALIZED_LOGISTIC(SEXP r_maxSEXP, SEXP KSEXP, SEXP N1SEXP, SEXP zSEXP, SEXP start_yrSEXP, SEXP num_YrsSEXP, SEXP catchesSEXP, SEXP MVPSEXP) {
+List GENERALIZED_LOGISTIC(double r_max, double K, double N1, double z, double q, double start_yr, double num_Yrs, NumericVector catches, double MVP);
+RcppExport SEXP _HumpbackSIR_GENERALIZED_LOGISTIC(SEXP r_maxSEXP, SEXP KSEXP, SEXP N1SEXP, SEXP zSEXP, SEXP qSEXP, SEXP start_yrSEXP, SEXP num_YrsSEXP, SEXP catchesSEXP, SEXP MVPSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -15,11 +15,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type K(KSEXP);
     Rcpp::traits::input_parameter< double >::type N1(N1SEXP);
     Rcpp::traits::input_parameter< double >::type z(zSEXP);
+    Rcpp::traits::input_parameter< double >::type q(qSEXP);
     Rcpp::traits::input_parameter< double >::type start_yr(start_yrSEXP);
     Rcpp::traits::input_parameter< double >::type num_Yrs(num_YrsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type catches(catchesSEXP);
     Rcpp::traits::input_parameter< double >::type MVP(MVPSEXP);
-    rcpp_result_gen = Rcpp::wrap(GENERALIZED_LOGISTIC(r_max, K, N1, z, start_yr, num_Yrs, catches, MVP));
+    rcpp_result_gen = Rcpp::wrap(GENERALIZED_LOGISTIC(r_max, K, N1, z, q, start_yr, num_Yrs, catches, MVP));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -39,7 +40,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_HumpbackSIR_GENERALIZED_LOGISTIC", (DL_FUNC) &_HumpbackSIR_GENERALIZED_LOGISTIC, 8},
+    {"_HumpbackSIR_GENERALIZED_LOGISTIC", (DL_FUNC) &_HumpbackSIR_GENERALIZED_LOGISTIC, 9},
     {"_HumpbackSIR_dlnorm_zerb", (DL_FUNC) &_HumpbackSIR_dlnorm_zerb, 4},
     {NULL, NULL, 0}
 };

@@ -344,37 +344,38 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
 #' @param SIR A fit SIR model or list of SIR models. Plots in the order provided.
 #' @param file_name name of a file to identified the files exported by the
 #'   function. If NULL, does not save.
-#' @param multiple_sirs Logical whether or not multiple SIRS are provided as a list.
 #' @param lower Vector of lower bounds for x-axis
 #' @param upper Vector of upper bounds for x-axis
-#' @param priors Default = NULL, wether realized priors are included in SIR
+#' @param priors Default = NULL, SIR realized priors or list of SIR realized priors. Plots in the order provided.
 #' @param reference Default = NULL, wether reference case is included in SIR
 #'
 #' @return Returns and saves a figure with the posterior densities of parameters.
-plot_density <- function(SIR, file_name = NULL, multiple_sirs = FALSE, lower = NULL, upper = NULL, prior_list = NULL, inc_reference = FALSE){
+plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, priors = NULL, inc_reference = FALSE){
 
-    if(multiple_sirs == FALSE){
-        sir_list <- list(SIR)
-    }
-    if(multiple_sirs == TRUE){
-        sir_list <- SIR
+    # Make into list
+    if(class(SIR) == "SIR"){
+        SIR <- list(SIR)
     }
 
+    # Make into list
+    if(class(priors) == "SIR"){
+        priors <- list(priors)
+    }
 
-    posteriors_lwd <- rep(3, length(sir_list))
-    posteriors_lty <- c(1, 1:(length(sir_list)-1))
-    posteriors_col <- c("grey", rep(1, length(sir_list)-1))
+    posteriors_lwd <- rep(3, length(SIR))
+    posteriors_lty <- c(1, 1:(length(SIR)-1))
+    posteriors_col <- c("grey", rep(1, length(SIR)-1))
 
-    if(!is.null(prior_list)){
-        posteriors_lwd <- c(posteriors_lwd, rep(1, length(prior_list)))
-        posteriors_lty <- c(posteriors_lty, c(1, 1:(length(prior_list)-1)))
-        posteriors_col <- c(posteriors_col, c("grey", rep(1, length(prior_list)-1)))
-        sir_list <- c(sir_list, prior_list)
+    if(!is.null(priors)){
+        posteriors_lwd <- c(posteriors_lwd, rep(1, length(priors)))
+        posteriors_lty <- c(posteriors_lty, c(1, 1:(length(priors)-1)))
+        posteriors_col <- c(posteriors_col, c("grey", rep(1, length(priors)-1)))
+        SIR <- c(SIR, priors)
     }
 
     # Vars of interest
-    years <- sort(unique(c( sapply(sir_list, function(x) x$inputs$target.Yr),
-                            sapply(sir_list, function(x) x$inputs$output.Years))))
+    years <- sort(unique(c( sapply(SIR, function(x) x$inputs$target.Yr),
+                            sapply(SIR, function(x) x$inputs$output.Years))))
     vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
@@ -393,14 +394,14 @@ plot_density <- function(SIR, file_name = NULL, multiple_sirs = FALSE, lower = N
 
             # Extract posterio densities
             posterior_dens <- list()
-            for(k in 1:length(sir_list)){
-                posterior_dens[[k]] <- density(sir_list[[k]]$resamples_output[,vars[i]])
+            for(k in 1:length(SIR)){
+                posterior_dens[[k]] <- density(SIR[[k]]$resamples_output[,vars[i]])
             }
 
             # Extract prior densities
             # prior_dens <- list()
-            # for(k in 1:length(sir_list)){
-            #     prior_dens[[k]] <- density(sir_list[[k]]$resamples_output[,vars[i]])
+            # for(k in 1:length(SIR)){
+            #     prior_dens[[k]] <- density(SIR[[k]]$resamples_output[,vars[i]])
             # }
             # priors_lwd <- rep(3, length(prior_dens))
             # priors_lty <- c(1:length(prior_dens))
@@ -439,25 +440,30 @@ plot_density <- function(SIR, file_name = NULL, multiple_sirs = FALSE, lower = N
 
 #' Function to compare posters
 #'
-#' @param sir_list list of SIR objects
+#' @param SIR list of SIR objects
 #' @param model_names names of sir objects
 #' @param file_name name of a file to identified the files exported by the
 #'   function. If NULL, does not save.
 #' @param reference_sir Default = NULL, wether reference SIR fit
-compare_posteriors <- function(reference_sir = NULL, sir_list, model_names = NULL, file_name = NULL){
+compare_posteriors <- function(reference_sir = NULL, SIR, model_names = NULL, file_name = NULL){
+
+    # If it is a single SIR, make into a list
+    if(class(SIR) == "SIR"){
+        SIR = list(SIR)
+    }
 
     # Extract range of values
     if(!is.null(reference_sir)){
-        sir_list <- c(list(reference_sir), sir_list)
+        SIR <- c(list(reference_sir), SIR)
     }
     table_results <- list()
-    for(i in 1:length(sir_list)){
-        table_results[[i]] <- zerbini_table(sir_list[[i]], file_name = NULL)
+    for(i in 1:length(SIR)){
+        table_results[[i]] <- zerbini_table(SIR[[i]], file_name = NULL)
     }
 
     # Vars of interest
-    years <- sort(unique(c( sapply(sir_list, function(x) x$inputs$target.Yr),
-                            sapply(sir_list, function(x) x$inputs$output.Years))))
+    years <- sort(unique(c( sapply(SIR, function(x) x$inputs$target.Yr),
+                            sapply(SIR, function(x) x$inputs$output.Years))))
     vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
@@ -470,10 +476,10 @@ compare_posteriors <- function(reference_sir = NULL, sir_list, model_names = NUL
 
             par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
 
-            values <- matrix(NA, nrow = nrow(sir_list[[1]]$resamples_output), ncol = length(sir_list))
+            values <- matrix(NA, nrow = nrow(SIR[[1]]$resamples_output), ncol = length(SIR))
 
-            for( i in 1:length(sir_list)){
-                values[,i] <- sir_list[[i]]$resamples_output[,vars[k]]
+            for( i in 1:length(SIR)){
+                values[,i] <- SIR[[i]]$resamples_output[,vars[k]]
             }
 
 
@@ -481,10 +487,10 @@ compare_posteriors <- function(reference_sir = NULL, sir_list, model_names = NUL
 
             # Add x-lab
             if(is.null(model_names)){
-                axis(side = 1, at = 1:length(sir_list), labels = as.character(1:length(sir_list)))
+                axis(side = 1, at = 1:length(SIR), labels = as.character(1:length(SIR)))
             }
             if(!is.null(model_names)){
-                axis(side = 1, at = 1:length(sir_list), labels = model_names, cex.axis = 0.75)
+                axis(side = 1, at = 1:length(SIR), labels = model_names, cex.axis = 0.75)
             }
 
             # Add lines for reference
@@ -496,13 +502,9 @@ compare_posteriors <- function(reference_sir = NULL, sir_list, model_names = NUL
                 abline(h = ref_box$stats[5,1], lty = 2, col = "grey30", lwd = 2)
             }
 
-            boxplot(values, ylab = TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = "grey", outline = FALSE, cex.axis = 0.75, add = TRUE)
+            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = "grey", outline = FALSE, cex.axis = 0.75, add = TRUE)
 
             if(j == 2){ dev.off()}
         }
     }
 }
-
-
-
-

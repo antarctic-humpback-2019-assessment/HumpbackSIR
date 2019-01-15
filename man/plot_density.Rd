@@ -4,9 +4,8 @@
 \alias{plot_density}
 \title{OUTPUT FUNCTION}
 \usage{
-plot_density(SIR, file_name = NULL, multiple_sirs = FALSE,
-  lower = NULL, upper = NULL, prior_list = NULL,
-  inc_reference = FALSE)
+plot_density(SIR, file_name = NULL, lower = NULL, upper = NULL,
+  priors = NULL, inc_reference = FALSE)
 }
 \arguments{
 \item{SIR}{A fit SIR model or list of SIR models. Plots in the order provided.}
@@ -14,13 +13,11 @@ plot_density(SIR, file_name = NULL, multiple_sirs = FALSE,
 \item{file_name}{name of a file to identified the files exported by the
 function. If NULL, does not save.}
 
-\item{multiple_sirs}{Logical whether or not multiple SIRS are provided as a list.}
-
 \item{lower}{Vector of lower bounds for x-axis}
 
 \item{upper}{Vector of upper bounds for x-axis}
 
-\item{priors}{Default = NULL, wether realized priors are included in SIR}
+\item{priors}{Default = NULL, SIR realized priors or list of SIR realized priors. Plots in the order provided.}
 
 \item{reference}{Default = NULL, wether reference case is included in SIR}
 }

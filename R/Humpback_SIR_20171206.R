@@ -584,6 +584,8 @@ HUMPBACK.SIR <- function(file_name = "NULL",
     if(rel.abundance.key){ return_list$inputs$rel.abundance = rel.abundance}
     if(count.data.key){ return_list$inputs$count.data = count.data}
 
+    class(return_list) <- "SIR" # Defines class for object
+
     return(return_list)
 }
 

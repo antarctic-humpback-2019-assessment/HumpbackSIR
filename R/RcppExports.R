@@ -22,6 +22,7 @@
 #'   assumed to be K).
 #' @param z The parameter that determines the population size where productivity
 #'   is maximum (assumed to be 2.39 by the IWC SC).
+#' @param q is the proportion of the population that will be killed each year from anthropogenic mortality.
 #' @param start_yr The first year of the projection (assumed to be the first
 #'   year in the catch series).
 #' @param num_Yrs The number of projection years. Set as the last year in the
@@ -45,8 +46,8 @@
 #' catches  <-  round(runif(10, min = 0, max = 150 ), 0 )
 #' MVP  <-  0
 #' GENERALIZED_LOGISTIC(r_max, K, N1, z, start_yr, num_Yrs, catches)
-GENERALIZED_LOGISTIC <- function(r_max, K, N1, z, start_yr, num_Yrs, catches, MVP) {
-    .Call(`_HumpbackSIR_GENERALIZED_LOGISTIC`, r_max, K, N1, z, start_yr, num_Yrs, catches, MVP)
+GENERALIZED_LOGISTIC <- function(r_max, K, N1, z, q, start_yr, num_Yrs, catches, MVP) {
+    .Call(`_HumpbackSIR_GENERALIZED_LOGISTIC`, r_max, K, N1, z, q, start_yr, num_Yrs, catches, MVP)
 }
 
 #' Adjusted lognormal likelihood from Zerbini et al. 2011 (eq. 5)

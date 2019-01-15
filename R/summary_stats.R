@@ -33,3 +33,31 @@ zerbini_table <- function( SIR, file_name = NULL){
     }
     return(results)
 }
+
+
+#' Bayes factor
+#'
+#' @param SIR SIR Fit model or list of SIR fit models
+#' @param prior_probs prior probabilities of each model
+#'
+#' @return vector of bayes factors
+bayes_factor <- function( SIR , prior_probs = NULL){
+    # If it is a single SIR, make into a list
+    if(class(SIR) == "SIR"){
+        stop("Error: only one SIR model provided")
+    }
+
+    if(is.null(prior_probs)){
+        prior_probs <- rep(1/length(SIR), length(SIR)) # Make uniform prior probs
+    }
+
+    # Get average likelihoods
+    data_probs <- sapply(SIR, function(x) sum(x$resamples_output$Likelihood)/ length(x$resamples_output$Likelihood) )
+
+    harmonic_mean <- sapply(SIR, function(x) (sum(x$resamples_output$Likelihood ^ -1)/ length(x$resamples_output$Likelihood)) ^-1 ) # Should not be used, facvors parameter rich models
+
+    post_model <- data_probs * prior_probs
+
+    bayes_factor <- post_model/sum(post_model)
+    return(bayes_factor)
+}
