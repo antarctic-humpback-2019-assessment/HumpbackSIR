@@ -88,9 +88,6 @@ rlunif <- function(n, min = 1, max = 2) {
 ##' @param q_IA Defaults to unused. Prior on q for indices of abundance. If
 ##'   \code{use = FALSE}, an analytic solution for q is used.
 ##' @param q_count Defaults to unused. Prior for q on counts.
-##' @param q_anthro is the proportion of the population that will be killed each year from anthropogenic mortality.
-##' @param d_anthro is the detection probability of carcasses on the beach (including the probability of washing up on shore)
-##' @param p_anthro is the proportion of the range of the species covered by monitoring
 ##'
 ##' @return A named list containing each of the specified priors in a form that
 ##'   can be used by the SIR function.
@@ -101,10 +98,7 @@ make_prior_list <- function(r_max = make_prior(runif, 0, 0.106),
                             premodern_catch_sample = make_prior(runif, 0, 1),
                             z = make_prior(2.39),
                             q_IA = make_prior(use = FALSE),
-                            q_count = make_prior(use = FALSE),
-                            q_anthro = make_prior(use = FALSE),
-                            d_anthro = make_prior(use = FALSE),
-                            p_anthro = make_prior(use = FALSE)) {
+                            q_count = make_prior(use = FALSE)) {
     list(r_max = r_max,
          K = K,
          N_obs = N_obs,
@@ -112,10 +106,7 @@ make_prior_list <- function(r_max = make_prior(runif, 0, 0.106),
          premodern_catch_sample = premodern_catch_sample,
          z = z,
          q_IA = q_IA,
-         q_count = q_count,
-         d_anthro = d_anthro,
-         q_anthro = q_anthro,
-         p_anthro = p_anthro)
+         q_count = q_count)
 }
 
 #' Probability density for correction factor as determined by Best et al 2010

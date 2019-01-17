@@ -19,7 +19,7 @@ zerbini_table <- function( SIR, file_name = NULL){
     # Get summary statistics
     results[,1] <- vars_latex
     results[,2] <- sapply(x, mean)
-    results[,3:7] <- t(sapply(x, quantile, probs= c(0.5, 0.025, 0.05, 0.975, 0.95)))
+    results[,3:7] <- t(sapply(x, quantile, probs= c(0.5, 0.025, 0.05, 0.95, 0.975)))
     results[,8] <- sapply(x, function(x) length(unique(x)))
 
     # Format things

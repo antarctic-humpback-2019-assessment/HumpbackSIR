@@ -21,7 +21,6 @@ using namespace Rcpp;
 //'   assumed to be K).
 //' @param z The parameter that determines the population size where productivity
 //'   is maximum (assumed to be 2.39 by the IWC SC).
-//' @param q is the proportion of the population that will be killed each year from anthropogenic mortality.
 //' @param start_yr The first year of the projection (assumed to be the first
 //'   year in the catch series).
 //' @param num_Yrs The number of projection years. Set as the last year in the
@@ -51,7 +50,6 @@ List GENERALIZED_LOGISTIC(
         double K,
         double N1,
         double z,
-        double q,
         double start_yr,
         double num_Yrs,
         NumericVector catches,
@@ -64,7 +62,7 @@ List GENERALIZED_LOGISTIC(
 
     // 2. Run through population dynamics
     for (int t = 1; t < num_Yrs; t++){
-        n_hat[t] = n_hat[t - 1] + r_max * n_hat[t - 1] * (1 - pow(n_hat[t - 1] / K, z) ) - catches[t - 1]  - (q * n_hat[t - 1]) ;
+        n_hat[t] = n_hat[t - 1] + r_max * n_hat[t - 1] * (1 - pow(n_hat[t - 1] / K, z) ) - catches[t - 1] ;
         if(n_hat[t] < 1){
             n_hat[t] = 1;               // Make sure the population is positive
         }

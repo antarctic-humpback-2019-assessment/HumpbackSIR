@@ -316,7 +316,7 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
             if(posterior_pred){
                 # Mean
                 points( x = rel.abundance.sub$Year + 0.25,
-                        y = IA_posterior_pred_sum[[i]][1,],
+                        y = IA_posterior_pred_sum[[i]][2,],
                         col = "Grey60", pch = 16, cex = 2)
                 arrows( x0 = rel.abundance.sub$Year + 0.25,
                         y0 = as.numeric(IA_posterior_pred_sum[[i]][3,]),
@@ -451,15 +451,16 @@ compare_posteriors <- function(reference_sir = NULL, SIR, model_names = NULL, fi
     if(class(SIR) == "SIR"){
         SIR = list(SIR)
     }
+    cols <- rep("grey", length(SIR))
 
     # Extract range of values
     if(!is.null(reference_sir)){
         SIR <- c(list(reference_sir), SIR)
+        cols <- c( "coral1", cols)
     }
-    table_results <- list()
-    for(i in 1:length(SIR)){
-        table_results[[i]] <- zerbini_table(SIR[[i]], file_name = NULL)
-    }
+
+
+
 
     # Vars of interest
     years <- sort(unique(c( sapply(SIR, function(x) x$inputs$target.Yr),
@@ -483,7 +484,7 @@ compare_posteriors <- function(reference_sir = NULL, SIR, model_names = NULL, fi
             }
 
 
-            boxplot(values, ylab = TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = "grey", outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
+            boxplot(values, ylab = TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = , outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
 
             # Add x-lab
             if(is.null(model_names)){

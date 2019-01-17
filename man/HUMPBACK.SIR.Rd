@@ -14,8 +14,8 @@ HUMPBACK.SIR(file_name = "NULL", n_resamples = 1000,
   rel.abundance.key = TRUE, count.data = NULL,
   count.data.key = FALSE, growth.rate.obs = c(0.074, 0.033, TRUE),
   growth.rate.Yrs = c(1995, 1996, 1997, 1998), catch.data = Catch.data,
-  premodern_catch_data = NULL, beached_data = NULL,
-  realized_prior = FALSE, control = sir_control())
+  premodern_catch_data = NULL, realized_prior = FALSE,
+  control = sir_control())
 }
 \arguments{
 \item{file_name}{name of a file to identified the files exported by the
@@ -67,9 +67,7 @@ in Zerbini et al., 2011)}
 
 \item{catch.data}{R object containing the years and catches (see example)}
 
-\item{premodern_catch_data}{R object containing the years maximum and minimum premodern catches.}
-
-\item{beached_data}{R object containing the years and beached whale sightings}
+\item{premodern_catch_data}{R object containing the years maximum and minimum premodern catches}
 
 \item{realized_prior}{Key to specify if realized prior is to be extracted. Default is FALSE.}
 
