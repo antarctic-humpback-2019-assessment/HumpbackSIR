@@ -244,6 +244,9 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
         #Sampling for r_max
         sample.r_max <- priors$r_max$rfn()
+        while (sample.r_max > 0.118) {
+            sample.r_max <- priors$r_max$rfn()
+        }
 
         ## Sampling from the N.obs prior
         sample.N.obs <- priors$N_obs$rfn()

@@ -317,12 +317,12 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
                 # Mean
                 points( x = rel.abundance.sub$Year + 0.25,
                         y = IA_posterior_pred_sum[[i]][2,],
-                        col = "Grey60", pch = 16, cex = 2)
+                        col = "Grey70", pch = 16, cex = 2)
                 arrows( x0 = rel.abundance.sub$Year + 0.25,
                         y0 = as.numeric(IA_posterior_pred_sum[[i]][3,]),
                         x1 = rel.abundance.sub$Year + 0.25,
                         y1 = as.numeric(IA_posterior_pred_sum[[i]][4,]),
-                        length=0.05, angle=90, code=3, lwd = 3, col = "Grey60")
+                        length=0.05, angle=90, code=3, lwd = 3, col = "Grey70")
 
             }
 
@@ -350,7 +350,7 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
 #' @param reference Default = NULL, wether reference case is included in SIR
 #'
 #' @return Returns and saves a figure with the posterior densities of parameters.
-plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, priors = NULL, inc_reference = FALSE){
+plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, priors = NULL, inc_reference = TRUE){
 
     # Make into list
     if(class(SIR) == "SIR"){
@@ -362,15 +362,31 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
         priors <- list(priors)
     }
 
-    posteriors_lwd <- rep(3, length(SIR))
-    posteriors_lty <- c(1, 1:(length(SIR)-1))
-    posteriors_col <- c("grey", rep(1, length(SIR)-1))
+    if(inc_reference){
+        posteriors_lwd <- rep(3, length(SIR))
+        posteriors_lty <- c(1, 1:(length(SIR)-1))
+        posteriors_col <- c("grey", rep(1, length(SIR)-1))
+    }
+
+    if(inc_reference == FALSE){
+        posteriors_lwd <- rep(3, length(SIR))
+        posteriors_lty <- c(1:(length(SIR)))
+        posteriors_col <- c(rep(1, length(SIR)))
+    }
 
     if(!is.null(priors)){
-        posteriors_lwd <- c(posteriors_lwd, rep(1, length(priors)))
-        posteriors_lty <- c(posteriors_lty, c(1, 1:(length(priors)-1)))
-        posteriors_col <- c(posteriors_col, c("grey", rep(1, length(priors)-1)))
-        SIR <- c(SIR, priors)
+        if(inc_reference){
+            posteriors_lwd <- c(posteriors_lwd, rep(1, length(priors)))
+            posteriors_lty <- c(posteriors_lty, c( 1: ifelse(length(priors) > 1, c(1,(length(priors)-1)), 1) ))
+            posteriors_col <- c(posteriors_col, c("grey", rep(1, ifelse(length(priors) > 1, (length(priors)-1), 1))))
+            SIR <- c(SIR, priors)
+        }
+        if(inc_reference == FALSE){
+            posteriors_lwd <- c(posteriors_lwd, rep(1, length(priors)))
+            posteriors_lty <- c(posteriors_lty, c(1:(length(priors))))
+            posteriors_col <- c(posteriors_col, c(rep(1, length(priors))))
+            SIR <- c(SIR, priors)
+        }
     }
 
     # Vars of interest
@@ -456,11 +472,11 @@ compare_posteriors <- function(reference_sir = NULL, SIR, model_names = NULL, fi
     # Extract range of values
     if(!is.null(reference_sir)){
         SIR <- c(list(reference_sir), SIR)
-        cols <- c( "coral1", cols)
+        cols <- c( "lightblue1", cols)
     }
 
 
-
+library(latex2exp)
 
     # Vars of interest
     years <- sort(unique(c( sapply(SIR, function(x) x$inputs$target.Yr),
@@ -484,7 +500,7 @@ compare_posteriors <- function(reference_sir = NULL, SIR, model_names = NULL, fi
             }
 
 
-            boxplot(values, ylab = TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = , outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
+            boxplot(values, ylab = TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
 
             # Add x-lab
             if(is.null(model_names)){
@@ -503,7 +519,7 @@ compare_posteriors <- function(reference_sir = NULL, SIR, model_names = NULL, fi
                 abline(h = ref_box$stats[5,1], lty = 2, col = "grey30", lwd = 2)
             }
 
-            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = "grey", outline = FALSE, cex.axis = 0.75, add = TRUE)
+            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, add = TRUE)
 
             if(j == 2){ dev.off()}
         }

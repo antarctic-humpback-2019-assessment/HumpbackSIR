@@ -5,7 +5,7 @@
 zerbini_table <- function( SIR, file_name = NULL){
 
     # Vars of interest
-    years <- c( SIR$inputs$target.Yr, SIR$inputs$output.Years)
+    years <- sort(c( SIR$inputs$target.Yr, SIR$inputs$output.Years))
     vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
     pop_vars <- c("K", "Nmin", paste0("N", years))
@@ -60,4 +60,36 @@ bayes_factor <- function( SIR , prior_probs = NULL){
 
     bayes_factor <- post_model/sum(post_model)
     return(bayes_factor)
+}
+
+
+
+#' Weighted SIR model
+#'
+#' Function to create a weighted model using bayes factors
+#'
+#' @param SIR List of SIR fit models
+#' @param bayes_factor vector of bayes_factors from \code{\link{bayes_factor}}
+#'
+#' @return an object of class "SIR"
+#' @export
+weight_model <- function(SIR, bayes_factor){
+
+    weighted_SIR <- SIR[[1]]
+
+    # Size of vector
+    n_samples <- nrow( weighted_SIR$resamples_trajectories )
+    subs_samples <- rmultinom(n = 1, size = n_samples, prob = bayes_factor) # How many values to take from each SIR
+
+    sample_ind <- 1
+    for(i in 1:length(SIR)){
+        random_rows <- sample(1:n_samples, size = subs_samples[i], replace = FALSE)
+
+        weighted_SIR$resamples_output[sample_ind:(sample_ind + subs_samples[i] - 1),] <- SIR[[i]]$resamples_output[random_rows, ]
+        weighted_SIR$resamples_trajectories[sample_ind:(sample_ind + subs_samples[i] - 1),] <- SIR[[i]]$resamples_trajectories[random_rows, ]
+        weighted_SIR$catch_trajectories[sample_ind:(sample_ind + subs_samples[i] - 1),] <- SIR[[i]]$catch_trajectories[random_rows, ]
+        sample_ind <- sample_ind + subs_samples[i]
+    }
+
+    return(weighted_SIR)
 }

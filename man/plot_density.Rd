@@ -5,7 +5,7 @@
 \title{OUTPUT FUNCTION}
 \usage{
 plot_density(SIR, file_name = NULL, lower = NULL, upper = NULL,
-  priors = NULL, inc_reference = FALSE)
+  priors = NULL, inc_reference = TRUE)
 }
 \arguments{
 \item{SIR}{A fit SIR model or list of SIR models. Plots in the order provided.}
