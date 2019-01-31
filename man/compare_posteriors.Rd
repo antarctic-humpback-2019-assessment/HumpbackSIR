@@ -4,11 +4,21 @@
 \alias{compare_posteriors}
 \title{Function to compare posters}
 \usage{
-compare_posteriors(reference_sir = NULL, SIR, model_names = NULL,
-  file_name = NULL)
+compare_posteriors(SIR, model_names = NULL, file_name = NULL,
+  bayes_factor = NULL, reference_sir = NULL)
 }
 \arguments{
-\item{reference_sir}{Default = NULL, wether reference SIR fit}
+\item{SIR}{list of SIR objects}
+
+\item{model_names}{names of sir objects}
+
+\item{file_name}{name of a file to identified the files exported by the
+function. If NULL, does not save.}
+
+\item{bayes_factor}{Optional. Vector of bayesfactors of length SIR}
+
+\item{reference_sir}{Default = NULL, wether reference SIR fit
+Function to compare posters}
 
 \item{SIR}{list of SIR objects}
 
@@ -16,6 +26,18 @@ compare_posteriors(reference_sir = NULL, SIR, model_names = NULL,
 
 \item{file_name}{name of a file to identified the files exported by the
 function. If NULL, does not save.}
+
+\item{reference_sir}{Default = NULL, wether reference SIR fit
+Function to compare posters}
+
+\item{SIR}{list of SIR objects}
+
+\item{model_names}{names of sir objects}
+
+\item{file_name}{name of a file to identified the files exported by the
+function. If NULL, does not save.}
+
+\item{reference_sir}{Default = NULL, reference SIR is in \code{SIR}, should be first if so.}
 }
 \description{
 Function to compare posters

@@ -29,7 +29,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
     # Extract N trajectories
     output_summary <- matrix(nrow = length(row_names), ncol = dim(x)[2])
     output_summary[1, ] <- sapply(x, mean)
-    output_summary[2:6, ] <- sapply(x, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+    output_summary[2:6, ] <- sapply(x, quantile, probs= c(0.5, 0.025, 0.975, 0.25, 0.75))
     output_summary[7, ] <- sapply(x, min)
     output_summary[8, ] <- sapply(x, max)
     output_summary[9, ] <- sapply(x, length)
@@ -42,7 +42,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
         ref <- Reference$resamples_trajectories
         reference_summary <- matrix(nrow = length(row_names), ncol = dim(ref)[2])
         reference_summary[1, ] <- sapply(ref, mean)
-        reference_summary[2:6, ] <- sapply(ref, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+        reference_summary[2:6, ] <- sapply(ref, quantile, probs= c(0.5, 0.025, 0.975, 0.25, 0.75))
         reference_summary[7, ] <- sapply(ref, min)
         reference_summary[8, ] <- sapply(ref, max)
         reference_summary[9, ] <- sapply(ref, length)
@@ -68,7 +68,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
         N_posterior_pred <- as.data.frame(N_posterior_pred)
         posterior_pred_summary <- matrix(nrow = length(row_names), ncol = dim(N_posterior_pred)[2])
         posterior_pred_summary[1, ] <- sapply(N_posterior_pred, mean)
-        posterior_pred_summary[2:6, ] <- sapply(N_posterior_pred, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+        posterior_pred_summary[2:6, ] <- sapply(N_posterior_pred, quantile, probs= c(0.5, 0.025, 0.975, 0.25, 0.75))
         posterior_pred_summary[7, ] <- sapply(N_posterior_pred, min)
         posterior_pred_summary[8, ] <- sapply(N_posterior_pred, max)
         posterior_pred_summary[9, ] <- sapply(N_posterior_pred, length)
@@ -80,7 +80,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
     # Extract catch trajectories
     catch_summary <- matrix(nrow = length(row_names), ncol = dim(catch.data)[2])
     catch_summary[1, ] <- sapply(catch.data, mean)
-    catch_summary[2:6, ] <- sapply(catch.data, quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+    catch_summary[2:6, ] <- sapply(catch.data, quantile, probs= c(0.5, 0.025, 0.975, 0.25, 0.75))
     catch_summary[7, ] <- sapply(catch.data, min)
     catch_summary[8, ] <- sapply(catch.data, max)
     catch_summary[9, ] <- sapply(catch.data, length)
@@ -92,6 +92,10 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
     abs.abundance$Lower95 <- qlnorm(0.025, log(abs.abundance$N.obs), abs.abundance$Sigma)
     ymax <- max(c(max(output_summary[2:6, ]), abs.abundance$N.obs, abs.abundance$Lower95, abs.abundance$Upper95, N_priors))
     ymin <- 0
+
+    x_axis <- Years/10
+    x_axis <- unique(round(x_axis) * 10)
+    x_axis <- x_axis[rep_len(c(TRUE, FALSE), length.out = length(x_axis))]
 
 
     # Plot trajectory
@@ -106,7 +110,8 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
         plot(y = NA, x = NA,
              ylim = c(ymin, ymax),
              xlim = c(min(Years), max(Years)),
-             xlab = "Year", ylab = "Number of individuals")
+             xlab = "Year", ylab = "Number of individuals", xaxt = "n")
+        axis(side = 1, x_axis)
 
         # N Trajectory
         # Credible interval
@@ -221,7 +226,7 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
         # Summarize
         IA_summary[[i]] <-  matrix(nrow = length(row_names), ncol = dim(IA_pread[[i]])[2])
         IA_summary[[i]][1, ] <- sapply(IA_pread[[i]], mean)
-        IA_summary[[i]][2:6, ] <- sapply(IA_pread[[i]], quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+        IA_summary[[i]][2:6, ] <- sapply(IA_pread[[i]], quantile, probs= c(0.5, 0.025, 0.975, 0.25, 0.75))
         IA_summary[[i]][7, ] <- sapply(IA_pread[[i]], min)
         IA_summary[[i]][8, ] <- sapply(IA_pread[[i]], max)
         IA_summary[[i]][9, ] <- sapply(IA_pread[[i]], length)
@@ -248,7 +253,7 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
             # Summarize
             IA_posterior_pred_sum[[i]] <-  matrix(nrow = length(row_names), ncol = dim(IA_posterior_pred[[i]])[2])
             IA_posterior_pred_sum[[i]][1, ] <- sapply(IA_posterior_pred[[i]], mean)
-            IA_posterior_pred_sum[[i]][2:6, ] <- sapply(IA_posterior_pred[[i]], quantile, probs= c(0.5, 0.025, 0.975, 0.05, 0.95))
+            IA_posterior_pred_sum[[i]][2:6, ] <- sapply(IA_posterior_pred[[i]], quantile, probs= c(0.5, 0.025, 0.975, 0.25, 0.75))
             IA_posterior_pred_sum[[i]][7, ] <- sapply(IA_posterior_pred[[i]], min)
             IA_posterior_pred_sum[[i]][8, ] <- sapply(IA_posterior_pred[[i]], max)
             IA_posterior_pred_sum[[i]][9, ] <- sapply(IA_posterior_pred[[i]], length)
@@ -378,7 +383,7 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
         if(inc_reference){
             posteriors_lwd <- c(posteriors_lwd, rep(1, length(priors)))
             posteriors_lty <- c(posteriors_lty, c( 1: ifelse(length(priors) > 1, c(1,(length(priors)-1)), 1) ))
-            posteriors_col <- c(posteriors_col, c("grey", rep(1, ifelse(length(priors) > 1, (length(priors)-1), 1))))
+            posteriors_col <- c(posteriors_col, c("grey", rep(1, ifelse(length(priors) > 1, (length(priors)-1), 0))))
             SIR <- c(SIR, priors)
         }
         if(inc_reference == FALSE){
@@ -446,7 +451,7 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
                  xlim = c(xlow, xup),
                  ylim = range(sapply(posterior_dens, "[", "y")),
                  ylab = "Density", xlab = latex2exp::TeX(vars_latex[i]))
-            mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty, col = posteriors_col)
+            mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty, col = posteriors_col[1:length(posterior_dens)])
         }
 
         if(j == 2){ dev.off()}
@@ -461,7 +466,24 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
 #' @param file_name name of a file to identified the files exported by the
 #'   function. If NULL, does not save.
 #' @param reference_sir Default = NULL, wether reference SIR fit
-compare_posteriors <- function(reference_sir = NULL, SIR, model_names = NULL, file_name = NULL){
+
+#' Function to compare posters
+#'
+#' @param SIR list of SIR objects
+#' @param model_names names of sir objects
+#' @param file_name name of a file to identified the files exported by the
+#'   function. If NULL, does not save.
+#' @param reference_sir Default = NULL, wether reference SIR fit
+
+#' Function to compare posters
+#'
+#' @param SIR list of SIR objects
+#' @param model_names names of sir objects
+#' @param file_name name of a file to identified the files exported by the
+#'   function. If NULL, does not save.
+#' @param reference_sir Default = NULL, reference SIR is in \code{SIR}, should be first if so.
+#' @param bayes_factor Optional. Vector of bayesfactors of length SIR
+compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_factor = NULL, reference_sir = NULL){
 
     # If it is a single SIR, make into a list
     if(class(SIR) == "SIR"){
@@ -471,12 +493,11 @@ compare_posteriors <- function(reference_sir = NULL, SIR, model_names = NULL, fi
 
     # Extract range of values
     if(!is.null(reference_sir)){
-        SIR <- c(list(reference_sir), SIR)
-        cols <- c( "lightblue1", cols)
+        cols <- c( "lightblue1", cols[-1])
     }
 
 
-library(latex2exp)
+    library(latex2exp)
 
     # Vars of interest
     years <- sort(unique(c( sapply(SIR, function(x) x$inputs$target.Yr),
@@ -491,7 +512,7 @@ library(latex2exp)
                 png( file = filename , width=7, height = 100 / 25.4, family = "serif", units = "in", res = 300)
             }
 
-            par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+            par( mar=c(5, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
 
             values <- matrix(NA, nrow = nrow(SIR[[1]]$resamples_output), ncol = length(SIR))
 
@@ -500,7 +521,7 @@ library(latex2exp)
             }
 
 
-            boxplot(values, ylab = TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
+            boxplot(values, ylab = TeX(vars_latex[k]), xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
 
             # Add x-lab
             if(is.null(model_names)){
@@ -508,6 +529,16 @@ library(latex2exp)
             }
             if(!is.null(model_names)){
                 axis(side = 1, at = 1:length(SIR), labels = model_names, cex.axis = 0.75)
+            }
+
+            # Add bayes factor
+            if(is.null(bayes_factor)){
+                mtext(side = 1, text = "Scenario", line = 1.6)
+            }
+            if(!is.null(bayes_factor)){
+                axis(side = 1, at = c(0.5, 1:length(SIR)), labels = c("BF =", bayes_factor), cex.axis = 1, tick = FALSE, line = 1.6)
+
+                mtext(side = 1, text = "Scenario", line = 3.4)
             }
 
             # Add lines for reference
@@ -520,8 +551,14 @@ library(latex2exp)
             }
 
             boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, add = TRUE)
+            # Add means
+            mean_vec <- colMeans(values)
+            for( i in 1:length(SIR)){
+                segments(x0 = .59999 + (i - 1), x1 = 1.39999 + (i - 1), y0 = mean_vec[i], col = 1, lwd = 2, lty = 2)
+            }
 
             if(j == 2){ dev.off()}
         }
     }
 }
+
