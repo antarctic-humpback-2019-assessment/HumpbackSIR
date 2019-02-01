@@ -11,7 +11,7 @@
 #' @param posterior_pred Logical. If true, includes a posterior predictive distribution of the estimated N
 #'
 #' @return Returns and saves a figure with the population trajectory.
-plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_pred = TRUE) {
+plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_pred = TRUE, coolors = "#941B0C",     coolors2 = "#104F55") {
 
 
     # Extract SIR objects
@@ -97,6 +97,9 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
     x_axis <- unique(round(x_axis) * 10)
     x_axis <- x_axis[rep_len(c(TRUE, FALSE), length.out = length(x_axis))]
 
+    ymax_catch <- max(catch_summary[2:6, ])
+    ymin_catch <- 0
+
 
     # Plot trajectory
     for(i in 1: (1 + !is.null(file_name))){
@@ -105,45 +108,58 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
             png( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
 
+
         # Plot configuration
-        par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+        par( mar=c(3, 3 , 0.5 , 3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+        # catch history
+        plot(y = NA, x = NA,
+             ylim = c(ymin_catch, ymax_catch),
+             xlim = c(min(Years), max(Years)),
+             xlab = NA, ylab = NA, xaxt = "n",  yaxt = "n")
+
+        # Credible interval
+        polygon(
+            x = c(Years,rev(Years)),
+            y = c(catch_summary[3, ],rev(catch_summary[4, ])),
+            col = adjustcolor(coolors, alpha = 0.2), border = NA) # 95% CI
+        polygon( x = c(Years,rev(Years)),
+                 y = c(catch_summary[5, ], rev(catch_summary[6, ])),
+                 col = adjustcolor(coolors, alpha = 0.5), border = NA) # 90% CI
+
+        # Median
+        lines( x = Years, y = catch_summary[2, ], lty = 2, lwd = 3, col = coolors) # Median
+
+        axis(side = 4, col = coolors, col.axis=coolors, font =2)
+        mtext(side = 4, "Catch (numbers)", line = 1.6, col = coolors, font = 2)
+
+
+        par(new = TRUE)
+        # N-trajectory
         plot(y = NA, x = NA,
              ylim = c(ymin, ymax),
              xlim = c(min(Years), max(Years)),
-             xlab = "Year", ylab = "Number of individuals", xaxt = "n")
-        axis(side = 1, x_axis)
+             xlab = NA, ylab = NA, xaxt = "n", col.axis=coolors2, col = coolors2, col.lab= coolors2, font = 2)
+        mtext(side = 2, "Number of individuals", line = 1.6, font = 2, col=coolors2)
+        axis(side = 1, x_axis, font = 2)
+        mtext(side = 1, "Year", line = 1.6, font = 2)
 
         # N Trajectory
         # Credible interval
         polygon(
             x = c(Years,rev(Years)),
             y = c(output_summary[3, ],rev(output_summary[4, ])),
-            col = "Grey80", border = NA) # 95% CI
+            col = adjustcolor(coolors2, alpha = 0.2), border = NA) # 95% CI
         polygon( x = c(Years,rev(Years)),
                  y = c(output_summary[5, ], rev(output_summary[6, ])),
-                 col = "Grey60", border = NA) # 90% CI
+                 col = adjustcolor(coolors2, alpha = 0.5), border = NA) # 90% CI
 
         # Median
-        lines( x = Years, y = output_summary[2, ], lwd = 3) # Median
+        lines( x = Years, y = output_summary[2, ], lwd = 3, col = coolors2) # Median
 
         # Reference median
         if(!is.null(Reference)){
             lines( x = ref_years, y = reference_summary[2, ], lwd = 3, lty = 3) # Median
         }
-
-        # Catch trajectory
-        # Credible interval
-        polygon(
-            x = c(Years,rev(Years)),
-            y = c(catch_summary[3, ],rev(catch_summary[4, ])),
-            col = "Grey80", border = NA) # 95% CI
-        polygon( x = c(Years,rev(Years)),
-                 y = c(catch_summary[5, ], rev(catch_summary[6, ])),
-                 col = "Grey60", border = NA) # 90% CI
-
-        # Median
-        lines( x = Years, y = catch_summary[2, ], lty = 2, lwd = 3, col = 1) # Median
-
 
         # Absolute abundance
         points( x = abs.abundance$Year,
@@ -166,9 +182,11 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
                     length=0.05, angle=90, code=3, lwd = 3, col = adjustcolor("Grey80", alpha.f = 1))
         }
 
+
         if(i == 2){ dev.off()}
     }
 }
+
 
 #' OUTPUT FUNCTION
 #'
