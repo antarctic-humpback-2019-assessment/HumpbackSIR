@@ -90,22 +90,28 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
     Years <- as.numeric(gsub("N_", "", colnames(output_summary)))
     abs.abundance$Upper95 <- qlnorm(0.975, log(abs.abundance$N.obs), abs.abundance$Sigma)
     abs.abundance$Lower95 <- qlnorm(0.025, log(abs.abundance$N.obs), abs.abundance$Sigma)
-    ymax <- max(c(max(output_summary[2:6, ]), abs.abundance$N.obs, abs.abundance$Lower95, abs.abundance$Upper95, N_priors))
-    ymin <- 0
 
+    # Set up ranges for plots
+    ymax <- max(c(max(output_summary[2:6, ]), abs.abundance$N.obs, abs.abundance$Lower95, abs.abundance$Upper95, N_priors))
+    ymin <- -0.2 * ymax
+
+    ymax_catch <- max(catch_summary[2:6, ])
+    ymax_catch <- ymax_catch * 2
+    ymin_catch <- 0
+
+    # Set up axis
     x_axis <- Years/10
     x_axis <- unique(round(x_axis) * 10)
     x_axis <- x_axis[rep_len(c(TRUE, FALSE), length.out = length(x_axis))]
 
-    ymax_catch <- max(catch_summary[2:6, ])
-    ymin_catch <- 0
-
+    y_axis <- seq(0, ymax , length.out = 5)
+    y_axis_catch <-  floor(seq(0,  max(catch_summary[2:6, ]) , length.out = 5)/1000) * 1000
 
     # Plot trajectory
     for(i in 1: (1 + !is.null(file_name))){
         if(i == 2){
             filename <- paste0(file_name, "_trajectory_summary", ".png")
-            png( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+            png( file = filename , width=7.5, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
 
 
@@ -127,10 +133,10 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
                  col = adjustcolor(coolors, alpha = 0.5), border = NA) # 90% CI
 
         # Median
-        lines( x = Years, y = catch_summary[2, ], lty = 2, lwd = 3, col = coolors) # Median
+        lines( x = Years, y = catch_summary[2, ], lty = 1, lwd = 3, col = coolors) # Median
 
-        axis(side = 4, col = coolors, col.axis=coolors, font =2)
-        mtext(side = 4, "Catch (numbers)", line = 1.6, col = coolors, font = 2)
+        axis(side = 4, at = y_axis_catch, col = coolors, col.axis=coolors, font =2)
+        mtext(side = 4, "Catch (numbers)", line = 1.6, col = coolors, font = 2, adj = 0.4)
 
 
         par(new = TRUE)
@@ -139,7 +145,8 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
              ylim = c(ymin, ymax),
              xlim = c(min(Years), max(Years)),
              xlab = NA, ylab = NA, xaxt = "n", col.axis=coolors2, col = coolors2, col.lab= coolors2, font = 2)
-        mtext(side = 2, "Number of individuals", line = 1.6, font = 2, col=coolors2)
+        abline(h = 0, col = coolors2)
+        mtext(side = 2, "Number of individuals", line = 1.6, font = 2, col=coolors2, adj = 0.6)
         axis(side = 1, x_axis, font = 2)
         mtext(side = 1, "Year", line = 1.6, font = 2)
 
@@ -188,6 +195,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
 }
 
 
+
 #' OUTPUT FUNCTION
 #'
 #' Function that provides a plot of the estimated indices of abundance a SIR  model including: median, 95%
@@ -200,7 +208,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
 #' @param ioa_names names of indices of abundance used.
 #'
 #' @return Returns and saves a figure with the IOA trajectories.
-plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = TRUE){
+plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = TRUE, coolors = "#104F55"){
 
     rel.abundance <- SIR$inputs$rel.abundance
     row_names <- c("mean", "median",
@@ -314,15 +322,15 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
             polygon(
                 x = c(IA.yr.range[[i]], rev(IA.yr.range[[i]])),
                 y = c(IA_summary[[i]][3, ],rev(IA_summary[[i]][4, ])),
-                col = "Grey80", border = NA) # 95% CI
+                col = adjustcolor(coolors, alpha = 0.2), border = NA) # 95% CI
 
             polygon( x = c(IA.yr.range[[i]], rev(IA.yr.range[[i]])),
                      y = c(IA_summary[[i]][5, ], rev(IA_summary[[i]][6, ])),
-                     col = "Grey60", border = NA) # 90% CI
+                     col = adjustcolor(coolors, alpha = 0.5), border = NA) # 50% CI
 
 
-            # Median and catch series
-            lines( x = IA.yr.range[[i]], y = IA_summary[[i]][2, ], lwd = 3) # Median
+            # Median
+            lines( x = IA.yr.range[[i]], y = IA_summary[[i]][2, ], col = coolors, lwd = 3) # Median
 
 
             # Relative abundance
@@ -422,11 +430,14 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
     for(j in 1:(1 + !is.null(file_name))){
         if(j == 2){
             filename <- paste0(file_name, "_posterior_density", ".png")
-            png( file = filename , width=169 / 25.4, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+            png( file = filename , width=8, height = 100 / 25.4, family = "serif", units = "in", res = 300)
         }
 
-        par(mfrow = c(2,length(vars)/2))
-        par( mar=c(3, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+        par(mfrow = c(2,(length(vars))/2 + 1))
+        par( mar=c(3, 0.05 , 0.5 , 0.45) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+
+        plot.new()
+
 
         # Loop through vars
         for(i in 1:length(vars)){
@@ -467,15 +478,24 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
             # Plot them
             plot(NA,
                  xlim = c(xlow, xup),
-                 ylim = range(sapply(posterior_dens, "[", "y")),
-                 ylab = "Density", xlab = latex2exp::TeX(vars_latex[i]))
+                 ylim = c(0, range(sapply(posterior_dens, "[", "y"))[2]),
+                 ylab = NA, xlab = latex2exp::TeX(vars_latex[i]), yaxt = "n")
             mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty, col = posteriors_col[1:length(posterior_dens)])
+
+            if(i == (length(vars)/2))  {
+                plot.new()
+            }
+
+            if(i %in% c(1, (length(vars))/2 + 1) ) {
+                mtext(side = 2, "Density", line = 1, cex= 0.75)
+            }
+
+
         }
 
         if(j == 2){ dev.off()}
     }
 }
-
 
 #' Function to compare posters
 #'
@@ -501,7 +521,7 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
 #'   function. If NULL, does not save.
 #' @param reference_sir Default = NULL, reference SIR is in \code{SIR}, should be first if so.
 #' @param bayes_factor Optional. Vector of bayesfactors of length SIR
-compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_factor = NULL, reference_sir = NULL){
+compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_factor = NULL, reference_sir = TRUE, model_average = TRUE){
 
     # If it is a single SIR, make into a list
     if(class(SIR) == "SIR"){
@@ -510,8 +530,12 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
     cols <- rep("grey", length(SIR))
 
     # Extract range of values
-    if(!is.null(reference_sir)){
-        cols <- c( "lightblue1", cols[-1])
+    if(reference_sir){
+        cols <- c( "#7C9FA2", cols[-1])
+    }
+
+    if(model_average){
+        cols <- c(cols[-length(cols)] , "#BA6D64")
     }
 
 
@@ -527,7 +551,7 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
         for(j in 1:(1 + !is.null(file_name))){
             if(j == 2){
                 filename <- paste0(file_name, "_posterior_comparison_", vars[k], ".png")
-                png( file = filename , width=7, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+                png( file = filename , width=8, height = 100 / 25.4, family = "serif", units = "in", res = 300)
             }
 
             par( mar=c(5, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
@@ -554,13 +578,13 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
                 mtext(side = 1, text = "Scenario", line = 1.6)
             }
             if(!is.null(bayes_factor)){
-                axis(side = 1, at = c(0.5, 1:length(SIR)), labels = c("BF =", bayes_factor), cex.axis = 1, tick = FALSE, line = 1.6)
+                axis(side = 1, at = c(0, 1:length(SIR)), labels = c("BF =", bayes_factor), cex.axis = 0.75, tick = FALSE, line = 1.6)
 
                 mtext(side = 1, text = "Scenario", line = 3.4)
             }
 
             # Add lines for reference
-            if(!is.null(reference_sir)){
+            if(reference_sir){
                 ref_box <- boxplot(values[,1], plot = FALSE)
 
                 abline(h = ref_box$stats[1,1], lty = 2, col = "grey30", lwd = 2)
@@ -568,15 +592,16 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
                 abline(h = ref_box$stats[5,1], lty = 2, col = "grey30", lwd = 2)
             }
 
-            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = "Scenario", xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, add = TRUE)
+            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, add = TRUE)
             # Add means
             mean_vec <- colMeans(values)
             for( i in 1:length(SIR)){
-                segments(x0 = .59999 + (i - 1), x1 = 1.39999 + (i - 1), y0 = mean_vec[i], col = 1, lwd = 2, lty = 2)
+                segments(x0 = .59999 + (i - 1), x1 = 1.39999 + (i - 1), y0 = mean_vec[i], col = 1, lwd = 2, lty = 3)
             }
 
             if(j == 2){ dev.off()}
         }
     }
 }
+
 

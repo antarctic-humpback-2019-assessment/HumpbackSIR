@@ -12,7 +12,7 @@ zerbini_table <- function( SIR, file_name = NULL){
     depletion_vars <- c("Max_Dep", paste0("status", years))
 
     results <- data.frame(matrix(NA, nrow = length(vars), ncol = 8))
-    colnames(results) <- c("Parameter","Mean", "Median", "2.5% CI", "5% CI", "95% CI", "97.5% CI", "Unique")
+    colnames(results) <- c("Parameter","Mean", "Median", "2.5% CI", "25% CI", "75% CI", "97.5% CI", "Unique")
 
     x <- SIR$resamples_output[,vars]
 
@@ -64,6 +64,7 @@ bayes_factor <- function( SIR , prior_probs = NULL){
 
 
 
+
 #' Weighted SIR model
 #'
 #' Function to create a weighted model using bayes factors
@@ -77,15 +78,19 @@ weight_model <- function(SIR, bayes_factor){
 
     weighted_SIR <- SIR[[1]]
 
+    names_output <- colnames(weighted_SIR$resamples_output)
+
     # Size of vector
     n_samples <- nrow( weighted_SIR$resamples_trajectories )
     subs_samples <- rmultinom(n = 1, size = n_samples, prob = bayes_factor) # How many values to take from each SIR
 
     sample_ind <- 1
     for(i in 1:length(SIR)){
+
+        names_resample_sub <- names(SIR[[i]]$resamples_output)
         random_rows <- sample(1:n_samples, size = subs_samples[i], replace = FALSE)
 
-        weighted_SIR$resamples_output[sample_ind:(sample_ind + subs_samples[i] - 1),] <- SIR[[i]]$resamples_output[random_rows, ]
+        weighted_SIR$resamples_output[sample_ind:(sample_ind + subs_samples[i] - 1), names_output[names_output %in% names_resample_sub] ] <- SIR[[i]]$resamples_output[random_rows,names_output[names_output %in% names_resample_sub]]
         weighted_SIR$resamples_trajectories[sample_ind:(sample_ind + subs_samples[i] - 1),] <- SIR[[i]]$resamples_trajectories[random_rows, ]
         weighted_SIR$catch_trajectories[sample_ind:(sample_ind + subs_samples[i] - 1),] <- SIR[[i]]$catch_trajectories[random_rows, ]
         sample_ind <- sample_ind + subs_samples[i]
