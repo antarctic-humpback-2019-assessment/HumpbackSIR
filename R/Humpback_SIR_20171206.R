@@ -782,7 +782,7 @@ LNLIKE.IAs <- function(rel.abundance, Pred_N, start_yr,
     loglike.IA1 <- 0
     IA.yrs <- rel.abundance$Year-start_yr + 1
     loglike.IA1 <- -sum(
-        dlnorm_zerb( # NOTE: can be changed to dlnorm_zerb
+        dlnorm( # NOTE: can be changed to dlnorm_zerb
             x = rel.abundance$IA.obs,
             meanlog = log( q.values[rel.abundance$Index] * Pred_N[IA.yrs] ),
             sdlog = rel.abundance$Sigma + add.CV,
