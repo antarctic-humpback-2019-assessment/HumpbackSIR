@@ -430,11 +430,11 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
     for(j in 1:(1 + !is.null(file_name))){
         if(j == 2){
             filename <- paste0(file_name, "_posterior_density", ".png")
-            png( file = filename , width=8, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+            png( file = filename , width=10, height = 110 / 25.4, family = "serif", units = "in", res = 300)
         }
 
-        par(mfrow = c(2,(length(vars))/2 + 1))
-        par( mar=c(3, 0.05 , 0.5 , 0.45) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+        par(mfrow = c(2,(length(vars))/2 + 2))
+        par( mar=c(3, 0.05 , 0.5 , 0.55) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
 
         plot.new()
 
@@ -484,7 +484,9 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
 
             if(i == (length(vars)/2))  {
                 plot.new()
+                plot.new()
             }
+
 
             if(i %in% c(1, (length(vars))/2 + 1) ) {
                 mtext(side = 2, "Density", line = 1, cex= 0.75)
