@@ -82,6 +82,7 @@ rlunif <- function(n, min = 1, max = 2) {
 ##' @param N_obs Prior on a recent abundance estimate. Defaults to Uniform(500,
 ##'   20,000).
 ##' @param add_CV Defaults to unused. Additional variability.
+##' @param premodern_catch_sample Defaults to unused. Samples between the minimum and maximum premodern catch values.
 ##' @param z Defaults to constant 2.39. Shape parameter for generalized logistic
 ##'   population dynamics function.
 ##' @param q_IA Defaults to unused. Prior on q for indices of abundance. If
@@ -94,6 +95,7 @@ make_prior_list <- function(r_max = make_prior(runif, 0, 0.118),
                             K = make_prior(use = FALSE),
                             N_obs = make_prior(runif, 500, 40000),
                             add_CV = make_prior(use = FALSE),
+                            premodern_catch_sample = make_prior(runif, 0, 1),
                             z = make_prior(2.39),
                             q_IA = make_prior(use = FALSE),
                             q_count = make_prior(use = FALSE)) {
@@ -101,7 +103,23 @@ make_prior_list <- function(r_max = make_prior(runif, 0, 0.118),
          K = K,
          N_obs = N_obs,
          add_CV = add_CV,
+         premodern_catch_sample = premodern_catch_sample,
          z = z,
          q_IA = q_IA,
          q_count = q_count)
+}
+
+#' Probability density for correction factor as determined by Best et al 2010
+#'
+#' @param n number of samples
+#' @param crit_95 Struck and loss rate such that there is only a 5% probability of struck and loss rate exceeding this value
+#' @param upper Upper limit for struck and loss rate
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rbest <- function(n = 1, crit_95 = 0.139, upper = 0.30){
+    dom <- runif(n)
+    sapply(dom, function(d) ifelse(d < 0.95, runif(1, 1, 1/(1-crit_95)), runif(1, 1/(1-crit_95), 1/(1-upper))))
 }

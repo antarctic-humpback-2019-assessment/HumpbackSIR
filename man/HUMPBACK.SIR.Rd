@@ -2,110 +2,97 @@
 % Please edit documentation in R/Humpback_SIR_20171206.R
 \name{HUMPBACK.SIR}
 \alias{HUMPBACK.SIR}
-\title{HUMPBACK SIR controls the sampling from the priors, the bisection and likelihoods and the output functions}
+\title{HUMPBACK SIR controls the sampling from the priors, the bisection and
+likelihoods and the output functions}
 \usage{
-HUMPBACK.SIR(file.name = "NULL", n.samples = 1000, n.resamples = 1000,
-  prior.K = c(NA, NA, NA), prior.r_max = c("uniform", 0, 0.12),
-  r_max.bound = c(0, 0.12), prior.N.obs = c("uniform", 0, 50000),
-  prior.add.CV = c("uniform", 0, 1, TRUE), prior.z = c(NA, 2.39, NA),
-  q.prior.IA = c("uniform", 0, 1, FALSE), q.prior.Count = c("uniform", 0, 1,
-  FALSE), Klim = c(1, 5e+05), target.Yr = 2008, num.haplotypes = 66,
-  tolerance.for.bisection = 0.001, output.Yrs = c(2008),
+HUMPBACK.SIR(file_name = "NULL", n_resamples = 1000,
+  priors = make_prior_list(),
+  catch_multipliers = make_multiplier_list(),
+  premodern_catch_multipliers = make_multiplier_list(),
+  target.Yr = 2008, num.haplotypes = 66, output.Yrs = c(2008),
   abs.abundance = Abs.Abundance, rel.abundance = Rel.Abundance,
-  rel.abundance.key = TRUE, count.data = NULL, count.data.key = FALSE,
-  growth.rate.obs = c(0.074, 0.033, TRUE), growth.rate.Yrs = c(1995, 1996,
-  1997, 1998), catch.data = Catch.data, Threshold = 1e+100, Print = 0)
+  rel.abundance.key = TRUE, count.data = NULL,
+  count.data.key = FALSE, growth.rate.obs = c(0.074, 0.033, TRUE),
+  growth.rate.Yrs = c(1995, 1996, 1997, 1998), catch.data = Catch.data,
+  premodern_catch_data = NULL, realized_prior = FALSE,
+  control = sir_control())
 }
 \arguments{
-\item{file.name}{name of a file to identified the files exported by the function}
+\item{file_name}{name of a file to identified the files exported by the
+function}
 
-\item{n.samples}{number of samples for the Rubin SIR: NOT USED}
+\item{n_resamples}{number of resamples to compute the marginal posterior
+distributions}
 
-\item{n.resamples}{number of resamples to compute the marginal posterior distributions}
+\item{priors}{List of priors, usually generated using \link{make_prior_list}.
+Default is the default of \code{make_prior_list}. See details.}
 
-\item{prior.K}{prior for K for future use with the forward method: NOT USED}
+\item{catch_multipliers}{List of catch multipliers, generated using \link{make_multiplier_list}
+Can either be estimated or explicitly provided. Default is \code{make_multiplier_list}.}
 
-\item{prior.r_max}{prior for r_max. The first element identifies the sampling distribution, the send identifies the lower bound (for uniform distribution) or the mean (for a normal distribution), and the third element corresponds to the upper bound (uniform distribution) or the standard error (normal distribution). The default is Uniform with bounds c(0, 0.12)}
+\item{premodern_catch_multipliers}{List of historic catch multipliers, generated using \link{make_multiplier_list}
+Can either be estimated or explicitly provided. Default is \code{make_multiplier_list}.}
 
-\item{r_max.bound}{bounds for the r_max prior. Default is c(0, 0.12)}
+\item{target.Yr}{year of the target population estimate for the bisection
+method. Default is 2008}
 
-\item{prior.N.obs}{prior distribution for a recent abudnance estimate. Elements are equivalent to the prior on r_max}
+\item{num.haplotypes}{number of haplotypes to compute minimum viable
+population (from Jackson et al., 2006 and IWC, 2007)}
 
-\item{prior.add.CV}{prior for additional CV if applicable. It is defined by four elements: (1) the sampling distribution, (2) lower bound or mean, (3) upper bound or SE, (4) boolean variable to specify whether CV add is used or not in the likelihood. Default is a uniform distribution bounded by (0,1) and FALSE (=CV.add not used)}
+\item{output.Yrs}{year for outputing the predicted abundance estimates.
+Default is 2008, but multiple years can be specified. For example, if
+outputs for 2005 and 2008 are needed, output.Yrs = c(2005, 2008)}
 
-\item{prior.z}{prior on the shape parameter. NOT USED, assumed z=2.39 (max productivity at K=0.6)}
+\item{abs.abundance}{R object containing year, estimate of absolute
+abundance, and CV (see example)}
 
-\item{q.prior.IA}{prior on q for indices of abundance. Definition of elements is similar to the prior on CV.add. If the fourth element = FALSE, an analytical solution for q is used (as in Zerbini et al. 2011)}
+\item{rel.abundance}{R object containing years, estimates of relative
+abudnance and CVs (see example)}
 
-\item{q.prior.Count}{similar to q.prior.IA, but for count data. NOT CURRENTLY USED}
+\item{rel.abundance.key}{key to speficy if relative abundance data are used
+in the likelihood. Default is TRUE}
 
-\item{Klim}{bounds for K when preforming the bisection method of Punt and Butterworth (1995). Defined by two elements, the lower and upper bounds. Default is (1, 500000)}
+\item{count.data}{R object containing years, estimates of counts and effort.
+NOT USED}
 
-\item{target.Yr}{year of the target population estimate for the bisection method. Default is 2008}
+\item{count.data.key}{key to speficy in count data are used. Default is
+FALSE. NOT USED}
 
-\item{num.haplotypes}{number of haplotypes to compute minimum viable population (from Jackson et al., 2006 and IWC, 2007)}
+\item{growth.rate.obs}{observed growth rate (1st element) and standard error
+(2nd element) as in Zerbni et al. (2011). If third element is FALSE, the
+growth rate is not included in the likelihood}
 
-\item{tolerance.for.bisection}{tolerance value for performing the bisection method}
-
-\item{output.Yrs}{year for outputing the predicted abundance estimates. Default is 2008, but multiple years can be specified. For example, if outputs for 2005 and 2008 are needed, output.Yrs = c(2005, 2008)}
-
-\item{abs.abundance}{R object containing year, estimate of absolute abundance, and CV (see example)}
-
-\item{rel.abundance}{R object containing years, estimates of relative abudnance and CVs (see example)}
-
-\item{rel.abundance.key}{key to speficy if relative abundance data are used in the likelihood. Default is TRUE}
-
-\item{count.data}{R object containing years, estimates of counts and effort. NOT USED}
-
-\item{count.data.key}{key to speficy in count data are used. Default is FALSE. NOT USED}
-
-\item{growth.rate.obs}{observed growth rate (1st element) and standard error (2nd element) as in Zerbni et al. (2011). If third element is FALSE, the growth rate is not included in the likelihood}
-
-\item{growth.rate.Yrs}{Years for which the growth.rate.obs were computed (as in Zerbini et al., 2011)}
+\item{growth.rate.Yrs}{Years for which the growth.rate.obs were computed (as
+in Zerbini et al., 2011)}
 
 \item{catch.data}{R object containing the years and catches (see example)}
 
-\item{Threshold}{threshold for the McCallister et al. (1994) SIR. This is data-specific. Default is 1e-100.}
+\item{premodern_catch_data}{R object containing the years maximum and minimum premodern catches}
 
-\item{Print}{key to print various pieces of information as the code runs. Default is 0 (nothing is printed)}
+\item{realized_prior}{Key to specify if realized prior is to be extracted. Default is FALSE.}
+
+\item{control}{A list of control parameters, usually generated by
+\code{sir_control}.}
 }
 \value{
 A \code{list} containing posterior samples and metadata
 
-TO DO:
-1. add the negative binomial likelihood for the count data, which is not currently used even though it is defined in the main function call.
+TODO: Add the negative binomial likelihood for the count data, which is not
+currently used even though it is defined in the main function call.
+
+Current default prior specification:
+\code{
+make_prior_list(r_max = make_prior(runif, 0, 0.106),
+                K = make_prior(use = FALSE),
+                N_obs = make_prior(runif, 500, 20000),
+                add_CV = make_prior(use = FALSE),
+                z = make_prior(2.39),
+                q_IA = make_prior(use = FALSE),
+                q_count = make_prior(use = FALSE)
+
+ make_multiplier_list(c_mult_1 = make_prior(1))}
 }
 \description{
-HUMPBACK SIR controls the sampling from the priors, the bisection and likelihoods and the output functions
-}
-\examples{
-
-\dontrun{
-HUMPBACK.SIR(file.name = "test.N2005",
-             n.samples = NULL,
-             n.resamples = 1000,
-             prior.K = c(NA, NA, NA),
-             prior.r_max = c("uniform", 0, 0.106),
-             r_max.bound = c(0, 0.106),
-             prior.N.obs = c("uniform", 500, 20000),
-             prior.add.CV = c("uniform", 0, 1, FALSE),
-             prior.z = c(NA, 2.39, NA),
-             q.prior.IA = c("uniform", 0, 1, FALSE),
-             q.prior.Count = c("uniform", 0, 1, FALSE),
-             Klim = c(1, 500000),
-             target.Yr = 2005,
-             num.haplotypes = 0,
-             tolerance.for.bisection = 0.0001,
-             output.Yrs = c(2005, 2006),
-             abs.abundance = Abs.Abundance.2005,
-             rel.abundance = Rel.Abundance,
-             rel.abundance.key = TRUE,
-             count.data = Count.Data,
-             count.data.key = FALSE,
-             growth.rate.obs = c(0.074, 0.033, TRUE),
-             growth.rate.Yrs = c(1995, 1996, 1997, 1998),
-             catch.data = Catch.data,
-             Threshold = 1e-17,
-             Print = 0)
-}
+HUMPBACK SIR controls the sampling from the priors, the bisection and
+likelihoods and the output functions
 }
