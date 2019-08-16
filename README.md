@@ -82,7 +82,7 @@ zerbini_table( sirMod, file_name = NULL )
 ```
 
 # 2011 Example figures
-Estimated population trajectory and time series of catches of WSA humpback whales from Zerbini et al. (2011). The gray line represents the model averaged median trajectory, and the dark and light shaded areas correspond, respectively, to the 50% and 95% confidence intervals. The dashed black line represents the median trajectory of the reference case scenario, and the red line represents the catches, with shaded areas corresponding to uncertainty in the pre-modern whaling catches. The model is fit to the absolute abundance estimates in 2008 and 2012 (black dots with confidence interval) and the model predicted abundance estimates in the same years (gray dots with confidence interval).
+Estimated population trajectory and time series of catches of WSA humpback whales from Zerbini et al. (2011). The gray line represents the model averaged median trajectory, and the dark and light shaded areas correspond, respectively, to the 50% and 95% confidence intervals. The dashed black line represents the median trajectory of the reference case scenario, and the red line represents the catches, with shaded areas corresponding to uncertainty in the pre-modern whaling catches. The model is fit to the absolute abundance estimates in 2005 (black dots with confidence interval) and the model predicted abundance estimates in the same year (offset gray dots with confidence interval).
 ![alt text](https://github.com/antarctic-humpback-2019-assessment/HumpbackSIR/blob/master/data-raw/Example/2011_Zerbini/Zerbini_et_al_2011_trajectory_summary.png "Population trajectory")
 
 # References
