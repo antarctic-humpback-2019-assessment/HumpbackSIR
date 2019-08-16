@@ -51,9 +51,9 @@
 #'
 #' Current default prior specification:
 #' \code{
-#' make_prior_list(r_max = make_prior(runif, 0, 0.106),
+#' make_prior_list(r_max = make_prior(runif, 0, 0.118),
 #'                 K = make_prior(use = FALSE),
-#'                 N_obs = make_prior(runif, 500, 20000),
+#'                 N_obs = make_prior(runif, 500, 40000),
 #'                 add_CV = make_prior(use = FALSE),
 #'                 z = make_prior(2.39),
 #'                 q_IA = make_prior(use = FALSE),

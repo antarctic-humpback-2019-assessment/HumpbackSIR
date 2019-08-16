@@ -91,9 +91,9 @@ rlunif <- function(n, min = 1, max = 2) {
 ##'
 ##' @return A named list containing each of the specified priors in a form that
 ##'   can be used by the SIR function.
-make_prior_list <- function(r_max = make_prior(runif, 0, 0.106),
+make_prior_list <- function(r_max = make_prior(runif, 0, 0.118),
                             K = make_prior(use = FALSE),
-                            N_obs = make_prior(runif, 500, 20000),
+                            N_obs = make_prior(runif, 500, 40000),
                             add_CV = make_prior(use = FALSE),
                             premodern_catch_sample = make_prior(runif, 0, 1),
                             z = make_prior(2.39),
