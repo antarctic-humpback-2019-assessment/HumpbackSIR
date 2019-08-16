@@ -4,8 +4,8 @@
 \alias{make_prior_list}
 \title{Make a list of priors to be passed to the SIR function.}
 \usage{
-make_prior_list(r_max = make_prior(runif, 0, 0.106), K = make_prior(use
-  = FALSE), N_obs = make_prior(runif, 500, 20000),
+make_prior_list(r_max = make_prior(runif, 0, 0.118), K = make_prior(use
+  = FALSE), N_obs = make_prior(runif, 500, 40000),
   add_CV = make_prior(use = FALSE),
   premodern_catch_sample = make_prior(runif, 0, 1),
   z = make_prior(2.39), q_IA = make_prior(use = FALSE),

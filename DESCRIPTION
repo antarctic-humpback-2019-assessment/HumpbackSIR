@@ -1,7 +1,7 @@
 Package: HumpbackSIR
 Type: Package
 Title: Use Sample-Importance-Resampling to Estimate Southern Humpback Abundance
-Version: 0.0.0.9000
+Version: 1.0.0.0000
 Authors@R: c(
     person("John", "Best", email = "jkbest@gmail.com", role = c("cre", "aut")),
     person("Grant", "Adams", email = "adamsgd@uw.edu", role = "aut"),

@@ -46,9 +46,6 @@
 #'
 #' @return A \code{list} containing posterior samples and metadata
 #'
-#' TODO: Add the negative binomial likelihood for the count data, which is not
-#' currently used even though it is defined in the main function call.
-#'
 #' Current default prior specification:
 #' \code{
 #' make_prior_list(r_max = make_prior(runif, 0, 0.118),
@@ -86,6 +83,7 @@
 #'              catch.data = Catch.data,
 #'              premodern_catch_data = NULL,
 #'              control = sir_control())
+#' }
 HUMPBACK.SIR <- function(file_name = "NULL",
                          n_resamples = 1000,
                          priors = make_prior_list(),
@@ -493,18 +491,24 @@ HUMPBACK.SIR <- function(file_name = "NULL",
     # Save outputs
     resamples_output <- data.frame(resamples_output)
     names(resamples_output) <- sir_names
-    write.csv(resamples_output,
-              paste0(file_name, "_", "resamples_output.csv"))
+    if(!is.null(file_name)){
+        write.csv(resamples_output,
+                  paste0(file_name, "_", "resamples_output.csv"))
+    }
 
     resamples_trajectories <- data.frame(resamples_trajectories)
     names(resamples_trajectories) <- paste0("N_", Year)
-    write.csv(resamples_trajectories,
-              paste0(file_name, "_", "resamples_trajectories.csv"))
+    if(!is.null(file_name)){
+        write.csv(resamples_trajectories,
+                  paste0(file_name, "_", "resamples_trajectories.csv"))
+    }
 
     catch_trajectories <- data.frame(catch_trajectories)
     names(catch_trajectories) <- paste0("Catch_", Year)
-    write.csv(catch_trajectories,
-              paste0(file_name, "_", "catch_trajectories.csv"))
+    if(!is.null(file_name)){
+        write.csv(catch_trajectories,
+                  paste0(file_name, "_", "catch_trajectories.csv"))
+    }
 
     resamples.per.samples <- draw / n_resamples
     if(resamples.per.samples < 3){
@@ -606,7 +610,6 @@ PRED.GROWTH.RATE <- function(growth.rate.Yrs, Pred_N, start_yr = start_yr) {
 #' @return Vector of rates of increase, one per index
 #' @export
 #'
-#' @examples
 COMPUTING.ROI <- function(data = data, Pred_N = Pred_N, start_yr = NULL) {
     num.indices <- max(data$Index)
     Pred.ROI <- rep(NA, num.indices)
@@ -740,7 +743,6 @@ LOGISTIC.BISECTION.K <- function(K.low,
 #' @return A numeric estimator for $q$.
 #' @export
 #'
-#' @examples
 CALC.ANALYTIC.Q <- function(rel.abundance, Pred_N, start_yr,
                             add_CV = 0, num.IA) {
     ## Vector to store the q values
@@ -777,7 +779,6 @@ CALC.ANALYTIC.Q <- function(rel.abundance, Pred_N, start_yr,
 #' @return List of likelihood based on Zerbini et al. (2011) eq. 5 or using `dnorm`
 #' @export
 #'
-#' @examples
 LNLIKE.IAs <- function(rel.abundance, Pred_N, start_yr,
                        q.values, add.CV, log = TRUE) {
     loglike.IA1 <- 0
@@ -800,9 +801,8 @@ LNLIKE.IAs <- function(rel.abundance, Pred_N, start_yr,
 #' @return List of predicted indices based on Zerbini et al. (2011) eq. 5 or using `dnorm`
 #' @export
 #'
-#' @examples
 PREDICT.IAs <- function(rel.abundance, Pred_N, start_yr,
-                       q.values, add.CV, log = TRUE) {
+                        q.values, add.CV, log = TRUE) {
     loglike.IA1 <- 0
     IA.yrs <- rel.abundance$Year-start_yr + 1
     loglike.IA1 <- -sum(
@@ -884,12 +884,12 @@ LNLIKE.GR <- function(Obs.GR, Pred.GR, GR.SD.Obs, log = T) {
 #'
 #' @return the negative log-likelihood
 LNLIKE.BEACHED <- function(beached_data,
-                                 Pred_N,
-                                 start_yr,
-                                 q_anthro,
-                                 d_anthro,
-                                 p_anthro,
-                                 log=TRUE){
+                           Pred_N,
+                           start_yr,
+                           q_anthro,
+                           d_anthro,
+                           p_anthro,
+                           log=TRUE){
 
     N.yrs <- beached_data$Year-start_yr+1
     nll_n <- -sum(
@@ -926,7 +926,7 @@ CALC.LNLIKE <- function(Obs.N, Pred_N, CV, log = FALSE) {
 #' @param x A data.frame of mcmc samples.
 #' @param object Name of the model object as specified by the user.
 #' @param file_name name of a file to identified the files exported by the
-#'   function.
+#'   function. If NULL, will not save .csv file.
 #'
 #' @return Returns a data.frame with summary of SIR outputs
 #'
@@ -960,8 +960,10 @@ summary_sir <- function(x, object = "USERDEFINED", file_name = "NULL") {
     row.names(output_summary) <- row_names
     noquote(format(output_summary, digits = 3, scientific = FALSE))
 
-    write.csv(output_summary,
-              paste0(file_name, "_", object, ".csv"))
+    if(!is.null(file_name)){
+        write.csv(output_summary,
+                  paste0(file_name, "_", object, ".csv"))
+    }
 
     list(object = object, date=Sys.time(), output_summary = output_summary)
 }

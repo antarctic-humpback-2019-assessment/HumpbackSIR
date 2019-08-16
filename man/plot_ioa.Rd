@@ -5,7 +5,7 @@
 \title{OUTPUT FUNCTION}
 \usage{
 plot_ioa(SIR, file_name = NULL, ioa_names = NULL,
-  posterior_pred = TRUE)
+  posterior_pred = TRUE, coolors = "#104F55")
 }
 \arguments{
 \item{SIR}{A fit SIR model}

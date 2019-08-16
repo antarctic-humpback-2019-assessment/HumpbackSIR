@@ -5,7 +5,7 @@
 \title{Function to compare posters}
 \usage{
 compare_posteriors(SIR, model_names = NULL, file_name = NULL,
-  bayes_factor = NULL, reference_sir = NULL)
+  bayes_factor = NULL, reference_sir = TRUE, model_average = TRUE)
 }
 \arguments{
 \item{SIR}{list of SIR objects}

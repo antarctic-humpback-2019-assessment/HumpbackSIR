@@ -14,10 +14,72 @@ where C_(t,min) is the minimum estimate of catch in year t, C_(t,max) is the max
 More information on the model can be found in Zerbini et al. (2011) and Zerbini et al (2019). Code and data to run the analysis in Zerbini et al (2019) can be found at: https://github.com/antarctic-humpback-2019-assessment/HumpbackRuns
 
 # Installation and usage
-To install the model the following code can be ran
+To install the model the following code can be ran:
 ```{r}
 library(devtools)
-devtools::install_github(antarctic-humpback-2019-assessment/HumpbackSIR)
+devtools::install_github(repo = "antarctic-humpback-2019-assessment/HumpbackSIR")
+```
+
+An example of how the model can be run is:
+```{r}
+library(HumpbackSIR)
+
+# Load data from 2011 assessment
+data("Abs.Abundance.2005") # Absolute abundance data
+data("Catch.data") # Catch data
+data("Count.Data") # Count
+data("Rel.Abundance") # Relative abundance
+
+# Set up priors
+prior_list <- make_prior_list(
+    r_max = make_prior(runif, 0, 0.106), # Population growth rate
+    K = make_prior(use = FALSE), # Carrying capacity, no prior because backwars method
+    N_obs = make_prior(runif, 500, 20000), # Prior on a recent abundance estimate
+    premodern_catch_sample = make_prior(runif, 0, 1), # Samples between the minimum and maximum premodern catch values
+    z = make_prior(2.39)) # Shape parameter for generalized logistic 
+    
+# Set up catch multiplier for struck and loss rate
+slr_prior <- make_multiplier_list(c_mult_1 = make_prior(rnorm, 1.2, 0.05)) # Normal prior with mean = 1.2 and sd = 0.05 
+
+# Run SIR
+sirMod <- HUMPBACK.SIR(file_name = NULL, # File name to save
+    n_resamples = 1000,
+    priors = prior_list,
+    catch_multipliers = slr_prior,
+    target.Yr = 2005, # Year of the target population estimate for the backwards method.
+    num.haplotypes = 0,
+    output.Yrs = c(2005, 2006), # Years to output
+    abs.abundance = Abs.Abundance.2005,
+    rel.abundance = Rel.Abundance,
+    rel.abundance.key = TRUE,
+    count.data = Count.Data,
+    count.data.key = FALSE, # Do not include in likelihood
+    growth.rate.obs = c(0.074, 0.033, TRUE), # Prior on growth rat
+    growth.rate.Yrs = c(1995, 1996, 1997, 1998),
+    catch.data = Catch.data,
+    control = sir_control(threshold = 1e-20, progress_bar = TRUE))
+    
+
+# Summarize parameters including mean, median, probability intervals of estimated parameters   
+resample_summary_base <- summary_sir(sirMod$resamples_output, 
+                                    object = "Resample_Summary", file_name = NULL)
+
+# Summary of trajectory including mean, median, probability intervals of annual abundance                                 
+trajectory_summary_base <- summary_sir(sirMod$resamples_trajectories, 
+                            object = "Trajectory_Summary", file_name = NULL)
+                            
+# Plot population trajector
+plot_trajectory(sirMod,  file_name = NULL)
+
+# Plot posterior parameter densities
+plot_density(SIR = sirMod,  file_name = NULL, inc_reference = FALSE)
+
+# Plot fits to indices
+plot_ioa(SIR = sirMod,  file_name = NULL, ioa_names = c("Feeding ground", "Breeding ground") )
+
+# Get summary table
+zerbini_table( sirMod, file_name = NULL )
+    
 ```
 
 # References

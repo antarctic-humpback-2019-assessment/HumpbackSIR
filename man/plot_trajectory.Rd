@@ -5,7 +5,7 @@
 \title{OUTPUT FUNCTION}
 \usage{
 plot_trajectory(SIR, Reference = NULL, file_name = NULL,
-  posterior_pred = TRUE)
+  posterior_pred = TRUE, coolors = "#941B0C", coolors2 = "#104F55")
 }
 \arguments{
 \item{SIR}{A fit SIR model}
