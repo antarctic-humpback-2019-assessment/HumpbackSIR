@@ -59,7 +59,11 @@ sirMod <- HUMPBACK.SIR(file_name = NULL, # File name to save
     catch.data = Catch.data,
     control = sir_control(threshold = 1e-20, progress_bar = TRUE))
     
+```
+The model can be tuned to acheive the desired resampling rate by changing the threshold.
 
+Once the model has run, summary statistics and model fits can be exported as follows:
+```{r}
 # Summarize parameters including mean, median, probability intervals of estimated parameters   
 resample_summary_base <- summary_sir(sirMod$resamples_output, 
                                     object = "Resample_Summary", file_name = NULL)
