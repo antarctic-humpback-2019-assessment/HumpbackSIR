@@ -79,8 +79,11 @@ plot_ioa(SIR = sirMod,  file_name = NULL, ioa_names = c("Feeding ground", "Breed
 
 # Get summary table
 zerbini_table( sirMod, file_name = NULL )
-    
 ```
+
+# 2011 Example run
+Population trajectories using the previous example are as follows
+![alt text](https://github.com/nwfsc-assess/geostatistical_delta-GLMM/raw/master/examples/global_coverage.png "Population trajectory")
 
 # References
 McAllister, M. K., Pikitch, E. K., Punt, A. E., Hilborn, R. 1994. A Bayesian approach to stock assessment and harvest decisions using the sampling/importance resampling algorithm. Canadian Journal of Fisheries and Aquatic Sciences. 12, 2673-2687. 
