@@ -108,10 +108,18 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
     y_axis_catch <-  floor(seq(0,  max(catch_summary[2:6, ]) , length.out = 5)/1000) * 1000
 
     # Plot trajectory
-    for(i in 1: (1 + !is.null(file_name))){
+    for(i in 1: (1 + as.numeric(!is.null(file_name)) * 2)){
+
+        # PNG
         if(i == 2){
             filename <- paste0(file_name, "_trajectory_summary", ".png")
             png( file = filename , width=7.5, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+        }
+
+        # PDF
+        if(i == 3){
+            filename <- paste0(file_name, "_trajectory_summary", ".pdf")
+            pdf( file = filename , width=7.5, height = 100 / 25.4, family = "serif")
         }
 
 
@@ -136,7 +144,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
         lines( x = Years, y = catch_summary[2, ], lty = 1, lwd = 3, col = coolors) # Median
 
         axis(side = 4, at = y_axis_catch, col = coolors, col.axis=coolors, font =2)
-        mtext(side = 4, "Catch (numbers)", line = 1.6, col = coolors, font = 2, adj = 0.4)
+        mtext(side = 4, "Annual catch (numbers)", line = 1.6, col = coolors, font = 2, adj = 0.4)
 
 
         par(new = TRUE)
@@ -190,7 +198,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
         }
 
 
-        if(i == 2){ dev.off()}
+        if(i > 1){ dev.off()}
     }
 }
 
@@ -427,10 +435,18 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
     # Plot
-    for(j in 1:(1 + !is.null(file_name))){
+    for(j in 1:(1 + as.numeric(!is.null(file_name)) * 2)){
+
+        # PNG
         if(j == 2){
             filename <- paste0(file_name, "_posterior_density", ".png")
             png( file = filename , width=10, height = 110 / 25.4, family = "serif", units = "in", res = 300)
+        }
+
+        # PDF
+        if(j == 3){
+            filename <- paste0(file_name, "_posterior_density", ".pdf")
+            pdf( file = filename , width=10, height = 110 / 25.4, family = "serif")
         }
 
         par(mfrow = c(2,(length(vars))/2 + 2))
@@ -495,7 +511,7 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
 
         }
 
-        if(j == 2){ dev.off()}
+        if(j > 1){ dev.off()}
     }
 }
 
@@ -550,10 +566,18 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
     for(k in 1:length(vars)){ # Loop through vars
-        for(j in 1:(1 + !is.null(file_name))){
+        for(j in 1:(1 + as.numeric(!is.null(file_name)) * 2)){
+
+            # PNG
             if(j == 2){
                 filename <- paste0(file_name, "_posterior_comparison_", vars[k], ".png")
                 png( file = filename , width=8, height = 100 / 25.4, family = "serif", units = "in", res = 300)
+            }
+
+            # PDF
+            if(j == 3){
+                filename <- paste0(file_name, "_posterior_comparison_", vars[k], ".pdf")
+                pdf( file = filename , width=8, height = 100 / 25.4, family = "serif")
             }
 
             par( mar=c(5, 3 , 0.5 , 0.3) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
@@ -565,7 +589,7 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
             }
 
 
-            boxplot(values, ylab = TeX(vars_latex[k]), xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
+            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
 
             # Add x-lab
             if(is.null(model_names)){
@@ -601,7 +625,7 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
                 segments(x0 = .59999 + (i - 1), x1 = 1.39999 + (i - 1), y0 = mean_vec[i], col = 1, lwd = 2, lty = 3)
             }
 
-            if(j == 2){ dev.off()}
+            if(j > 1){ dev.off()}
         }
     }
 }
