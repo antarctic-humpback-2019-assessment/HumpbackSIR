@@ -5,7 +5,8 @@
 \title{Function to compare posters}
 \usage{
 compare_posteriors(SIR, model_names = NULL, file_name = NULL,
-  bayes_factor = NULL, reference_sir = TRUE, model_average = TRUE)
+  bayes_factor = NULL, reference_sir = TRUE, model_average = TRUE,
+  years = NULL)
 }
 \arguments{
 \item{SIR}{list of SIR objects}
@@ -17,27 +18,11 @@ function. If NULL, does not save.}
 
 \item{bayes_factor}{Optional. Vector of bayesfactors of length SIR}
 
-\item{reference_sir}{Default = NULL, wether reference SIR fit
-Function to compare posters}
+\item{reference_sir}{Default = TRUE, reference SIR is in \code{SIR}, should be first if so.}
 
-\item{SIR}{list of SIR objects}
+\item{model_average}{Default = TRUE, model average SIR is in \code{SIR}, should be last if so.}
 
-\item{model_names}{names of sir objects}
-
-\item{file_name}{name of a file to identified the files exported by the
-function. If NULL, does not save.}
-
-\item{reference_sir}{Default = NULL, wether reference SIR fit
-Function to compare posters}
-
-\item{SIR}{list of SIR objects}
-
-\item{model_names}{names of sir objects}
-
-\item{file_name}{name of a file to identified the files exported by the
-function. If NULL, does not save.}
-
-\item{reference_sir}{Default = NULL, reference SIR is in \code{SIR}, should be first if so.}
+\item{years}{Optional vector of years to compare.}
 }
 \description{
 Function to compare posters

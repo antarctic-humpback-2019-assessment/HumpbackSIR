@@ -11,6 +11,8 @@
 #' @param posterior_pred Logical. If true, includes a posterior predictive distribution of the estimated N
 #'
 #' @return Returns and saves a figure with the population trajectory.
+#'
+#' @export
 plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_pred = TRUE, coolors = "#941B0C",     coolors2 = "#104F55") {
 
 
@@ -216,6 +218,8 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
 #' @param ioa_names names of indices of abundance used.
 #'
 #' @return Returns and saves a figure with the IOA trajectories.
+#'
+#' @export
 plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = TRUE, coolors = "#104F55"){
 
     rel.abundance <- SIR$inputs$rel.abundance
@@ -389,6 +393,7 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
 #' @param reference Default = NULL, wether reference case is included in SIR
 #'
 #' @return Returns and saves a figure with the posterior densities of parameters.
+#' @export
 plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, priors = NULL, inc_reference = TRUE){
 
     # Make into list
@@ -515,13 +520,7 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
     }
 }
 
-#' Function to compare posters
-#'
-#' @param SIR list of SIR objects
-#' @param model_names names of sir objects
-#' @param file_name name of a file to identified the files exported by the
-#'   function. If NULL, does not save.
-#' @param reference_sir Default = NULL, wether reference SIR fit
+
 
 #' Function to compare posters
 #'
@@ -529,17 +528,13 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
 #' @param model_names names of sir objects
 #' @param file_name name of a file to identified the files exported by the
 #'   function. If NULL, does not save.
-#' @param reference_sir Default = NULL, wether reference SIR fit
-
-#' Function to compare posters
-#'
-#' @param SIR list of SIR objects
-#' @param model_names names of sir objects
-#' @param file_name name of a file to identified the files exported by the
-#'   function. If NULL, does not save.
-#' @param reference_sir Default = NULL, reference SIR is in \code{SIR}, should be first if so.
+#' @param reference_sir Default = TRUE, reference SIR is in \code{SIR}, should be first if so.
+#' @param model_average Default = TRUE, model average SIR is in \code{SIR}, should be last if so.
+#' @param years Optional vector of years to compare.
 #' @param bayes_factor Optional. Vector of bayesfactors of length SIR
-compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_factor = NULL, reference_sir = TRUE, model_average = TRUE){
+#'
+#' @export
+compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_factor = NULL, reference_sir = TRUE, model_average = TRUE, years = NULL){
 
     # If it is a single SIR, make into a list
     if(class(SIR) == "SIR"){
@@ -559,9 +554,15 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
 
     library(latex2exp)
 
+    #################################
+    # SEPERATE PLOTS
+    #################################
+
     # Vars of interest
-    years <- sort(unique(c( sapply(SIR, function(x) x$inputs$target.Yr),
-                            sapply(SIR, function(x) x$inputs$output.Years))))
+    if(is.null(years)){
+        years <- sort(unique(c( sapply(SIR, function(x) x$inputs$target.Yr),
+                                sapply(SIR, function(x) x$inputs$output.Years))))
+    }
     vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
     vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
@@ -628,6 +629,93 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
             if(j > 1){ dev.off()}
         }
     }
+
+    ###########################
+    # COMBINED PLOTS
+    ###########################
+
+    # Vars of interest
+    vars <- c("r_max", "Nmin", paste0("N", years), "K", "Max_Dep", paste0("status", years))
+    vars_latex <- c("$r_{max}$", "$N_{min}$", paste0("$N_{", years, "}$"), "$K$", "Max depletion", paste0("Depletion in ", years))
+
+    for(j in 1:(1 + as.numeric(!is.null(file_name)) * 2)){
+
+        # PNG
+        if(j == 2){
+            filename <- paste0(file_name, "_posterior_comparison", ".png")
+            png( file = filename , width=10, height = 8, family = "serif", units = "in", res = 300)
+        }
+
+        # PDF
+        if(j == 3){
+            filename <- paste0(file_name, "_posterior_comparison", ".pdf")
+            pdf( file = filename , width=10, height = 8, family = "serif")
+        }
+
+        # Set up multiplot
+        layout(matrix(c(1:(length(vars) + 2)), (length(vars)/2 + 1), 2, byrow = FALSE), heights = c(rep(1, length(vars)/2), 0.35))
+        par( mar=c(0.15, 3.5 , 0.35 , 0.5) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+
+        # Loop through vars
+        for(k in 1:length(vars)){ # Loop through vars
+
+            values <- matrix(NA, nrow = nrow(SIR[[1]]$resamples_output), ncol = length(SIR))
+
+            for( i in 1:length(SIR)){
+                values[,i] <- SIR[[i]]$resamples_output[,vars[k]]
+            }
+
+            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
+
+
+
+            # X-Lab
+            if(k %in% c(length(vars)/2, length(vars))){
+                # Add model name
+                if(is.null(model_names)){
+                    axis(side = 1, at = 1:length(SIR), labels = as.character(1:length(SIR)))
+                }
+                if(!is.null(model_names)){
+                    axis(side = 1, at = 1:length(SIR), labels = model_names, cex.axis = 0.75, gap.axis = 0)
+                }
+
+                # Add bayes factor
+                if(is.null(bayes_factor)){
+                    mtext(side = 1, text = "Scenario", line = 1.6)
+                }
+                if(!is.null(bayes_factor)){
+                    axis(side = 1, at = c(0, 1:length(SIR)), labels = c("BF =", bayes_factor), cex.axis = 0.75, tick = FALSE, line = 1.6, gap.axis = 0)
+
+                    mtext(side = 1, text = "Scenario", line = 3.4)
+                }
+            }
+
+            # Add lines for reference
+            if(reference_sir){
+                ref_box <- boxplot(values[,1], plot = FALSE)
+
+                abline(h = ref_box$stats[1,1], lty = 2, col = "grey30", lwd = 2)
+                abline(h = ref_box$stats[3,1], lty = 2, col = "grey30", lwd = 2)
+                abline(h = ref_box$stats[5,1], lty = 2, col = "grey30", lwd = 2)
+            }
+
+            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, add = TRUE)
+            # Add means
+            mean_vec <- colMeans(values)
+            for( i in 1:length(SIR)){
+                segments(x0 = .59999 + (i - 1), x1 = 1.39999 + (i - 1), y0 = mean_vec[i], col = 1, lwd = 2, lty = 3)
+            }
+
+            # Bottom row
+            if(k == length(vars)/2){
+                plot.new()
+            }
+        }
+
+        if(j > 1){ dev.off()}
+    }
 }
+
+
 
 
