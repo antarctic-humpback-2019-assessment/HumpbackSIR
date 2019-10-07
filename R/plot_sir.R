@@ -654,7 +654,7 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
 
         # Set up multiplot
         layout(matrix(c(1:(length(vars) + 2)), (length(vars)/2 + 1), 2, byrow = FALSE), heights = c(rep(1, length(vars)/2), 0.35))
-        par( mar=c(0.15, 3.5 , 0.35 , 0.5) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
+        par( mar=c(0.15, 3.5 , 0.5 , 0.5) , oma=c(0 , 0 , 0 , 0), tcl = -0.35, mgp = c(1.75, 0.5, 0))
 
         # Loop through vars
         for(k in 1:length(vars)){ # Loop through vars
@@ -665,8 +665,8 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
                 values[,i] <- SIR[[i]]$resamples_output[,vars[k]]
             }
 
-            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, boxlty = 1, lty = 1)
-
+            boxplot(values, ylab = NA, xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 1, boxlty = 1, lty = 1)
+            mtext(side = 2, text = latex2exp::TeX(vars_latex[k]), line = 1.8)
 
 
             # X-Lab
@@ -676,7 +676,7 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
                     axis(side = 1, at = 1:length(SIR), labels = as.character(1:length(SIR)))
                 }
                 if(!is.null(model_names)){
-                    axis(side = 1, at = 1:length(SIR), labels = model_names, cex.axis = 0.75, gap.axis = 0)
+                    axis(side = 1, at = 1:length(SIR), labels = model_names, cex.axis = 0.9, gap.axis = 0)
                 }
 
                 # Add bayes factor
@@ -684,7 +684,7 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
                     mtext(side = 1, text = "Scenario", line = 1.6)
                 }
                 if(!is.null(bayes_factor)){
-                    axis(side = 1, at = c(0, 1:length(SIR)), labels = c("BF =", bayes_factor), cex.axis = 0.75, tick = FALSE, line = 1.6, gap.axis = 0)
+                    axis(side = 1, at = c(0, 1:length(SIR)), labels = c("BF =", bayes_factor), cex.axis = 0.9, tick = FALSE, line = 1.6, gap.axis = 0)
 
                     mtext(side = 1, text = "Scenario", line = 3.4)
                 }
@@ -699,7 +699,9 @@ compare_posteriors <- function(SIR, model_names = NULL, file_name = NULL, bayes_
                 abline(h = ref_box$stats[5,1], lty = 2, col = "grey30", lwd = 2)
             }
 
-            boxplot(values, ylab = latex2exp::TeX(vars_latex[k]), xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 0.75, add = TRUE)
+            boxplot(values, ylab = NA, xlab = NA, xaxt = "n", col = cols, outline = FALSE, cex.axis = 1, add = TRUE)
+            mtext(side = 2, text = latex2exp::TeX(vars_latex[k]), line = 1.8)
+
             # Add means
             mean_vec <- colMeans(values)
             for( i in 1:length(SIR)){
