@@ -1,7 +1,7 @@
 
-# R Script for Bayesian Assessment Model of Humpback Whales - uses the equations
-# in Zerbini et al. (2011) Code cleaned up and sent to Andre Punt, John Best and
-# Grant Adams on 7 Dec 2017
+# R Script for Bayesian Assessment Model of Humpback Whales - developed from the code/equations
+# in Zerbini et al. (2011)
+# Adapted by Grant Adams and John Best for Zerbini et al. 2019
 
 #' HUMPBACK SIR controls the sampling from the priors, the bisection and
 #' likelihoods and the output functions
@@ -197,7 +197,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
     #Creating output vectors
     #-------------------------------------
-    sir_names <- c("r_max", "K", paste0("catch_multiplier_", 1:length(catch_multipliers)) ,
+    sir_names <- c("r_max", "K", "z", paste0("catch_multiplier_", 1:length(catch_multipliers)) ,
                    paste0("premodern_catch_multiplier_", 1:length(premodern_catch_multipliers)),
                    "sample.N.obs", "add_CV", "sample_premodern_catch", "Nmin", "YearMin",
                    "violate_MVP", paste0("N", target.Yr), paste0("N", output.Yrs),
@@ -258,7 +258,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         }
 
         ## Sample from prior for `z` (usually constant)
-        sample.z <- priors$z$rfn()
+        sample.z <- exp(priors$z$rfn())
 
         ## Sampling from q priors if q.prior is TRUE; priors on q for indices of
         ## abundance
@@ -452,13 +452,14 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                 catch_trajectories[i+1,] <- catches
                 resamples_output[i+1,] <- c(sample.r_max,
                                             sample.K,
+                                            sample.z,
                                             sample_catch_multiplier,
                                             sample_premodern_catch_multiplier,
                                             sample.N.obs,
                                             sample.add_CV,
                                             sample_premodern_catch,
                                             Pred_N$Min_Pop,
-                                            Pred_N$Min_Yr,
+                                            ifelse(length(Pred_N$Min_Yr) == 1, Pred_N$Min_Yr, "Multiple"),
                                             Pred_N$Violate_Min_Viable_Pop,
                                             c(Pred_N$Pred_N[target.Yr - start_yr + 1]),
                                             c(Pred_N$Pred_N[output.Yrs - start_yr + 1]),

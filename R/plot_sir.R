@@ -1,18 +1,3 @@
-
-#' OUTPUT FUNCTION
-#'
-#' Function that provides a plot of the estimated population trajectory from a SIR outputs model including: median, 95%
-#' credible interval, 90% credible interval, catch, and observed absolute abundance.
-#'
-#' @param SIR A fit SIR model
-#' @param file_name name of a file to identified the files exported by the
-#'   function. If NULL, does not save.
-#' @param Reference A fit SIR model for the reference case
-#' @param posterior_pred Logical. If true, includes a posterior predictive distribution of the estimated N
-#'
-#' @return Returns and saves a figure with the population trajectory.
-#'
-#' @export
 plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_pred = TRUE, coolors = "#941B0C",     coolors2 = "#104F55") {
 
 
@@ -63,7 +48,7 @@ plot_trajectory <- function(SIR, Reference = NULL, file_name = NULL, posterior_p
             N_posterior_pred[,i] <- rlnorm(
                 n = nrow(N_posterior_pred),
                 meanlog = log( x[,paste0("N_", abs.abundance$Year[i]) ] ),
-                sdlog = abs.abundance$Sigma[i] + SIR$resamples_output$add_CV[1]
+                sdlog = abs.abundance$Sigma[i] + as.numeric(as.character(SIR$resamples_output$add_CV[1]))
             )
         }
 
@@ -391,10 +376,11 @@ plot_ioa <- function(SIR, file_name = NULL, ioa_names = NULL, posterior_pred = T
 #' @param upper Vector of upper bounds for x-axis
 #' @param priors Default = NULL, SIR realized priors or list of SIR realized priors. Plots in the order provided.
 #' @param reference Default = NULL, wether reference case is included in SIR
+#' @param probs Lower and upper quantiles to use for plot limits if lower and upper are not specified.
 #'
 #' @return Returns and saves a figure with the posterior densities of parameters.
 #' @export
-plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, priors = NULL, inc_reference = TRUE){
+plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, priors = NULL, inc_reference = TRUE, probs = c(0.025, 0.975) ){
 
     # Make into list
     if(class(SIR) == "SIR"){
@@ -436,8 +422,8 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
     # Vars of interest
     years <- sort(unique(c( sapply(SIR, function(x) x$inputs$target.Yr),
                             sapply(SIR, function(x) x$inputs$output.Years))))
-    vars <- c("r_max", "K", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
-    vars_latex <- c("$r_{max}$", "$K$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
+    vars <- c("r_max", "K", "z", "Nmin", paste0("N", years), "Max_Dep", paste0("status", years))
+    vars_latex <- c("$r_{max}$", "$K$", "$z$", "$N_{min}$", paste0("$N_{", years, "}$"), "Max depletion", paste0("Depletion in ", years))
 
     # Plot
     for(j in 1:(1 + as.numeric(!is.null(file_name)) * 2)){
@@ -466,7 +452,7 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
             # Extract posterio densities
             posterior_dens <- list()
             for(k in 1:length(SIR)){
-                posterior_dens[[k]] <- density(SIR[[k]]$resamples_output[,vars[i]])
+                posterior_dens[[k]] <- density(as.numeric(as.character(SIR[[k]]$resamples_output[,vars[i]])))
             }
 
             # Extract prior densities
@@ -479,18 +465,18 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
 
             # Get x range
             if(is.null(lower[i])){
-                xlow <- quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.025))
+                xlow <- quantile(sapply(posterior_dens, "[", "x")$x, probs= probs[1])
             } else if(is.na(lower[i])){
-                xlow <- quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.025))
+                xlow <- quantile(sapply(posterior_dens, "[", "x")$x, probs= probs[1])
             } else{
                 xlow <- lower[i]
             }
 
             if(is.null(upper[i])){
-                xup <- quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.975))
+                xup <- quantile(sapply(posterior_dens, "[", "x")$x, probs= probs[2])
             }
             else if(is.na(upper[i])){
-                xup <- quantile(sapply(posterior_dens, "[", "x")$x, probs= c(0.975))
+                xup <- quantile(sapply(posterior_dens, "[", "x")$x, probs= probs[2])
             } else{
                 xup <- upper[i]
             }
