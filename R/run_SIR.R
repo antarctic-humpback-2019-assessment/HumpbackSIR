@@ -258,7 +258,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         }
 
         ## Sample from prior for `z` (usually constant)
-        sample.z <- exp(priors$z$rfn())
+        sample.z <- priors$z$rfn()
 
         ## Sampling from q priors if q.prior is TRUE; priors on q for indices of
         ## abundance
