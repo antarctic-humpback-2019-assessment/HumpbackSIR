@@ -16,3 +16,21 @@ make_multiplier_list <- function(c_mult_1 = make_prior(1), ...) {
     }
     mult_list
 }
+
+
+
+#' Get z from Nk
+#'
+#' @param Nk Depletion which maximizes yield.
+#' @param b branch of lambert W function
+#' @param maxiter Number of iterations to solve lambert W
+#'
+#' @export
+#'
+#' @examples
+#'
+#' getz(Nk = 0.6)
+getz <- function(Nk = 0.6, b=-1, maxiter=100) {
+    z = suppressWarnings(emdbook::lambertW(Nk*log(Nk), b=b, maxiter=maxiter) - log(Nk)) / log(Nk)
+    return(z)
+}

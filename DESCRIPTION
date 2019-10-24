@@ -15,7 +15,9 @@ URL: https://github.com/jkbest2/HumpbackSIR
 BugReports: https://github.com/jkbest2/HumpbackSIR/issues
 Encoding: UTF-8
 LazyData: true
-Imports: Rcpp (>= 0.12.16),
-    latex2exp
+Imports: 
+    Rcpp (>= 0.12.16),
+    latex2exp,
+    emdbook
 LinkingTo: Rcpp
 RoxygenNote: 6.1.1

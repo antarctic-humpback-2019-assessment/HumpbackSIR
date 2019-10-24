@@ -8,7 +8,7 @@ make_prior_list(r_max = make_prior(runif, 0, 0.118), K = make_prior(use
   = FALSE), N_obs = make_prior(runif, 500, 40000),
   add_CV = make_prior(use = FALSE),
   premodern_catch_sample = make_prior(runif, 0, 1),
-  z = make_prior(2.39), q_IA = make_prior(use = FALSE),
+  Nk = make_prior(0.6), q_IA = make_prior(use = FALSE),
   q_count = make_prior(use = FALSE))
 }
 \arguments{
@@ -24,8 +24,7 @@ recent observation and sampled \code{r_max}.}
 
 \item{premodern_catch_sample}{Defaults to unused. Samples between the minimum and maximum premodern catch values.}
 
-\item{z}{Defaults to constant 2.39. Shape parameter for generalized logistic
-population dynamics function.}
+\item{Nk}{Defaults to constant 0.6. Depletion (N/K) at with surplus production is maximized.}
 
 \item{q_IA}{Defaults to unused. Prior on q for indices of abundance. If
 \code{use = FALSE}, an analytic solution for q is used.}

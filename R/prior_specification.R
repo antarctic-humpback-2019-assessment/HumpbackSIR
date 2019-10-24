@@ -83,8 +83,7 @@ rlunif <- function(n, min = 1, max = 2) {
 ##'   20,000).
 ##' @param add_CV Defaults to unused. Additional variability.
 ##' @param premodern_catch_sample Defaults to unused. Samples between the minimum and maximum premodern catch values.
-##' @param z Defaults to constant 2.39. Shape parameter for generalized logistic
-##'   population dynamics function.
+##' @param Nk Defaults to constant 0.6. Depletion (N/K) at with surplus production is maximized.
 ##' @param q_IA Defaults to unused. Prior on q for indices of abundance. If
 ##'   \code{use = FALSE}, an analytic solution for q is used.
 ##' @param q_count Defaults to unused. Prior for q on counts.
@@ -96,7 +95,7 @@ make_prior_list <- function(r_max = make_prior(runif, 0, 0.118),
                             N_obs = make_prior(runif, 500, 40000),
                             add_CV = make_prior(use = FALSE),
                             premodern_catch_sample = make_prior(runif, 0, 1),
-                            z = make_prior(2.39),
+                            Nk = make_prior(0.6),
                             q_IA = make_prior(use = FALSE),
                             q_count = make_prior(use = FALSE)) {
     list(r_max = r_max,
@@ -104,7 +103,7 @@ make_prior_list <- function(r_max = make_prior(runif, 0, 0.118),
          N_obs = N_obs,
          add_CV = add_CV,
          premodern_catch_sample = premodern_catch_sample,
-         z = z,
+         Nk = Nk,
          q_IA = q_IA,
          q_count = q_count)
 }

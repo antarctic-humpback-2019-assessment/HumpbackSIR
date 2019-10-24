@@ -83,7 +83,7 @@ make_prior_list(r_max = make_prior(runif, 0, 0.118),
                 K = make_prior(use = FALSE),
                 N_obs = make_prior(runif, 500, 40000),
                 add_CV = make_prior(use = FALSE),
-                z = make_prior(2.39),
+                Nk = make_prior(0.6),
                 q_IA = make_prior(use = FALSE),
                 q_count = make_prior(use = FALSE)
 

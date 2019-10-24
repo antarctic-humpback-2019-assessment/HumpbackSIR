@@ -52,7 +52,7 @@
 #'                 K = make_prior(use = FALSE),
 #'                 N_obs = make_prior(runif, 500, 40000),
 #'                 add_CV = make_prior(use = FALSE),
-#'                 z = make_prior(2.39),
+#'                 Nk = make_prior(0.6),
 #'                 q_IA = make_prior(use = FALSE),
 #'                 q_count = make_prior(use = FALSE)
 #'
@@ -197,7 +197,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
 
     #Creating output vectors
     #-------------------------------------
-    sir_names <- c("r_max", "K", "z", paste0("catch_multiplier_", 1:length(catch_multipliers)) ,
+    sir_names <- c("r_max", "K", "Nk", "z", paste0("catch_multiplier_", 1:length(catch_multipliers)) ,
                    paste0("premodern_catch_multiplier_", 1:length(premodern_catch_multipliers)),
                    "sample.N.obs", "add_CV", "sample_premodern_catch", "Nmin", "YearMin",
                    "violate_MVP", paste0("N", target.Yr), paste0("N", output.Yrs),
@@ -258,7 +258,8 @@ HUMPBACK.SIR <- function(file_name = "NULL",
         }
 
         ## Sample from prior for `z` (usually constant)
-        sample.z <- priors$z$rfn()
+        sample.Nk <- priors$Nk$rfn()
+        sample.z <- getz(sample.Nk, b = ifelse(sample.Nk >= 1/exp(1), - 1, 0))
 
         ## Sampling from q priors if q.prior is TRUE; priors on q for indices of
         ## abundance
@@ -426,6 +427,10 @@ HUMPBACK.SIR <- function(file_name = "NULL",
             }
         }
 
+        # FIXME: may need to adjust
+        if(sample.Nk == 1/exp(1)){
+            Likelihood <- 0
+        }
 
 
         Cumulative.Likelihood <- Cumulative.Likelihood + Likelihood
@@ -452,6 +457,7 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                 catch_trajectories[i+1,] <- catches
                 resamples_output[i+1,] <- c(sample.r_max,
                                             sample.K,
+                                            sample.Nk,
                                             sample.z,
                                             sample_catch_multiplier,
                                             sample_premodern_catch_multiplier,
