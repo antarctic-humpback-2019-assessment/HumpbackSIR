@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // GENERALIZED_LOGISTIC
 List GENERALIZED_LOGISTIC(double r_max, double K, double N1, double z, double start_yr, double num_Yrs, NumericVector catches, double MVP);
 RcppExport SEXP _HumpbackSIR_GENERALIZED_LOGISTIC(SEXP r_maxSEXP, SEXP KSEXP, SEXP N1SEXP, SEXP zSEXP, SEXP start_yrSEXP, SEXP num_YrsSEXP, SEXP catchesSEXP, SEXP MVPSEXP) {
