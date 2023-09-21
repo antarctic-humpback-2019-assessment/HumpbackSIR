@@ -1,5 +1,5 @@
 # HumpbackSIR
-This is a package to implement a deterministic generalized logistic model in a Bayesian framework using a Sampling-Importance-Resampling (SIR) algorithm developed for modelling Humpback Whale populations by Zerbini et al. (2011) and Zerbini et al (2019). The SIR algorithm follows that implemented by McAllister et al. (1994).
+This is a package to implement a deterministic generalized logistic model in a Bayesian framework using a Sampling-Importance-Resampling (SIR) algorithm developed for modelling Humpback Whale populations by Zerbini et al. (2011) and Zerbini et al (2019). The SIR algorithm follows that implemented by McAllister et al. (1994) and uses the backward/bisection approach. The backward/bisection approach puts a prior on and estimates the abundance in a recent year then solves for the carrying capacity that is needed to get us there given the estimated maximum population growth rate and shape parameter (implicitly estimating K).
 
 Code and data to run the analysis in Zerbini et al (2019) can be found at: https://github.com/antarctic-humpback-2019-assessment/HumpbackRuns
 
