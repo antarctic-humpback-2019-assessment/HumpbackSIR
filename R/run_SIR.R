@@ -277,7 +277,8 @@ HUMPBACK.SIR <- function(file_name = "NULL",
             q.sample.Count <- rep(-9999, length(unique(count.data$Index)))
         }
 
-        sample.K <- LOGISTIC.BISECTION.K(K.low = control$K_bisect_lim[1],
+        K.error <- FALSE
+        sample.K <- try(LOGISTIC.BISECTION.K(K.low = control$K_bisect_lim[1],
                                          K.high = control$K_bisect_lim[2],
                                          r_max = sample.r_max,
                                          z = sample.z,
@@ -286,7 +287,14 @@ HUMPBACK.SIR <- function(file_name = "NULL",
                                          target.Pop = sample.N.obs,
                                          catches = catches,
                                          MVP = MVP,
-                                         tol = control$K_bisect_tol)
+                                         tol = control$K_bisect_tol),
+                        silent = TRUE)
+
+        ## If population is too variable because of process error, give error and set likelihood to 0
+        if(class(sample.K) == "try-error"){
+            sample.K = 999
+            K.error = TRUE
+        }
 
         #Computing the predicted abundances with the samples from the priors
         #----------------------------------------
@@ -423,6 +431,14 @@ HUMPBACK.SIR <- function(file_name = "NULL",
             Likelihood <- 0
             if (control$verbose > 0) {
                 message("MVP violated on draw", draw)
+            }
+        }
+
+        ## If population was too variable set likelihood to 0
+        if (K.error) {
+            Likelihood <- 0
+            if (control$verbose > 0) {
+                message("Population dynamics too variable on draw", draw)
             }
         }
 

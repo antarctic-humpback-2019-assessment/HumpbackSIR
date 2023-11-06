@@ -489,13 +489,12 @@ plot_density <- function(SIR, file_name = NULL, lower = NULL, upper = NULL, prio
                  ylab = NA, xlab = latex2exp::TeX(vars_latex[i]), yaxt = "n")
             mapply(lines, posterior_dens, lwd = posteriors_lwd, lty = posteriors_lty, col = posteriors_col[1:length(posterior_dens)])
 
-            if(i == (length(vars)/2))  {
-                plot.new()
+            if(i == ceiling(length(vars)/2))  {
                 plot.new()
             }
 
 
-            if(i %in% c(1, (length(vars))/2 + 1) ) {
+            if(i %in% c(1, (ceiling(length(vars)/2) + 1))) {
                 mtext(side = 2, "Density", line = 1, cex= 0.75)
             }
 
